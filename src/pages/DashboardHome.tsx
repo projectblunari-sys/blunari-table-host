@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTenant } from '@/hooks/useTenant';
+import TenantAccessDisplay from '@/components/dashboard/TenantAccessDisplay';
 import { useTodaysBookings } from '@/hooks/useRealtimeBookings';
 import TodaysBookings from '@/components/dashboard/TodaysBookings';
 import QuickActions from '@/components/dashboard/QuickActions';
@@ -20,7 +21,7 @@ import {
 } from 'lucide-react';
 
 const DashboardHome: React.FC = () => {
-  const { tenant } = useTenant();
+  const { tenant, accessType, tenantSlug } = useTenant();
   const { bookings, isLoading } = useTodaysBookings(tenant?.id);
 
   // Calculate today's metrics
@@ -88,6 +89,13 @@ const DashboardHome: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Tenant Access Information */}
+      <TenantAccessDisplay 
+        accessType={accessType as 'domain' | 'user'} 
+        tenantSlug={tenantSlug} 
+        tenant={tenant} 
+      />
+
       {/* Welcome Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

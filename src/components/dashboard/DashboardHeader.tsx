@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeBookings } from '@/hooks/useRealtimeBookings';
+import { useTenantBranding } from '@/contexts/TenantBrandingContext';
 import { 
   Bell, 
   Settings, 
@@ -28,6 +29,7 @@ const DashboardHeader: React.FC = () => {
   const { tenant } = useTenant();
   const { user, signOut } = useAuth();
   const { isConnected } = useRealtimeBookings(tenant?.id);
+  const { restaurantName } = useTenantBranding();
 
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -42,7 +44,7 @@ const DashboardHeader: React.FC = () => {
         {/* Restaurant Info & Date */}
         <div className="space-y-1">
           <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            {tenant?.name || 'Restaurant Dashboard'}
+            {restaurantName}
           </h1>
           <p className="text-muted-foreground flex items-center gap-2">
             <Calendar className="h-4 w-4" />

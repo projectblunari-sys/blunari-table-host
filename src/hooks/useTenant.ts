@@ -15,19 +15,92 @@ interface Tenant {
   website?: string;
   address?: any;
   cuisine_type_id?: string;
+  logo_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
   created_at: string;
   updated_at: string;
 }
 
+// Extract tenant slug from subdomain or domain
+const getTenantSlugFromDomain = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  
+  const hostname = window.location.hostname;
+  
+  // Handle different domain patterns
+  if (hostname === 'localhost' || hostname.startsWith('127.0.0.1')) {
+    // For local development, check for ?tenant= parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('tenant');
+  }
+  
+  // Production patterns:
+  // restaurant-slug.blunari.ai -> extract "restaurant-slug"
+  // restaurant-slug.blunari.app -> extract "restaurant-slug"
+  // custom-domain.com -> lookup by domain
+  
+  const parts = hostname.split('.');
+  
+  if (parts.length >= 3 && (parts[1] === 'blunari' || parts.includes('blunari'))) {
+    // Subdomain pattern: restaurant-slug.blunari.ai
+    return parts[0];
+  }
+  
+  // Custom domain - return hostname to lookup in database
+  return hostname;
+};
+
 export const useTenant = () => {
   const { user } = useAuth();
+  const tenantSlug = getTenantSlugFromDomain();
 
-  const { data: tenant, isLoading, error } = useQuery({
-    queryKey: ['tenant', user?.id],
+  // First, try to get tenant by subdomain/domain
+  const { data: tenantByDomain, isLoading: isLoadingDomain } = useQuery({
+    queryKey: ['tenant-by-domain', tenantSlug],
+    queryFn: async () => {
+      if (!tenantSlug) return null;
+
+      // Try to find tenant by slug first
+      let { data, error } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('slug', tenantSlug)
+        .eq('status', 'active')
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // Not found by slug, try by custom domain
+        const { data: domainData, error: domainError } = await supabase
+          .from('domains')
+          .select(`
+            tenant_id,
+            tenants (
+              id, name, slug, status, timezone, currency, description,
+              phone, email, website, address, cuisine_type_id, logo_url,
+              primary_color, secondary_color, created_at, updated_at
+            )
+          `)
+          .eq('domain', tenantSlug)
+          .eq('status', 'active')
+          .single();
+
+        if (domainError) return null;
+        data = domainData?.tenants as any;
+      }
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data as Tenant | null;
+    },
+    enabled: !!tenantSlug,
+  });
+
+  // Fallback: get tenant by user (for admin access or development)
+  const { data: tenantByUser, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['tenant-by-user', user?.id],
     queryFn: async () => {
       if (!user) return null;
 
-      // Get user's tenant using the database function
       const { data, error } = await supabase
         .rpc('get_user_tenant', { p_user_id: user.id });
 
@@ -43,30 +116,40 @@ export const useTenant = () => {
         provisioning_status: string;
       };
     },
-    enabled: !!user,
+    enabled: !!user && !tenantByDomain,
   });
 
+  // Get full tenant details for user-based lookup
   const { data: tenantDetails, isLoading: isLoadingDetails } = useQuery({
-    queryKey: ['tenant-details', tenant?.tenant_id],
+    queryKey: ['tenant-details', tenantByUser?.tenant_id],
     queryFn: async () => {
-      if (!tenant?.tenant_id) return null;
+      if (!tenantByUser?.tenant_id) return null;
 
       const { data, error } = await supabase
         .from('tenants')
         .select('*')
-        .eq('id', tenant.tenant_id)
+        .eq('id', tenantByUser.tenant_id)
         .single();
 
       if (error) throw error;
       return data as Tenant;
     },
-    enabled: !!tenant?.tenant_id,
+    enabled: !!tenantByUser?.tenant_id,
   });
 
+  // Determine the final tenant and access type
+  const tenant = tenantByDomain || tenantDetails;
+  const tenantInfo = tenantByDomain ? null : tenantByUser;
+  const accessType = tenantByDomain ? 'domain' : 'user';
+  
+  const isLoading = isLoadingDomain || isLoadingUser || isLoadingDetails;
+
   return {
-    tenant: tenantDetails,
-    tenantInfo: tenant,
-    isLoading: isLoading || isLoadingDetails,
-    error,
+    tenant,
+    tenantInfo,
+    accessType,
+    tenantSlug,
+    isLoading,
+    error: null,
   };
 };

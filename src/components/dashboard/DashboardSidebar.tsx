@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTenant } from '@/hooks/useTenant';
+import { useTenantBranding } from '@/contexts/TenantBrandingContext';
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -34,6 +35,7 @@ const DashboardSidebar: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { tenant } = useTenant();
+  const { logoUrl, restaurantName } = useTenantBranding();
 
   return (
     <>
@@ -72,13 +74,13 @@ const DashboardSidebar: React.FC = () => {
           {/* Logo and tenant info */}
           <div className="flex h-16 items-center px-6 border-b border-border">
             <img 
-              src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png" 
-              alt="Blunari Logo" 
+              src={logoUrl} 
+              alt="Restaurant Logo" 
               className="h-8 w-auto"
             />
             <div className="ml-3">
               <h2 className="text-sm font-semibold text-foreground">
-                {tenant?.name || 'Restaurant'}
+                {restaurantName}
               </h2>
               <Badge variant="secondary" className="text-xs">
                 {tenant?.status || 'Active'}
