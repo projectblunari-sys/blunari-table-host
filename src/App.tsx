@@ -11,6 +11,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import DashboardHome from "./pages/DashboardHome";
 import BookingManagement from "./pages/BookingManagement";
+import TableManagement from "./pages/TableManagement";
+import CustomerManagement from "./pages/CustomerManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,8 +35,8 @@ const App = () => (
             }>
               <Route index element={<DashboardHome />} />
               <Route path="bookings" element={<BookingManagement />} />
-              <Route path="tables" element={<div>Table Management - Coming Soon</div>} />
-              <Route path="customers" element={<div>Customer Management - Coming Soon</div>} />
+              <Route path="tables" element={<TableManagement />} />
+              <Route path="customers" element={<CustomerManagement />} />
               <Route path="waitlist" element={<div>Waitlist - Coming Soon</div>} />
               <Route path="staff" element={<div>Staff Management - Coming Soon</div>} />
               <Route path="messages" element={<div>Messages - Coming Soon</div>} />
