@@ -13,6 +13,8 @@ import DashboardHome from "./pages/DashboardHome";
 import BookingManagement from "./pages/BookingManagement";
 import TableManagement from "./pages/TableManagement";
 import CustomerManagement from "./pages/CustomerManagement";
+import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,8 +42,8 @@ const App = () => (
               <Route path="waitlist" element={<div>Waitlist - Coming Soon</div>} />
               <Route path="staff" element={<div>Staff Management - Coming Soon</div>} />
               <Route path="messages" element={<div>Messages - Coming Soon</div>} />
-              <Route path="analytics" element={<div>Analytics - Coming Soon</div>} />
-              <Route path="settings" element={<div>Settings - Coming Soon</div>} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
