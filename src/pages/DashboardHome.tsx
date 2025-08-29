@@ -1,91 +1,29 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { useTenant } from '@/hooks/useTenant';
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { useAlertSystem } from '@/hooks/useAlertSystem';
 import TenantAccessDisplay from '@/components/dashboard/TenantAccessDisplay';
-import { useTodaysBookings } from '@/hooks/useRealtimeBookings';
 import TodaysBookings from '@/components/dashboard/TodaysBookings';
 import QuickActions from '@/components/dashboard/QuickActions';
 import TableStatus from '@/components/dashboard/TableStatus';
+import MetricsCard from '@/components/dashboard/MetricsCard';
+import PerformanceTrendsChart from '@/components/dashboard/PerformanceTrendsChart';
+import AlertSystem from '@/components/dashboard/AlertSystem';
 import { 
   Users, 
   Calendar, 
   Clock, 
   TrendingUp, 
   DollarSign, 
-  Star,
-  AlertCircle,
-  CheckCircle
+  Target,
+  UserX
 } from 'lucide-react';
 
 const DashboardHome: React.FC = () => {
   const { tenant, accessType, tenantSlug } = useTenant();
-  const { bookings, isLoading } = useTodaysBookings(tenant?.id);
-
-  // Calculate today's metrics
-  const todayMetrics = React.useMemo(() => {
-    if (!bookings) return { total: 0, confirmed: 0, seated: 0, completed: 0, revenue: 0 };
-    
-    return {
-      total: bookings.length,
-      confirmed: bookings.filter(b => b.status === 'confirmed').length,
-      seated: bookings.filter(b => b.status === 'seated').length,
-      completed: bookings.filter(b => b.status === 'completed').length,
-      revenue: bookings.filter(b => b.status === 'completed').length * 85, // Estimated average
-    };
-  }, [bookings]);
-
-  const metrics = [
-    {
-      title: "Today's Revenue",
-      value: `$${todayMetrics.revenue.toLocaleString()}`,
-      icon: DollarSign,
-      trend: "+12%",
-      color: "text-success",
-      bgColor: "bg-success/10"
-    },
-    {
-      title: "Total Bookings",
-      value: todayMetrics.total.toString(),
-      icon: Calendar,
-      trend: "+5",
-      color: "text-primary",
-      bgColor: "bg-primary/10"
-    },
-    {
-      title: "Seated Guests",
-      value: todayMetrics.seated.toString(),
-      icon: Users,
-      trend: `${todayMetrics.seated}/${todayMetrics.total}`,
-      color: "text-secondary",
-      bgColor: "bg-secondary/10"
-    },
-    {
-      title: "Average Wait",
-      value: "12 min",
-      icon: Clock,
-      trend: "-3 min",
-      color: "text-accent",
-      bgColor: "bg-accent/10"
-    }
-  ];
-
-  const alerts = [
-    {
-      type: 'warning',
-      message: 'Table 5 has been occupied for 2+ hours',
-      time: '10 minutes ago',
-      icon: AlertCircle
-    },
-    {
-      type: 'success',
-      message: 'Kitchen prep completed for 7:30 PM reservations',
-      time: '15 minutes ago',
-      icon: CheckCircle
-    }
-  ];
+  const { metrics, performanceTrends, isLoading } = useDashboardMetrics(tenant?.id);
+  const { alerts, dismissAlert, clearAllAlerts } = useAlertSystem(tenant?.id);
 
   return (
     <div className="space-y-6">
@@ -117,59 +55,59 @@ const DashboardHome: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
-        {metrics.map((metric, index) => (
-          <Card key={metric.title} className="relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {metric.title}
-              </CardTitle>
-              <div className={`h-8 w-8 rounded-lg ${metric.bgColor} flex items-center justify-center`}>
-                <metric.icon className={`h-4 w-4 ${metric.color}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metric.value}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className={metric.color}>{metric.trend}</span> from yesterday
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+        <MetricsCard
+          title="Today's Revenue"
+          value={metrics.todayBookings.revenue}
+          trend={metrics.todayBookings.trend * 85} // Revenue trend
+          icon={DollarSign}
+          color="text-success"
+          bgColor="bg-success/10"
+          format="currency"
+          subtitle={`${metrics.todayBookings.count} completed bookings`}
+        />
+        <MetricsCard
+          title="Occupancy Rate"
+          value={metrics.occupancyRate.current}
+          trend={metrics.occupancyRate.trend}
+          icon={Target}
+          color="text-primary"
+          bgColor="bg-primary/10"
+          format="percentage"
+          subtitle={`Target: ${metrics.occupancyRate.target}%`}
+        />
+        <MetricsCard
+          title="Average Spend"
+          value={metrics.averageSpend.amount}
+          trend={metrics.averageSpend.trend}
+          icon={TrendingUp}
+          color="text-secondary"
+          bgColor="bg-secondary/10"
+          format="currency"
+          subtitle="Per completed booking"
+        />
+        <MetricsCard
+          title="No-Show Rate"
+          value={metrics.noshowRate.percentage}
+          trend={-metrics.noshowRate.trend} // Negative trend is good for no-shows
+          icon={UserX}
+          color="text-accent"
+          bgColor="bg-accent/10"
+          format="percentage"
+          subtitle="Of total bookings"
+        />
       </motion.div>
 
-      {/* Alerts */}
-      {alerts.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
-                Recent Alerts
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {alerts.map((alert, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
-                  <alert.icon className={`h-5 w-5 mt-0.5 ${
-                    alert.type === 'warning' ? 'text-warning' : 'text-success'
-                  }`} />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{alert.message}</p>
-                    <p className="text-xs text-muted-foreground">{alert.time}</p>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    Dismiss
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+      {/* Performance Trends Chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <PerformanceTrendsChart 
+          data={performanceTrends} 
+          isLoading={isLoading}
+        />
+      </motion.div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -183,12 +121,18 @@ const DashboardHome: React.FC = () => {
           <TodaysBookings />
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Alerts and Quick Actions */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="space-y-6"
         >
+          <AlertSystem 
+            alerts={alerts}
+            onDismiss={dismissAlert}
+            onClearAll={clearAllAlerts}
+          />
           <QuickActions />
         </motion.div>
       </div>
