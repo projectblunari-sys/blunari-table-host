@@ -27,9 +27,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Handle different access scenarios
+  // SECURITY FIX: All access now requires authentication
+  // No more unrestricted domain access
+  if (!user) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  // Handle different access scenarios (only for authenticated users)
   if (accessType === 'domain') {
-    // Domain-based access (public restaurant dashboard)
+    // Domain-based access (authenticated restaurant staff only)
     if (!tenant) {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -58,15 +64,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       );
     }
 
-    // For domain access, we don't require user authentication
-    // The dashboard can be accessed by restaurant staff or customers
+    // Verify user has access to this tenant
+    // This will be validated by the new RLS policies on the backend
     return <>{children}</>;
   }
 
   // User-based access (admin or staff access)
-  if (!user) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
 
   if (!tenant) {
     return (
