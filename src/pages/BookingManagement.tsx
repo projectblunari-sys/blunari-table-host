@@ -3,62 +3,122 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useTenant } from '@/hooks/useTenant';
-import { useRealtimeBookings } from '@/hooks/useRealtimeBookings';
+import { useAdvancedBookings } from '@/hooks/useAdvancedBookings';
 import BookingCard from '@/components/dashboard/BookingCard';
+import SmartBookingWizard from '@/components/booking/SmartBookingWizard';
+import AdvancedFilters from '@/components/booking/AdvancedFilters';
 import { 
   Plus, 
-  Search, 
-  Filter, 
-  Calendar as CalendarIcon,
-  Clock,
-  Users,
-  Phone,
-  Mail
+  CalendarIcon,
+  CheckSquare,
+  Square,
+  Trash2,
+  Send,
+  Edit,
+  MoreHorizontal,
+  MessageSquare,
+  Activity
 } from 'lucide-react';
 
 const BookingManagement: React.FC = () => {
   const { tenant } = useTenant();
-  const { bookings, isLoading, isConnected } = useRealtimeBookings(tenant?.id);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const {
+    bookings,
+    isLoading,
+    filters,
+    setFilters,
+    selectedBookings,
+    setSelectedBookings,
+    bulkOperation,
+    isBulkOperationPending,
+    updateBooking
+  } = useAdvancedBookings(tenant?.id);
 
-  // Filter bookings based on search term and status
-  const filteredBookings = React.useMemo(() => {
-    if (!bookings) return [];
-    
-    return bookings.filter(booking => {
-      const matchesSearch = booking.guest_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           booking.guest_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (booking.guest_phone && booking.guest_phone.includes(searchTerm));
-      
-      const matchesStatus = selectedStatus === 'all' || booking.status === selectedStatus;
-      
-      return matchesSearch && matchesStatus;
-    });
-  }, [bookings, searchTerm, selectedStatus]);
+  const [showWizard, setShowWizard] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
   // Group bookings by status
   const bookingsByStatus = React.useMemo(() => {
     const groups = {
-      confirmed: filteredBookings.filter(b => b.status === 'confirmed'),
-      seated: filteredBookings.filter(b => b.status === 'seated'),
-      completed: filteredBookings.filter(b => b.status === 'completed'),
-      cancelled: filteredBookings.filter(b => b.status === 'cancelled'),
-      no_show: filteredBookings.filter(b => b.status === 'no_show'),
+      confirmed: bookings.filter(b => b.status === 'confirmed'),
+      pending: bookings.filter(b => b.status === 'pending'),
+      seated: bookings.filter(b => b.status === 'seated'),
+      completed: bookings.filter(b => b.status === 'completed'),
+      cancelled: bookings.filter(b => b.status === 'cancelled'),
+      noshow: bookings.filter(b => b.status === 'noshow'),
     };
     return groups;
-  }, [filteredBookings]);
+  }, [bookings]);
+
+  const currentBookings = selectedStatus === 'all' ? bookings : bookingsByStatus[selectedStatus as keyof typeof bookingsByStatus] || [];
 
   const statusCounts = {
-    all: filteredBookings.length,
+    all: bookings.length,
     confirmed: bookingsByStatus.confirmed.length,
+    pending: bookingsByStatus.pending.length,
     seated: bookingsByStatus.seated.length,
     completed: bookingsByStatus.completed.length,
     cancelled: bookingsByStatus.cancelled.length,
-    no_show: bookingsByStatus.no_show.length,
+    noshow: bookingsByStatus.noshow.length,
+  };
+
+  const handleSelectAll = () => {
+    if (selectedBookings.length === currentBookings.length) {
+      setSelectedBookings([]);
+    } else {
+      setSelectedBookings(currentBookings.map(b => b.id));
+    }
+  };
+
+  const handleSelectBooking = (bookingId: string) => {
+    setSelectedBookings(prev => 
+      prev.includes(bookingId) 
+        ? prev.filter(id => id !== bookingId)
+        : [...prev, bookingId]
+    );
+  };
+
+  const handleBulkStatusUpdate = (status: string) => {
+    bulkOperation({
+      type: 'status_update',
+      bookingIds: selectedBookings,
+      data: { status }
+    });
+  };
+
+  const handleBulkNotification = () => {
+    bulkOperation({
+      type: 'send_notification',
+      bookingIds: selectedBookings,
+      data: { 
+        type: 'reminder',
+        template: 'booking_reminder' 
+      }
+    });
+  };
+
+  const handleBulkDelete = () => {
+    bulkOperation({
+      type: 'delete',
+      bookingIds: selectedBookings,
+      data: {}
+    });
+  };
+
+  const handleExportCSV = () => {
+    const bookingsToExport = selectedBookings.length > 0 
+      ? currentBookings.filter(b => selectedBookings.includes(b.id))
+      : currentBookings;
+    
+    bulkOperation({
+      type: 'export',
+      bookingIds: bookingsToExport.map(b => b.id),
+      data: {}
+    });
   };
 
   return (
@@ -73,53 +133,117 @@ const BookingManagement: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Booking Management</h1>
           <p className="text-muted-foreground">
-            Manage all your restaurant reservations and walk-ins
+            Comprehensive booking lifecycle management with smart features
           </p>
         </div>
         
         <div className="flex items-center gap-2">
-          <Badge variant={isConnected ? "default" : "destructive"}>
-            {isConnected ? 'Live Updates' : 'Offline'}
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Activity className="h-3 w-3" />
+            Real-time Updates
           </Badge>
-          <Button>
+          <Button onClick={() => setShowWizard(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            New Booking
+            Smart Booking
           </Button>
         </div>
       </motion.div>
 
-      {/* Search and Filters */}
+      {/* Advanced Filters */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, email, or phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <CalendarIcon className="h-4 w-4 mr-2" />
-                  Date Range
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <AdvancedFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          totalBookings={bookings.length}
+          onExportCSV={handleExportCSV}
+        />
       </motion.div>
+
+      {/* Bulk Actions */}
+      {selectedBookings.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card>
+            <CardContent className="py-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selectedBookings.length === currentBookings.length}
+                    onCheckedChange={handleSelectAll}
+                  />
+                  <span className="font-medium">
+                    {selectedBookings.length} of {currentBookings.length} selected
+                  </span>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkStatusUpdate('confirmed')}
+                    disabled={isBulkOperationPending}
+                  >
+                    <CheckSquare className="h-4 w-4 mr-1" />
+                    Confirm
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkStatusUpdate('seated')}
+                    disabled={isBulkOperationPending}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Seat
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBulkNotification}
+                    disabled={isBulkOperationPending}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-1" />
+                    Notify
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={isBulkOperationPending}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Selected Bookings</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete {selectedBookings.length} booking(s)? 
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleBulkDelete}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Booking Status Tabs */}
       <motion.div
@@ -128,11 +252,17 @@ const BookingManagement: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <Tabs value={selectedStatus} onValueChange={setSelectedStatus}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="all" className="flex items-center gap-2">
               All
               <Badge variant="secondary" className="text-xs">
                 {statusCounts.all}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="flex items-center gap-2">
+              Pending
+              <Badge variant="secondary" className="text-xs">
+                {statusCounts.pending}
               </Badge>
             </TabsTrigger>
             <TabsTrigger value="confirmed" className="flex items-center gap-2">
@@ -159,33 +289,48 @@ const BookingManagement: React.FC = () => {
                 {statusCounts.cancelled}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="no_show" className="flex items-center gap-2">
+            <TabsTrigger value="noshow" className="flex items-center gap-2">
               No Show
               <Badge variant="secondary" className="text-xs">
-                {statusCounts.no_show}
+                {statusCounts.noshow}
               </Badge>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="all" className="mt-6">
-            <BookingsList bookings={filteredBookings} isLoading={isLoading} />
+          <TabsContent value={selectedStatus} className="mt-6">
+            <BookingsList 
+              bookings={currentBookings} 
+              isLoading={isLoading}
+              selectedBookings={selectedBookings}
+              onSelectBooking={handleSelectBooking}
+              onUpdateBooking={updateBooking}
+            />
           </TabsContent>
-          
-          {Object.entries(bookingsByStatus).map(([status, statusBookings]) => (
-            <TabsContent key={status} value={status} className="mt-6">
-              <BookingsList bookings={statusBookings} isLoading={isLoading} />
-            </TabsContent>
-          ))}
         </Tabs>
       </motion.div>
+
+      {/* Smart Booking Wizard */}
+      <SmartBookingWizard 
+        open={showWizard}
+        onOpenChange={setShowWizard}
+      />
     </div>
   );
 };
 
-// Bookings List Component
-const BookingsList: React.FC<{ bookings: any[]; isLoading: boolean }> = ({ 
+// Enhanced Bookings List Component
+const BookingsList: React.FC<{ 
+  bookings: any[]; 
+  isLoading: boolean;
+  selectedBookings: string[];
+  onSelectBooking: (id: string) => void;
+  onUpdateBooking: (data: { id: string; updates: any }) => void;
+}> = ({ 
   bookings, 
-  isLoading 
+  isLoading, 
+  selectedBookings,
+  onSelectBooking,
+  onUpdateBooking
 }) => {
   if (isLoading) {
     return (
@@ -227,8 +372,19 @@ const BookingsList: React.FC<{ bookings: any[]; isLoading: boolean }> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.05 }}
+          className="relative"
         >
-          <BookingCard booking={booking} />
+          <div className="absolute top-2 left-2 z-10">
+            <Checkbox
+              checked={selectedBookings.includes(booking.id)}
+              onCheckedChange={() => onSelectBooking(booking.id)}
+              className="bg-background border-2"
+            />
+          </div>
+          <BookingCard 
+            booking={booking} 
+            onUpdate={(updates) => onUpdateBooking({ id: booking.id, updates })}
+          />
         </motion.div>
       ))}
     </div>

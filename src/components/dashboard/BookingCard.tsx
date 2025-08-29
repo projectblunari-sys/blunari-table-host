@@ -16,9 +16,10 @@ interface Booking {
 
 interface BookingCardProps {
   booking: Booking;
+  onUpdate?: (updates: Partial<Booking>) => void;
 }
 
-const BookingCard = ({ booking }: BookingCardProps) => {
+const BookingCard = ({ booking, onUpdate }: BookingCardProps) => {
   const getStatusColor = (status: Booking['status']) => {
     switch (status) {
       case 'confirmed':
@@ -87,7 +88,11 @@ const BookingCard = ({ booking }: BookingCardProps) => {
             Message
           </Button>
           {booking.status === 'confirmed' && (
-            <Button size="sm" className="flex-1 bg-gradient-primary">
+            <Button 
+              size="sm" 
+              className="flex-1 bg-gradient-primary"
+              onClick={() => onUpdate?.({ status: 'seated' })}
+            >
               Seat
             </Button>
           )}
