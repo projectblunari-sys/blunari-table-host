@@ -2232,6 +2232,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_rate_limits: {
+        Row: {
+          count: number
+          created_at: string
+          event_type: string
+          id: string
+          identifier: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          event_type: string
+          id?: string
+          identifier: string
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          event_type?: string
+          id?: string
+          identifier?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       service_health_status: {
         Row: {
           checked_at: string
@@ -3166,6 +3193,17 @@ export type Database = {
       }
       validate_api_key_permissions: {
         Args: { p_key_hash: string; p_required_permission: string }
+        Returns: boolean
+      }
+      validate_role_assignment: {
+        Args: {
+          assigner_role: Database["public"]["Enums"]["employee_role"]
+          target_role: Database["public"]["Enums"]["employee_role"]
+        }
+        Returns: boolean
+      }
+      validate_tenant_access: {
+        Args: { tenant_uuid: string }
         Returns: boolean
       }
       verify_domain: {
