@@ -75,9 +75,9 @@ export const useAnalytics = (tenantId?: string, dateRange?: { start: string; end
     const totalCovers = completedBookings.reduce((sum, b) => sum + b.party_size, 0);
 
     // Group by day for daily analytics
-    const dailyData = groupBookingsByPeriod(completedBookings, 'day');
-    const weeklyData = groupBookingsByPeriod(completedBookings, 'week');
-    const monthlyData = groupBookingsByPeriod(completedBookings, 'month');
+    const dailyData = groupBookingsByDay(completedBookings);
+    const weeklyData = groupBookingsByWeek(completedBookings);
+    const monthlyData = groupBookingsByMonth(completedBookings);
 
     return {
       daily: dailyData,
@@ -191,39 +191,59 @@ function getDefaultOperationalMetrics(): OperationalMetrics {
   };
 }
 
-function groupBookingsByPeriod(bookings: any[], period: 'day' | 'week' | 'month') {
+function groupBookingsByDay(bookings: any[]) {
   const groups: { [key: string]: any[] } = {};
   
   bookings.forEach(booking => {
     const date = new Date(booking.booking_time);
-    let key: string;
-    
-    switch (period) {
-      case 'day':
-        key = date.toISOString().split('T')[0];
-        break;
-      case 'week':
-        const week = getWeekNumber(date);
-        key = `${date.getFullYear()}-W${week}`;
-        break;
-      case 'month':
-        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        break;
-    }
+    const key = date.toISOString().split('T')[0];
     
     if (!groups[key]) groups[key] = [];
     groups[key].push(booking);
   });
   
-  return Object.entries(groups).map(([key, bookings]) => {
-    if (period === 'day') {
-      return { date: key, revenue: bookings.length * 85, covers: bookings.reduce((sum, b) => sum + b.party_size, 0) };
-    } else if (period === 'week') {
-      return { week: key, revenue: bookings.length * 85, covers: bookings.reduce((sum, b) => sum + b.party_size, 0) };
-    } else {
-      return { month: key, revenue: bookings.length * 85, covers: bookings.reduce((sum, b) => sum + b.party_size, 0) };
-    }
+  return Object.entries(groups).map(([date, bookings]) => ({
+    date,
+    revenue: bookings.length * 85,
+    covers: bookings.reduce((sum, b) => sum + b.party_size, 0),
+  }));
+}
+
+function groupBookingsByWeek(bookings: any[]) {
+  const groups: { [key: string]: any[] } = {};
+  
+  bookings.forEach(booking => {
+    const date = new Date(booking.booking_time);
+    const week = getWeekNumber(date);
+    const key = `${date.getFullYear()}-W${week}`;
+    
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(booking);
   });
+  
+  return Object.entries(groups).map(([week, bookings]) => ({
+    week,
+    revenue: bookings.length * 85,
+    covers: bookings.reduce((sum, b) => sum + b.party_size, 0),
+  }));
+}
+
+function groupBookingsByMonth(bookings: any[]) {
+  const groups: { [key: string]: any[] } = {};
+  
+  bookings.forEach(booking => {
+    const date = new Date(booking.booking_time);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(booking);
+  });
+  
+  return Object.entries(groups).map(([month, bookings]) => ({
+    month,
+    revenue: bookings.length * 85,
+    covers: bookings.reduce((sum, b) => sum + b.party_size, 0),
+  }));
 }
 
 function calculatePeakHours(bookings: any[]) {
