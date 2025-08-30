@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import * as THREE from 'three';
 
-// Enhanced Round Table with realistic materials and details
+// Enhanced Round Table with realistic materials and details  
 function RoundTable({ x, y, r, rotation, label, seats, confidence }: { 
   x: number; 
   y: number; 
@@ -37,41 +37,30 @@ function RoundTable({ x, y, r, rotation, label, seats, confidence }: {
   const [hovered, setHovered] = useState(false);
   const [selected, setSelected] = useState(false);
 
-  useFrame((state) => {
-    if (groupRef.current && hovered) {
-      const time = state.clock.elapsedTime;
-      if (time % 0.1 < 0.01) {
-        groupRef.current.rotation.y = rotation + Math.sin(time * 1) * 0.02;
-        groupRef.current.position.y = Math.sin(time * 2) * 0.01;
-      }
-    }
-  });
-
   const tableColor = confidence && confidence > 0.7 ? '#8B4513' : '#A0522D';
   const topColor = hovered ? '#F4D03F' : selected ? '#E8D5B7' : '#DEB887';
   const glowColor = hovered ? '#FFD700' : selected ? '#FFA500' : 'transparent';
 
   return (
-    <Float speed={0.5} rotationIntensity={0.1} floatIntensity={0.1}>
-      <group 
-        ref={groupRef}
-        position={[x - 5, 0, y - 5]} 
-        rotation={[0, rotation, 0]}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={(e) => {
-          e.stopPropagation();
-          setHovered(false);
-          document.body.style.cursor = 'default';
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelected(!selected);
-        }}
-      >
+    <group 
+      ref={groupRef}
+      position={[x - 5, 0, y - 5]} 
+      rotation={[0, rotation, 0]}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        setHovered(false);
+        document.body.style.cursor = 'default';
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setSelected(!selected);
+      }}
+    >
         {/* Ambient glow effect */}
         {(hovered || selected) && (
           <pointLight
@@ -176,17 +165,7 @@ function RoundTable({ x, y, r, rotation, label, seats, confidence }: {
           </Html>
         )}
 
-        {/* Sparkle effects for high confidence tables */}
-        {confidence && confidence > 0.8 && (
-          <Sparkles 
-            count={5} 
-            scale={2} 
-            size={2} 
-            speed={0.3}
-          />
-        )}
       </group>
-    </Float>
   );
 }
 
@@ -205,40 +184,29 @@ function RectTable({ x, y, w, h, rotation, label, seats, confidence }: {
   const [hovered, setHovered] = useState(false);
   const [selected, setSelected] = useState(false);
 
-  useFrame((state) => {
-    if (groupRef.current && hovered) {
-      const time = state.clock.elapsedTime;
-      if (time % 0.1 < 0.01) {
-        groupRef.current.rotation.y = rotation + Math.sin(time * 1) * 0.02;
-        groupRef.current.position.y = Math.sin(time * 2) * 0.01;
-      }
-    }
-  });
-
   const tableColor = confidence && confidence > 0.7 ? '#8B4513' : '#A0522D';
   const topColor = hovered ? '#F4D03F' : selected ? '#E8D5B7' : '#DEB887';
 
   return (
-    <Float speed={0.5} rotationIntensity={0.1} floatIntensity={0.1}>
-      <group 
-        ref={groupRef}
-        position={[x - 5, 0, y - 5]} 
-        rotation={[0, rotation, 0]}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={(e) => {
-          e.stopPropagation();
-          setHovered(false);
-          document.body.style.cursor = 'default';
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelected(!selected);
-        }}
-      >
+    <group 
+      ref={groupRef}
+      position={[x - 5, 0, y - 5]} 
+      rotation={[0, rotation, 0]}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        setHovered(false);
+        document.body.style.cursor = 'default';
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setSelected(!selected);
+      }}
+    >
         {/* Contact shadow */}
         <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[w * 1.1, h * 1.1]} />
@@ -340,16 +308,7 @@ function RectTable({ x, y, w, h, rotation, label, seats, confidence }: {
           </Html>
         )}
 
-        {confidence && confidence > 0.8 && (
-          <Sparkles 
-            count={8} 
-            scale={2} 
-            size={2} 
-            speed={0.3}
-          />
-        )}
       </group>
-    </Float>
   );
 }
 
