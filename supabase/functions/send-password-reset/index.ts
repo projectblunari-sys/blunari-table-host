@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -279,8 +280,12 @@ async function handlePasswordReset(supabase: any, email: string, code: string, n
 
 async function sendSecurityCodeEmail(email: string, securityCode: string) {
   try {
+    const smtpUsername = Deno.env.get('FASTMAIL_SMTP_USERNAME');
+    const smtpPassword = Deno.env.get('FASTMAIL_SMTP_PASSWORD');
+    const fromEmail = Deno.env.get('FASTMAIL_FROM_EMAIL');
+
     if (isDevelopment) {
-      // Development mode: Log the code to console
+      // Development mode: Log the code to console AND send email if configured
       console.log(`
       ============================================
       SECURITY CODE EMAIL (DEVELOPMENT MODE)
@@ -293,19 +298,57 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
       This code will expire in 10 minutes.
       ============================================
       `);
-    } else {
-      // Production mode: Send actual email
-      // TODO: Integrate with actual email service (Resend, SendGrid, etc.)
-      console.log(`Security code email sent to ${email} (production mode)`);
     }
-    
-    // TODO: Replace with actual email service integration
-    // Options: Resend, SendGrid, AWS SES, etc.
+
+    // Send email via Fastmail SMTP if credentials are available
+    if (smtpUsername && smtpPassword && fromEmail) {
+      const client = new SMTPClient({
+        connection: {
+          hostname: "smtp.fastmail.com",
+          port: 587,
+          tls: true,
+          auth: {
+            username: smtpUsername,
+            password: smtpPassword,
+          },
+        },
+      });
+
+      await client.send({
+        from: fromEmail,
+        to: email,
+        subject: "Password Reset Security Code",
+        content: `Your password reset security code is: ${securityCode}
+
+This code will expire in 10 minutes.
+
+If you didn't request this password reset, please ignore this email.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Password Reset Security Code</h2>
+            <p>Your password reset security code is:</p>
+            <div style="background: #f5f5f5; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 20px 0;">
+              ${securityCode}
+            </div>
+            <p>This code will expire in 10 minutes.</p>
+            <p style="color: #666; font-size: 14px;">If you didn't request this password reset, please ignore this email.</p>
+          </div>
+        `,
+      });
+
+      await client.close();
+      console.log(`Security code email sent successfully to ${email}`);
+    } else {
+      console.log("SMTP credentials not configured, email not sent");
+      if (isDevelopment) {
+        console.log("Check the security code in the logs above for testing");
+      }
+    }
     
     return Promise.resolve();
   } catch (error: any) {
     console.error("Error sending email:", error);
-    throw new Error("Failed to send security code email");
+    throw new Error(`Failed to send security code email: ${error.message}`);
   }
 }
 
