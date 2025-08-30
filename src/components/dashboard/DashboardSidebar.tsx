@@ -65,8 +65,8 @@ const DashboardSidebar: React.FC = () => {
         animate={{ x: sidebarOpen ? 0 : -300 }}
         transition={{ type: 'spring', damping: 20, stiffness: 100 }}
         className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border
-          lg:translate-x-0 lg:static lg:inset-0
+          fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex-shrink-0
+          lg:relative lg:translate-x-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
