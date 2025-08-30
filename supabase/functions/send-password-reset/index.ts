@@ -36,8 +36,9 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get client IP for rate limiting
-    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || '127.0.0.1';
+    // Get client IP for rate limiting - handle comma-separated IPs
+    const clientIPRaw = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || '127.0.0.1';
+    const clientIP = clientIPRaw.split(',')[0].trim(); // Take first IP if comma-separated
     const userAgent = req.headers.get('user-agent') || 'Unknown';
 
     // If code and newPassword are provided, verify code and reset password
@@ -80,7 +81,8 @@ async function handleCodeRequest(supabase: any, email: string, clientIP: string,
         return new Response(
           JSON.stringify({ 
             error: "Account temporarily locked due to too many attempts",
-            locked_until: rateLimitResult.locked_until
+            locked_until: rateLimitResult.locked_until,
+            success: false
           }),
           {
             status: 429,
@@ -92,7 +94,8 @@ async function handleCodeRequest(supabase: any, email: string, clientIP: string,
       return new Response(
         JSON.stringify({ 
           error: "Rate limit exceeded. Please try again later.",
-          attempts_remaining: rateLimitResult.attempts_remaining
+          attempts_remaining: rateLimitResult.attempts_remaining || 0,
+          success: false
         }),
         {
           status: 429,
@@ -178,7 +181,10 @@ async function handlePasswordReset(supabase: any, email: string, code: string, n
     if (!resetCodes || resetCodes.length === 0) {
       await logAuditEvent(supabase, email, 'verify_code', false, 'invalid_code', clientIP, userAgent);
       return new Response(
-        JSON.stringify({ error: "Invalid or expired security code" }),
+        JSON.stringify({ 
+          error: "Invalid or expired security code. Please request a new one.",
+          success: false
+        }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -214,7 +220,10 @@ async function handlePasswordReset(supabase: any, email: string, code: string, n
     if (!user) {
       await logAuditEvent(supabase, email, 'reset_password', false, 'user_not_found', clientIP, userAgent);
       return new Response(
-        JSON.stringify({ error: "User not found" }),
+        JSON.stringify({ 
+          error: "User not found. Please check your email address.",
+          success: false
+        }),
         {
           status: 404,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -232,7 +241,10 @@ async function handlePasswordReset(supabase: any, email: string, code: string, n
       console.error("Error resetting password:", passwordError);
       await logAuditEvent(supabase, email, 'reset_password', false, 'auth_error', clientIP, userAgent);
       return new Response(
-        JSON.stringify({ error: "Failed to reset password. Please try again." }),
+        JSON.stringify({ 
+          error: "Failed to reset password. Please try again.",
+          success: false
+        }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
