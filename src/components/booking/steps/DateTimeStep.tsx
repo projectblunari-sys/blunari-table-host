@@ -99,24 +99,26 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
             Party of {partySize} • {tenant.name}
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           {/* Date picker */}
           <div>
-            <h3 className="font-medium mb-3">Choose a date</h3>
-            <CalendarComponent
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleDateSelect}
-              disabled={isDateDisabled}
-              fromDate={new Date()}
-              toDate={addDays(new Date(), 60)}
-              className="rounded-md border"
-            />
+            <h3 className="font-medium mb-4">Choose a date</h3>
+            <div className="flex justify-center">
+              <CalendarComponent
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                disabled={isDateDisabled}
+                fromDate={new Date()}
+                toDate={addDays(new Date(), 60)}
+                className="rounded-md border w-full max-w-sm"
+              />
+            </div>
           </div>
 
           {/* Time slots */}
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="font-medium">Available times</h3>
               <Button
                 variant="ghost"
@@ -129,9 +131,9 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
             </div>
 
             {loadingSlots ? (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
+                  <Skeleton key={i} className="h-20 w-full" />
                 ))}
               </div>
             ) : error ? (
@@ -152,36 +154,37 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
                 <p className="text-sm">Try selecting a different date</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* Main slots */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {availability.slots.map((slot, index) => (
                     <motion.div 
                       key={index}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
+                      className="w-full"
                     >
                       <Button
                         variant="outline"
-                        className="w-full h-auto p-3 flex flex-col items-center gap-1"
+                        className="w-full h-auto p-4 flex flex-col items-center gap-2 hover:bg-accent/50 transition-colors"
                         onClick={() => handleSlotSelect(slot)}
                         disabled={parentLoading}
                       >
-                        <div className="font-semibold">
+                        <div className="font-semibold text-base">
                           {formatSlotTime(slot.time)}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {slot.available_tables} table{slot.available_tables !== 1 ? 's' : ''}
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap justify-center gap-1 mt-1">
                           {slot.optimal && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-xs px-2 py-1">
                               <TrendingUp className="w-3 h-3 mr-1" />
                               Optimal
                             </Badge>
                           )}
                           {slot.revenue_projection && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="text-xs px-2 py-1">
                               ${slot.revenue_projection}
                             </Badge>
                           )}
@@ -194,15 +197,15 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
                 {/* Alternative times if provided by API */}
                 {availability.alternatives && availability.alternatives.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-medium mb-2 text-muted-foreground">
+                    <h4 className="text-sm font-medium mb-3 text-muted-foreground">
                       Alternative times
                     </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {availability.alternatives.map((slot, index) => (
                         <Button
                           key={index}
                           variant="ghost"
-                          className="w-full h-auto p-2 flex flex-col items-center gap-1 text-muted-foreground"
+                          className="w-full h-auto p-3 flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground"
                           onClick={() => handleSlotSelect(slot)}
                           disabled={parentLoading}
                         >
