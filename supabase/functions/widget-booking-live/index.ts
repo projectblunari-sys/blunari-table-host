@@ -31,8 +31,31 @@ serve(async (req) => {
       )
     }
 
-    const requestData = await req.json()
-    console.log('Live booking request:', requestData)
+    let requestData;
+    try {
+      const bodyText = await req.text();
+      console.log('Raw request body:', bodyText);
+      
+      if (!bodyText || bodyText.trim() === '') {
+        throw new Error('Empty request body');
+      }
+      
+      requestData = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: { code: 'INVALID_REQUEST', message: 'Invalid request body' } 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    console.log('Parsed request data:', requestData)
 
     const { action } = requestData
 

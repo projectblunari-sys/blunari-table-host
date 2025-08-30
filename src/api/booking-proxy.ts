@@ -25,18 +25,20 @@ async function callEdgeFunction(functionName: string, body: any = {}): Promise<a
     console.log(`Calling edge function: ${functionName}`, body);
     
     const { data, error } = await supabase.functions.invoke(functionName, {
-      body,
+      body: JSON.stringify(body),
       headers: {
         'Content-Type': 'application/json',
       },
     });
+
+    console.log('Edge function response:', { data, error });
 
     if (error) {
       console.error(`Edge function ${functionName} error:`, error);
       throw new BookingAPIError('EDGE_FUNCTION_ERROR', error.message, error);
     }
 
-    if (!data.success && data.error) {
+    if (data && !data.success && data.error) {
       throw new BookingAPIError(data.error.code || 'API_ERROR', data.error.message, data.error);
     }
 
