@@ -273,6 +273,14 @@ const WidgetPreview: React.FC = () => {
                     src={bookingUrl}
                     className={`w-full border-0 ${deviceConfigs[previewDevice].height}`}
                     title="Booking Widget Preview"
+                    onError={(e) => {
+                      console.error('Iframe loading error:', e);
+                      toast({
+                        title: "Preview Error",
+                        description: "Unable to load the booking widget preview. The widget may still work when embedded.",
+                        variant: "destructive",
+                      });
+                    }}
                   />
                 </CardContent>
               </Card>
