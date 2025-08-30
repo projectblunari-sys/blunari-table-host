@@ -71,9 +71,23 @@ serve(async (req) => {
       );
     }
 
-    console.log('Parsed request data:', requestData)
+    console.log('Parsed request data:', requestData);
 
-    const { action } = requestData
+    const { action } = requestData;
+
+    if (!action) {
+      console.error('No action specified in request:', requestData);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: { code: 'MISSING_ACTION', message: 'Action parameter is required' } 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     if (action === 'search') {
       return handleAvailabilitySearch(supabase, requestData)
@@ -118,10 +132,16 @@ async function handleAvailabilitySearch(supabase: any, requestData: any) {
       .from('tenants')
       .select('*')
       .eq('id', tenant_id)
-      .single()
+      .maybeSingle();
 
-    if (tenantError || !tenant) {
-      throw new Error('Tenant not found')
+    if (tenantError) {
+      console.error('Tenant query error:', tenantError);
+      throw new Error(`Failed to query tenant: ${tenantError.message}`);
+    }
+
+    if (!tenant) {
+      console.error('Tenant not found for ID:', tenant_id);
+      throw new Error(`Tenant not found: ${tenant_id}`);
     }
 
     // Call external Blunari API for availability search

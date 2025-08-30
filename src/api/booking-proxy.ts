@@ -39,17 +39,26 @@ async function callEdgeFunction(functionName: string, body: any = {}): Promise<a
     }
 
     if (!data) {
+      console.error('No data received from edge function');
       throw new BookingAPIError('NO_DATA', 'No data received from booking service');
+    }
+
+    console.log('Raw edge function data:', data);
+
+    // Handle different response formats
+    if (typeof data === 'string') {
+      try {
+        const parsedData = JSON.parse(data);
+        console.log('Parsed string response:', parsedData);
+        return parsedData;
+      } catch (parseError) {
+        console.error('Failed to parse string response:', parseError);
+        throw new BookingAPIError('PARSE_ERROR', 'Invalid response format from booking service');
+      }
     }
 
     if (data.success === false && data.error) {
       throw new BookingAPIError(data.error.code || 'API_ERROR', data.error.message, data.error);
-    }
-
-    // Handle case where success is not explicitly set but no error exists
-    if (data.success !== true && !data.slots && !data.hold_id && !data.reservation_id) {
-      console.warn('Unexpected response format:', data);
-      throw new BookingAPIError('INVALID_RESPONSE', 'Invalid response from booking service');
     }
 
     return data;

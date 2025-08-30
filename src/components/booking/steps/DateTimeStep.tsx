@@ -65,8 +65,23 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     } catch (err) {
       const error = err as Error;
       console.error('Availability search failed:', error);
-      setError(error.message);
-      toast.error('Failed to load availability: ' + error.message);
+      
+      // Handle specific error types
+      let errorMessage = 'Failed to load availability';
+      if (error.message.includes('TENANT_NOT_FOUND')) {
+        errorMessage = 'Restaurant configuration not found';
+      } else if (error.message.includes('EDGE_FUNCTION_ERROR')) {
+        errorMessage = 'Service temporarily unavailable';
+      } else if (error.message.includes('NETWORK_ERROR')) {
+        errorMessage = 'Network connection issue';
+      } else {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
+      toast.error('Failed to load availability', {
+        description: errorMessage
+      });
     } finally {
       setLoadingSlots(false);
     }
