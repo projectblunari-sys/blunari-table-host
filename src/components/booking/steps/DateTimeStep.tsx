@@ -41,8 +41,8 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     try {
       const searchRequest = {
         tenant_id: tenant.tenant_id,
-        party_size: partySize,
-        service_date: format(date, 'yyyy-MM-dd'),
+        party_size: Number(partySize), // Ensure it's a number
+        service_date: format(date, 'yyyy-MM-dd'), // Plain date string in YYYY-MM-DD format
       };
       
       console.log('Making availability search request:', searchRequest);

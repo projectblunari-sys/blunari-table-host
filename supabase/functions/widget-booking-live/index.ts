@@ -113,11 +113,11 @@ async function handleAvailabilitySearch(supabase: any, requestData: any) {
     
     const searchPayload = {
       tenant_id,
-      party_size,
-      service_date,
+      party_size: Number(party_size), // Ensure it's a number
+      service_date, // Already in YYYY-MM-DD format
       time_window: {
-        start: '12:00',
-        end: '21:00'
+        start: 'T12:00:00', // ISO time format
+        end: 'T21:00:00'   // ISO time format
       }
     }
 
@@ -230,7 +230,7 @@ async function handleCreateHold(supabase: any, requestData: any) {
     
     const holdPayload = {
       tenant_id,
-      party_size,
+      party_size: Number(party_size), // Ensure it's a number
       slot,
       policy_params: {}
     }
