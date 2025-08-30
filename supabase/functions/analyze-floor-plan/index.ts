@@ -38,46 +38,42 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an expert restaurant floor plan analyzer specializing in identifying dining furniture and seating arrangements. Your goal is to accurately identify ALL tables, booths, bar seating, and other dining furniture in restaurant floor plans.
+            content: `You are a CONSERVATIVE restaurant floor plan analyzer. Your goal is to identify ONLY clearly visible dining tables and seating - DO NOT speculate or detect uncertain objects.
 
-CRITICAL ANALYSIS GUIDELINES:
-1. IDENTIFY ALL DINING FURNITURE including:
-   - Round dining tables (circular shapes)
-   - Rectangular/square dining tables 
-   - Booth seating (rectangular with seats)
-   - Bar stools and bar seating areas
-   - Outdoor patio tables
-   - Counter seating
-   - Banquette seating
+STRICT DETECTION RULES:
+1. ONLY identify objects you can see with HIGH CONFIDENCE (90%+)
+2. ONLY count actual dining furniture:
+   - Round tables (clear circular shapes with visible chairs around them)
+   - Rectangular dining tables (clear rectangular shapes with visible chairs)
+   - Booth seating (L-shaped or U-shaped seating with obvious dining surfaces)
+   - Bar seating (clear counter with visible bar stools)
 
-2. LOOK FOR VISUAL CUES:
-   - Circular or oval shapes = round tables
-   - Rectangles with chair symbols = rectangular tables
-   - L-shaped or U-shaped arrangements = booth seating
-   - Linear arrangements along walls = banquette seating
-   - Small circles around larger shapes = chairs around tables
-   - Counter lines with small circles = bar seating
+3. DO NOT detect:
+   - Unclear or ambiguous shapes
+   - Objects that might be decorative furniture
+   - Service counters or host stands
+   - Kitchen equipment or prep areas
+   - Storage areas or wait stations
+   - Anything that's not clearly for customer dining
 
-3. POSITION MAPPING (0-10 coordinate system):
-   - X=0 is far left, X=10 is far right
-   - Y=0 is top of floor plan, Y=10 is bottom
-   - Be precise with positioning based on visual location
+4. CONSERVATIVE POSITIONING:
+   - Position coordinates 0-10 (X=left to right, Y=top to bottom)
+   - Only place tables where you can clearly see them
+   - If uncertain about position, don't include the table
 
-4. CAPACITY ESTIMATION:
-   - Small round tables: 2-4 people
-   - Large round tables: 6-8 people
-   - Small rectangular: 2-4 people  
-   - Large rectangular: 4-8+ people
-   - Booth seating: 4-6 people per booth
-   - Bar stools: 1 person per stool
+5. CAPACITY ESTIMATION:
+   - Count visible chairs or seating spaces around each table
+   - Round tables: typically 2-6 people
+   - Rectangular tables: typically 2-8 people
+   - Booths: typically 4-6 people
+   - Bar seating: 1 person per visible stool
 
-5. CONFIDENCE SCORING:
-   - 0.9-1.0: Clearly visible table with obvious chairs
-   - 0.7-0.9: Recognizable table shape with probable seating
-   - 0.5-0.7: Probable table based on layout patterns
-   - 0.3-0.5: Possible seating area, needs verification
+6. CONFIDENCE REQUIREMENTS:
+   - Only include tables with 80%+ confidence
+   - If you're not sure it's a dining table, exclude it
+   - Better to detect fewer tables accurately than many incorrectly
 
-Return JSON in this EXACT format:
+Return JSON format:
 {
   "tableCount": number,
   "detectedTables": [
@@ -85,15 +81,15 @@ Return JSON in this EXACT format:
       "id": "table_X",
       "name": "Table X", 
       "position": {"x": 0-10, "y": 0-10},
-      "confidence": 0.0-1.0,
+      "confidence": 0.8-1.0,
       "estimatedCapacity": number,
-      "tableType": "round|rectangular|booth|bar|banquette",
-      "description": "Brief description of what you see"
+      "tableType": "round|rectangular|booth|bar",
+      "description": "What specifically makes you confident this is a dining table"
     }
   ],
   "confidence": 0.0-1.0,
-  "recommendations": ["specific suggestions"],
-  "analysis": "Detailed description of dining layout analysis"
+  "recommendations": ["specific observations"],
+  "analysis": "Detailed explanation of what dining furniture you clearly identified"
 }`
           },
           {
@@ -101,17 +97,15 @@ Return JSON in this EXACT format:
             content: [
               {
                 type: 'text',
-                text: `Please analyze this restaurant floor plan image with extreme attention to detail. I need you to identify EVERY possible dining table, booth, bar seat, and seating area. 
+                text: `Analyze this restaurant floor plan image with CONSERVATIVE accuracy. Only identify dining tables and seating that you can see clearly and confidently.
 
-Look carefully for:
-- Any circular or round shapes (likely round tables)
-- Rectangular shapes with chairs around them (rectangular tables)
-- Booth-style seating arrangements along walls
-- Bar seating areas with stools
-- Outdoor patio seating
-- Any furniture that could be used for dining
+CRITICAL: Only detect objects that are CLEARLY dining tables:
+- You must be able to see the table surface AND seating around it
+- Don't guess or speculate about unclear shapes
+- Only include tables with 80%+ confidence
+- Focus on customer dining areas, not service/kitchen areas
 
-Even if you're not 100% certain something is a table, include it if there's a reasonable chance it could be dining furniture. Be thorough and don't miss anything that could potentially be seating.`
+Be very careful and precise - it's better to miss a table than to incorrectly identify something that isn't a dining table.`
               },
               {
                 type: 'image_url',
