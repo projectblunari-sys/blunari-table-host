@@ -15,9 +15,10 @@ import TableManagement from "./pages/TableManagement";
 import CustomerManagement from "./pages/CustomerManagement";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
-import BookingWidget from "./pages/BookingWidget";
+import WidgetPreview from "./pages/WidgetPreview";
 import POSIntegrations from "./pages/POSIntegrations";
 import NotFound from "./pages/NotFound";
+import BookingPage from "./pages/BookingPage";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            
+            {/* Public booking widget routes */}
+            <Route path="/book/:slug" element={<BookingPage />} />
+            
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <DashboardLayout />
@@ -41,7 +46,7 @@ const App = () => (
               <Route path="bookings" element={<BookingManagement />} />
               <Route path="tables" element={<TableManagement />} />
               <Route path="customers" element={<CustomerManagement />} />
-              <Route path="booking-widget" element={<BookingWidget />} />
+              <Route path="widget-preview" element={<WidgetPreview />} />
               <Route path="pos-integrations" element={<POSIntegrations />} />
               <Route path="waitlist" element={<div>Waitlist - Coming Soon</div>} />
               <Route path="staff" element={<div>Staff Management - Coming Soon</div>} />

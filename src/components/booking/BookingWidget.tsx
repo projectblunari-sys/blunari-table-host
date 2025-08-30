@@ -17,14 +17,17 @@ import ErrorBoundary from './ErrorBoundary';
 
 interface BookingWidgetProps {
   slug: string;
-  tenant: TenantInfo;
   onError?: (error: Error) => void;
 }
 
-const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, tenant, onError }) => {
+const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
+  const [tenantLoading, setTenantLoading] = useState(true);
+  const [tenantError, setTenantError] = useState<string | null>(null);
+  const [tenant, setTenant] = useState<TenantInfo | null>(null);
+  
   const [state, setState] = useState<BookingState>({
     step: 1,
-    tenant,
+    tenant: null,
     party_size: null,
     selected_slot: null,
     hold: null,
@@ -33,9 +36,48 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, tenant, onError }) 
     start_time: Date.now(),
     step_times: [],
   });
+  
+  const [stepLoading, setStepLoading] = useState(false);
+  const [stepError, setStepError] = useState<string | null>(null);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Load tenant info on mount
+  useEffect(() => {
+    const loadTenant = async () => {
+      try {
+        setTenantLoading(true);
+        setTenantError(null);
+        
+        // Mock tenant for demo - replace with actual API call
+        const mockTenant: TenantInfo = {
+          tenant_id: 'demo-tenant-id',
+          slug: slug,
+          name: 'Demo Restaurant',
+          timezone: 'America/New_York',
+          currency: 'USD',
+          branding: {
+            primary_color: '#3b82f6',
+            secondary_color: '#1e40af',
+            logo_url: undefined,
+          },
+          features: {
+            deposit_enabled: false,
+            revenue_optimization: true,
+          },
+        };
+        
+        setTenant(mockTenant);
+        setState(prev => ({ ...prev, tenant: mockTenant }));
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Failed to load restaurant information';
+        setTenantError(errorMsg);
+        onError?.(err instanceof Error ? err : new Error(errorMsg));
+      } finally {
+        setTenantLoading(false);
+      }
+    };
+
+    loadTenant();
+  }, [slug, onError]);
 
   // Track step completion times for gamification
   const recordStepTime = useCallback(() => {
@@ -48,19 +90,23 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, tenant, onError }) 
 
   // Analytics tracking
   useEffect(() => {
-    sendAnalyticsEvent('booking_started', {
-      tenant_id: tenant.tenant_id,
-      slug,
-      timestamp: state.start_time,
-    });
-  }, [tenant.tenant_id, slug, state.start_time]);
+    if (tenant) {
+      sendAnalyticsEvent('booking_started', {
+        tenant_id: tenant.tenant_id,
+        slug,
+        timestamp: state.start_time,
+      });
+    }
+  }, [tenant, slug, state.start_time]);
 
   const handleStepComplete = useCallback(async (stepData: any) => {
+    if (!tenant) return;
+    
     recordStepTime();
     
     try {
-      setLoading(true);
-      setError(null);
+      setStepLoading(true);
+      setStepError(null);
 
       switch (state.step) {
         case 1:
@@ -110,15 +156,17 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, tenant, onError }) 
       }
     } catch (err) {
       const error = err as Error;
-      setError(error.message);
+      setStepError(error.message);
       onError?.(error);
       toast.error('Step completion failed. Please try again.');
     } finally {
-      setLoading(false);
+      setStepLoading(false);
     }
-  }, [state.step, tenant.tenant_id, recordStepTime, onError]);
+  }, [state.step, tenant, recordStepTime, onError]);
 
   const handleBookingComplete = useCallback(async (reservation: any) => {
+    if (!tenant) return;
+    
     const totalTime = Date.now() - state.start_time;
     
     await sendAnalyticsEvent('booking_completed', {
@@ -137,18 +185,20 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, tenant, onError }) 
     if (achievements.length > 0) {
       toast.success(`🎉 Achievement${achievements.length > 1 ? 's' : ''} unlocked: ${achievements.join(', ')}`);
     }
-  }, [state.start_time, state.step_times, state.selected_slot, tenant.tenant_id]);
+  }, [state.start_time, state.step_times, state.selected_slot, tenant]);
 
   const handleBookingError = useCallback(async (error: Error) => {
+    if (!tenant) return;
+    
     await sendAnalyticsEvent('booking_failed', {
       error_message: error.message,
       step: state.step,
       tenant_id: tenant.tenant_id,
     });
     
-    setError(error.message);
+    setStepError(error.message);
     onError?.(error);
-  }, [state.step, tenant.tenant_id, onError]);
+  }, [state.step, tenant, onError]);
 
   const handleBack = useCallback(() => {
     if (state.step > 1) {
@@ -158,91 +208,131 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, tenant, onError }) 
 
   const progressPercentage = (state.step / 4) * 100;
 
-  if (error) {
+  // Loading state
+  if (tenantLoading) {
     return (
-      <Card className="max-w-md mx-auto">
-        <CardContent className="p-6 text-center">
-          <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Booking Error</h3>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={() => setError(null)}>Try Again</Button>
-        </CardContent>
-      </Card>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <h2 className="text-lg font-semibold mb-2">Loading...</h2>
+            <p className="text-muted-foreground">Fetching restaurant information</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state
+  if (tenantError || !tenant) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-lg font-semibold mb-2">Restaurant Unavailable</h2>
+            <p className="text-muted-foreground mb-4">
+              {tenantError || 'Unable to load restaurant information. Please try again later.'}
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (stepError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 flex items-center justify-center">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="p-6 text-center">
+            <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Booking Error</h3>
+            <p className="text-muted-foreground mb-4">{stepError}</p>
+            <Button onClick={() => setStepError(null)}>Try Again</Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <ErrorBoundary onError={onError}>
-      <div className="max-w-2xl mx-auto p-4">
-        {/* Header with branding */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold mb-2"
-              style={{ color: tenant.branding?.primary_color }}>
-            Book a Table at {tenant.name}
-          </h1>
-          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              <BookingTimer startTime={state.start_time} />
-            </div>
-            <Badge variant="outline">Step {state.step} of 4</Badge>
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <Progress value={progressPercentage} className="mb-8" />
-
-        {/* Step content */}
-        <AnimatePresence mode="wait">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
+        <div className="max-w-2xl mx-auto">
+          {/* Header with branding */}
           <motion.div
-            key={state.step}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
           >
-            {state.step === 1 && (
-              <PartySizeStep
-                tenant={tenant}
-                onComplete={handleStepComplete}
-                loading={loading}
-              />
-            )}
-            
-            {state.step === 2 && (
-              <DateTimeStep
-                tenant={tenant}
-                partySize={state.party_size!}
-                onComplete={handleStepComplete}
-                onBack={handleBack}
-                loading={loading}
-              />
-            )}
-            
-            {state.step === 3 && (
-              <GuestDetailsStep
-                tenant={tenant}
-                onComplete={handleStepComplete}
-                onBack={handleBack}
-                loading={loading}
-              />
-            )}
-            
-            {state.step === 4 && (
-              <ConfirmationStep
-                state={state}
-                onComplete={handleBookingComplete}
-                onError={handleBookingError}
-                onBack={handleBack}
-                loading={loading}
-              />
-            )}
+            <h1 className="text-3xl font-bold mb-2">{tenant.name}</h1>
+            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <BookingTimer startTime={state.start_time} />
+              </div>
+              <Badge variant="outline">Step {state.step} of 4</Badge>
+            </div>
           </motion.div>
-        </AnimatePresence>
 
-        {/* Footer */}
-        <div className="text-center mt-8 text-xs text-muted-foreground">
-          Powered by Real-Time Booking System
+          {/* Progress bar */}
+          <Progress value={progressPercentage} className="mb-8" />
+
+          {/* Step content */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={state.step}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {state.step === 1 && (
+                <PartySizeStep
+                  tenant={tenant}
+                  onComplete={handleStepComplete}
+                  loading={stepLoading}
+                />
+              )}
+              
+              {state.step === 2 && (
+                <DateTimeStep
+                  tenant={tenant}
+                  partySize={state.party_size!}
+                  onComplete={handleStepComplete}
+                  onBack={handleBack}
+                  loading={stepLoading}
+                />
+              )}
+              
+              {state.step === 3 && (
+                <GuestDetailsStep
+                  tenant={tenant}
+                  onComplete={handleStepComplete}
+                  onBack={handleBack}
+                  loading={stepLoading}
+                />
+              )}
+              
+              {state.step === 4 && (
+                <ConfirmationStep
+                  state={state}
+                  onComplete={handleBookingComplete}
+                  onError={handleBookingError}
+                  onBack={handleBack}
+                  loading={stepLoading}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Footer */}
+          <div className="text-center mt-8 text-xs text-muted-foreground">
+            Powered by Real-Time Booking System
+          </div>
         </div>
       </div>
     </ErrorBoundary>
