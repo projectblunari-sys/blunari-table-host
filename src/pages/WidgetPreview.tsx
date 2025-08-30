@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useTenant } from '@/hooks/useTenant';
 import { useToast } from '@/hooks/use-toast';
+import BookingDebugger from '@/components/booking/BookingDebugger';
 
 const WidgetPreview: React.FC = () => {
   const { tenant, isLoading } = useTenant();
@@ -210,7 +211,7 @@ const WidgetPreview: React.FC = () => {
 
       {/* Main Content */}
       <Tabs defaultValue="preview" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="preview" className="flex items-center gap-2">
             <Eye className="w-4 h-4" />
             Preview
@@ -222,6 +223,10 @@ const WidgetPreview: React.FC = () => {
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings2 className="w-4 h-4" />
             Settings
+          </TabsTrigger>
+          <TabsTrigger value="debug" className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Debug
           </TabsTrigger>
         </TabsList>
 
@@ -485,6 +490,10 @@ const WidgetPreview: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="debug" className="space-y-6">
+          <BookingDebugger slug={tenant?.slug || 'demo'} />
         </TabsContent>
       </Tabs>
     </div>

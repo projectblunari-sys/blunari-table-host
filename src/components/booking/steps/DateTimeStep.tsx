@@ -45,7 +45,10 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         service_date: format(date, 'yyyy-MM-dd'),
       };
       
+      console.log('Making availability search request:', searchRequest);
+      
       const result = await searchAvailability(searchRequest);
+      console.log('Availability search result:', result);
       setAvailability(result);
       
       if (result.slots.length === 0) {
@@ -55,8 +58,9 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       }
     } catch (err) {
       const error = err as Error;
+      console.error('Availability search failed:', error);
       setError(error.message);
-      toast.error('Failed to load availability');
+      toast.error('Failed to load availability: ' + error.message);
     } finally {
       setLoadingSlots(false);
     }
