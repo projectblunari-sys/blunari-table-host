@@ -16,7 +16,8 @@ import {
   Clock, 
   MessageSquare,
   Menu,
-  X
+  X,
+  Code
 } from 'lucide-react';
 
 const navigation = [
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Bookings', href: '/dashboard/bookings', icon: Calendar },
   { name: 'Tables', href: '/dashboard/tables', icon: TableProperties },
   { name: 'Customers', href: '/dashboard/customers', icon: Users },
+  { name: 'Booking Widget', href: '/dashboard/booking-widget', icon: Code },
   { name: 'Waitlist', href: '/dashboard/waitlist', icon: Clock },
   { name: 'Staff', href: '/dashboard/staff', icon: ChefHat },
   { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
