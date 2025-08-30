@@ -17,7 +17,8 @@ import {
   MessageSquare,
   Menu,
   X,
-  Code
+  Code,
+  Plug
 } from 'lucide-react';
 
 const navigation = [
@@ -26,6 +27,7 @@ const navigation = [
   { name: 'Tables', href: '/dashboard/tables', icon: TableProperties },
   { name: 'Customers', href: '/dashboard/customers', icon: Users },
   { name: 'Booking Widget', href: '/dashboard/booking-widget', icon: Code },
+  { name: 'POS Integrations', href: '/dashboard/pos-integrations', icon: Plug },
   { name: 'Waitlist', href: '/dashboard/waitlist', icon: Clock },
   { name: 'Staff', href: '/dashboard/staff', icon: ChefHat },
   { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
