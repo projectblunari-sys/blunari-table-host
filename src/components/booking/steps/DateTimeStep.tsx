@@ -111,7 +111,8 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
                 disabled={isDateDisabled}
                 fromDate={new Date()}
                 toDate={addDays(new Date(), 60)}
-                className="rounded-md border w-full max-w-sm"
+                className="rounded-lg border shadow-sm w-full max-w-sm bg-card"
+                showOutsideDays={false}
               />
             </div>
           </div>
