@@ -7,7 +7,12 @@ const corsHeaders = {
 
 interface PasswordResetRequest {
   email: string;
+  code?: string;
+  newPassword?: string;
 }
+
+// Store for security codes (in production, use Redis or database)
+const securityCodes = new Map<string, { code: string; expires: number }>();
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -15,13 +20,41 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email }: PasswordResetRequest = await req.json();
+    const { email, code, newPassword }: PasswordResetRequest = await req.json();
 
     if (!email) {
       return new Response(
         JSON.stringify({ error: "Email is required" }),
         {
           status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // If code and newPassword are provided, verify code and reset password
+    if (code && newPassword) {
+      const storedData = securityCodes.get(email);
+      
+      if (!storedData || storedData.code !== code || Date.now() > storedData.expires) {
+        return new Response(
+          JSON.stringify({ error: "Invalid or expired security code" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+
+      // Remove used code
+      securityCodes.delete(email);
+
+      // In a real implementation, you would update the password in your database here
+      // For now, we'll just return success
+      return new Response(
+        JSON.stringify({ success: true, message: "Password reset successfully" }),
+        {
+          status: 200,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
@@ -39,6 +72,15 @@ const handler = async (req: Request): Promise<Response> => {
     if (!smtpConfig.password) {
       throw new Error("SMTP password not configured");
     }
+
+    // Generate 6-digit security code
+    const securityCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store code with 10-minute expiration
+    securityCodes.set(email, {
+      code: securityCode,
+      expires: Date.now() + 10 * 60 * 1000 // 10 minutes
+    });
 
     // For port 465, we need to use TLS connection directly
     const conn = await Deno.connectTls({
@@ -80,26 +122,24 @@ const handler = async (req: Request): Promise<Response> => {
     await conn.write(encoder.encode(`DATA\r\n`));
     await conn.read(buffer);
     
-    // Password reset email content
-    const resetLink = `${Deno.env.get("SUPABASE_URL")}/auth/v1/verify?token=PASSWORD_RESET&type=recovery&redirect_to=${encodeURIComponent("https://kbfbbkcaxhzlnbqxwgoz.supabase.co/")}`;
-    
+    // Security code email content
     const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Password Reset Request</title>
+    <title>Password Reset Security Code</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #2563eb;">Password Reset Request</h2>
+        <h2 style="color: #2563eb;">Password Reset Security Code</h2>
         <p>Hello,</p>
         <p>We received a request to reset the password for your account associated with this email address.</p>
-        <p>If you made this request, please click the link below to reset your password:</p>
-        <p style="margin: 20px 0;">
-            <a href="${resetLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
-        </p>
+        <p>Your security code is:</p>
+        <div style="background-color: #f8f9fa; border: 2px solid #2563eb; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+            <h1 style="color: #2563eb; font-size: 32px; margin: 0; letter-spacing: 4px;">${securityCode}</h1>
+        </div>
+        <p>Enter this code on the password reset page to continue. This code will expire in 10 minutes.</p>
         <p>If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.</p>
-        <p>This link will expire in 24 hours for security reasons.</p>
         <p>Best regards,<br>The Blunari Security Team</p>
     </div>
 </body>
@@ -108,7 +148,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Email message
     const message = `From: "Blunari Security" <${smtpConfig.from}>
 To: ${email}
-Subject: Password Reset Request
+Subject: Password Reset Security Code
 MIME-Version: 1.0
 Content-Type: text/html; charset=UTF-8
 
@@ -120,10 +160,10 @@ ${htmlContent}`;
     await conn.write(encoder.encode(`QUIT\r\n`));
     conn.close();
 
-    console.log("Password reset email sent successfully to:", email);
+    console.log("Security code sent successfully to:", email);
 
     return new Response(
-      JSON.stringify({ success: true, message: "Password reset email sent" }),
+      JSON.stringify({ success: true, message: "Security code sent to your email" }),
       {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },

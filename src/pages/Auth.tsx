@@ -22,7 +22,9 @@ const resetSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
 });
 
-const passwordResetSchema = z.object({
+const codeVerifySchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  code: z.string().length(6, 'Security code must be 6 digits'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -32,14 +34,17 @@ const passwordResetSchema = z.object({
 
 type AuthFormData = z.infer<typeof authSchema>;
 type ResetFormData = z.infer<typeof resetSchema>;
-type PasswordResetFormData = z.infer<typeof passwordResetSchema>;
+type CodeVerifyFormData = z.infer<typeof codeVerifySchema>;
 
 const Auth: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [codeLoading, setCodeLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
-  const { signIn, user, resetPassword } = useAuth();
+  const [showCodeForm, setShowCodeForm] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -60,6 +65,17 @@ const Auth: React.FC = () => {
     reset: resetForm,
   } = useForm<ResetFormData>({
     resolver: zodResolver(resetSchema),
+    mode: 'onSubmit',
+  });
+
+  const {
+    register: registerCode,
+    handleSubmit: handleCodeSubmit,
+    formState: { errors: codeErrors },
+    reset: resetCodeForm,
+    setValue: setCodeValue,
+  } = useForm<CodeVerifyFormData>({
+    resolver: zodResolver(codeVerifySchema),
     mode: 'onSubmit',
   });
 
@@ -104,30 +120,78 @@ const Auth: React.FC = () => {
     setResetLoading(true);
     
     try {
-      const { error } = await resetPassword(data.email);
-      
-      if (error) {
-        toast({
-          title: 'Reset failed',
-          description: 'Could not send reset email. Please try again.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Reset email sent',
-          description: 'Check your email for password reset instructions.',
-        });
-        resetForm();
-        setActiveTab('signin');
+      const response = await fetch('https://kbfbbkcaxhzlnbqxwgoz.supabase.co/functions/v1/send-password-reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send security code');
       }
-    } catch (error) {
+
+      toast({
+        title: 'Security code sent',
+        description: 'Check your email for the 6-digit security code.',
+      });
+      
+      setResetEmail(data.email);
+      setCodeValue('email', data.email);
+      setShowCodeForm(true);
+      resetForm();
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Something went wrong. Please try again.',
+        description: error.message || 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
     } finally {
       setResetLoading(false);
+    }
+  };
+
+  const onCodeSubmit = async (data: CodeVerifyFormData) => {
+    setCodeLoading(true);
+    
+    try {
+      const response = await fetch('https://kbfbbkcaxhzlnbqxwgoz.supabase.co/functions/v1/send-password-reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          code: data.code,
+          newPassword: data.password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to reset password');
+      }
+
+      toast({
+        title: 'Password reset successful',
+        description: 'Your password has been updated. You can now sign in.',
+      });
+      
+      setShowCodeForm(false);
+      resetCodeForm();
+      setActiveTab('signin');
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Invalid security code. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCodeLoading(false);
     }
   };
 
@@ -242,47 +306,139 @@ const Auth: React.FC = () => {
               <CardHeader>
                 <CardTitle className="text-center">Reset Password</CardTitle>
                 <CardDescription className="text-center">
-                  Enter your email to receive reset instructions
+                  {showCodeForm ? 'Enter the security code from your email' : 'Enter your email to receive a security code'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleResetSubmit(onResetSubmit)} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="reset-email">Email</Label>
-                    <Input
-                      id="reset-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      {...registerReset('email')}
-                      className={resetErrors.email ? 'border-destructive' : ''}
-                    />
-                    {resetErrors.email && (
-                      <p className="text-sm text-destructive">{resetErrors.email.message}</p>
-                    )}
-                  </div>
-                  
-                  <Button type="submit" className="w-full" disabled={resetLoading}>
-                    {resetLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      'Send Reset Email'
-                    )}
-                  </Button>
-                  
-                  <div className="text-center">
-                    <Button
-                      type="button"
-                      variant="link"
-                      onClick={() => setActiveTab('signin')}
-                      className="text-sm text-muted-foreground hover:text-foreground"
-                    >
-                      Back to sign in
+                {!showCodeForm ? (
+                  <form onSubmit={handleResetSubmit(onResetSubmit)} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email">Email</Label>
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        {...registerReset('email')}
+                        className={resetErrors.email ? 'border-destructive' : ''}
+                      />
+                      {resetErrors.email && (
+                        <p className="text-sm text-destructive">{resetErrors.email.message}</p>
+                      )}
+                    </div>
+                    
+                    <Button type="submit" className="w-full" disabled={resetLoading}>
+                      {resetLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Send Code'
+                      )}
                     </Button>
-                  </div>
-                </form>
+                    
+                    <div className="text-center">
+                      <Button
+                        type="button"
+                        variant="link"
+                        onClick={() => setActiveTab('signin')}
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        Back to sign in
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  <form onSubmit={handleCodeSubmit(onCodeSubmit)} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="code-email">Email</Label>
+                      <Input
+                        id="code-email"
+                        type="email"
+                        value={resetEmail}
+                        disabled
+                        className="bg-muted"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="security-code">Security Code</Label>
+                      <Input
+                        id="security-code"
+                        type="text"
+                        placeholder="Enter 6-digit code"
+                        maxLength={6}
+                        {...registerCode('code')}
+                        className={codeErrors.code ? 'border-destructive' : ''}
+                      />
+                      {codeErrors.code && (
+                        <p className="text-sm text-destructive">{codeErrors.code.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">New Password</Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        placeholder="Enter new password"
+                        {...registerCode('password')}
+                        className={codeErrors.password ? 'border-destructive' : ''}
+                      />
+                      {codeErrors.password && (
+                        <p className="text-sm text-destructive">{codeErrors.password.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirm Password</Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        placeholder="Confirm new password"
+                        {...registerCode('confirmPassword')}
+                        className={codeErrors.confirmPassword ? 'border-destructive' : ''}
+                      />
+                      {codeErrors.confirmPassword && (
+                        <p className="text-sm text-destructive">{codeErrors.confirmPassword.message}</p>
+                      )}
+                    </div>
+                    
+                    <Button type="submit" className="w-full" disabled={codeLoading}>
+                      {codeLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Resetting...
+                        </>
+                      ) : (
+                        'Reset Password'
+                      )}
+                    </Button>
+                    
+                    <div className="text-center space-y-2">
+                      <Button
+                        type="button"
+                        variant="link"
+                        onClick={() => setShowCodeForm(false)}
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        Back to email entry
+                      </Button>
+                      <br />
+                      <Button
+                        type="button"
+                        variant="link"
+                        onClick={() => {
+                          setShowCodeForm(false);
+                          setActiveTab('signin');
+                        }}
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        Back to sign in
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </CardContent>
             </TabsContent>
           </Tabs>
