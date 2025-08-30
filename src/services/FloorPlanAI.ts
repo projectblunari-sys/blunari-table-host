@@ -178,8 +178,8 @@ export class FloorPlanAI {
         id: `detected_${index + 1}`,
         name: `Table ${index + 1}`,
         position: {
-          x: Math.max(0, Math.min(10, (boundingBox.xmin + boundingBox.xmax) / 2 / imageElement.width * 10)),
-          y: Math.max(0, Math.min(10, (boundingBox.ymin + boundingBox.ymax) / 2 / imageElement.height * 10))
+          x: Math.max(0, Math.min(10, (boundingBox.xmin + boundingBox.xmax) / 2 / imageElement.naturalWidth * 10)),
+          y: Math.max(0, Math.min(10, (boundingBox.ymin + boundingBox.ymax) / 2 / imageElement.naturalHeight * 10))
         },
         confidence: detection.score,
         boundingBox: {
