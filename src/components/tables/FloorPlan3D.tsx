@@ -101,7 +101,21 @@ const FloorPlanPlane: React.FC<{ imageUrl?: string }> = ({ imageUrl }) => {
     );
   }
 
-  // Only load texture when we have a valid URL
+  // Suspense wrapper for texture loading
+  return (
+    <React.Suspense fallback={
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+        <planeGeometry args={[10, 10]} />
+        <meshStandardMaterial color="#f8fafc" transparent opacity={0.8} />
+      </mesh>
+    }>
+      <FloorPlanPlaneWithTexture imageUrl={imageUrl} />
+    </React.Suspense>
+  );
+};
+
+// Separate component for texture loading
+const FloorPlanPlaneWithTexture: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
   const texture = useLoader(TextureLoader, imageUrl);
 
   return (
