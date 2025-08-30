@@ -301,23 +301,35 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
       return Promise.resolve();
     }
 
-    // Try to send email using the SMTP client with blunari.ai settings
+    // Try to send email using the SMTP client with multiple server options
     try {
       const client = new SmtpClient();
       
-      // Use standard SMTP settings - will auto-detect based on domain
-      await client.connectTLS({
-        hostname: "smtp.gmail.com", // Gmail SMTP for blunari.ai domain
-        port: 587,
-        username: smtpUser,
-        password: smtpPass,
-      });
+      // Try common SMTP configurations for custom domains
+      const smtpConfigs = [
+        { hostname: "smtp.gmail.com", port: 587 },  // Gmail
+        { hostname: "smtp-mail.outlook.com", port: 587 },  // Outlook
+        { hostname: "mail.blunari.ai", port: 587 },  // Custom domain
+        { hostname: "smtp.blunari.ai", port: 587 },  // Custom SMTP
+      ];
 
-      await client.send({
-        from: smtpFrom,
-        to: email,
-        subject: "Password Reset Security Code - Blunari",
-        content: `Your password reset security code is: ${securityCode}
+      let emailSent = false;
+      for (const config of smtpConfigs) {
+        try {
+          console.log(`Trying SMTP server: ${config.hostname}:${config.port}`);
+          
+          await client.connectTLS({
+            hostname: config.hostname,
+            port: config.port,
+            username: smtpUser,
+            password: smtpPass,
+          });
+
+          await client.send({
+            from: smtpFrom,
+            to: email,
+            subject: "Password Reset Security Code - Blunari",
+            content: `Your password reset security code is: ${securityCode}
 
 This code will expire in 10 minutes.
 
@@ -325,46 +337,59 @@ If you didn't request this password reset, please ignore this email.
 
 Best regards,
 Blunari Team`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-            <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #1a365d; margin: 0; font-size: 24px;">Blunari</h1>
-                <p style="color: #666; margin: 5px 0 0 0;">Restaurant Management Platform</p>
-              </div>
-              
-              <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Password Reset Security Code</h2>
-              
-              <div style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 30px; text-align: center; margin: 20px 0;">
-                <div style="font-size: 36px; font-weight: bold; letter-spacing: 6px; color: #0066cc; font-family: 'Courier New', monospace;">
-                  ${securityCode}
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+                <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #1a365d; margin: 0; font-size: 24px;">Blunari</h1>
+                    <p style="color: #666; margin: 5px 0 0 0;">Restaurant Management Platform</p>
+                  </div>
+                  
+                  <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Password Reset Security Code</h2>
+                  
+                  <div style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 30px; text-align: center; margin: 20px 0;">
+                    <div style="font-size: 36px; font-weight: bold; letter-spacing: 6px; color: #0066cc; font-family: 'Courier New', monospace;">
+                      ${securityCode}
+                    </div>
+                    <p style="color: #666; margin: 15px 0 0 0; font-size: 14px;">This code will expire in 10 minutes</p>
+                  </div>
+                  
+                  <div style="text-align: center; margin: 30px 0;">
+                    <p style="color: #333; margin: 0;">Enter this code in your password reset form to continue.</p>
+                  </div>
+                  
+                  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; text-align: center;">
+                    <p style="color: #666; font-size: 12px; margin: 0;">
+                      If you didn't request this password reset, please ignore this email.
+                    </p>
+                    <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">
+                      This is an automated message from Blunari.
+                    </p>
+                  </div>
                 </div>
-                <p style="color: #666; margin: 15px 0 0 0; font-size: 14px;">This code will expire in 10 minutes</p>
               </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <p style="color: #333; margin: 0;">Enter this code in your password reset form to continue.</p>
-              </div>
-              
-              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; text-align: center;">
-                <p style="color: #666; font-size: 12px; margin: 0;">
-                  If you didn't request this password reset, please ignore this email.
-                </p>
-                <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">
-                  This is an automated message from Blunari.
-                </p>
-              </div>
-            </div>
-          </div>
-        `,
-      });
+            `,
+          });
 
-      await client.close();
-      console.log(`Email sent successfully to ${email} via Blunari SMTP`);
+          await client.close();
+          console.log(`Email sent successfully to ${email} via ${config.hostname}`);
+          emailSent = true;
+          break; // Exit loop on success
+          
+        } catch (configError) {
+          console.log(`Failed with ${config.hostname}: ${configError.message}`);
+          // Continue to next config
+        }
+      }
+
+      if (!emailSent) {
+        throw new Error('All SMTP configurations failed');
+      }
+
       return Promise.resolve();
 
     } catch (smtpError) {
-      console.error('SMTP sending failed:', smtpError);
+      console.error('All SMTP attempts failed:', smtpError);
       
       // Fallback: log the code for testing
       console.log(`
