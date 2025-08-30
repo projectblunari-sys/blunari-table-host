@@ -39,6 +39,64 @@ const DashboardSidebar: React.FC = () => {
 
   return (
     <>
+      {/* Mobile sidebar */}
+      <motion.aside
+        initial={{ x: -300 }}
+        animate={{ x: sidebarOpen ? 0 : -300 }}
+        transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+        className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border lg:hidden"
+      >
+        <div className="flex h-full flex-col">
+          {/* Logo and tenant info */}
+          <div className="flex h-16 items-center px-6 border-b border-border">
+            <img 
+              src={logoUrl} 
+              alt="Restaurant Logo" 
+              className="h-8 w-auto"
+            />
+            <div className="ml-3">
+              <h2 className="text-sm font-semibold text-foreground">
+                {restaurantName}
+              </h2>
+              <Badge variant="secondary" className="text-xs">
+                {tenant?.status || 'Active'}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 px-4 py-6 space-y-2">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`
+                    flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200
+                    ${isActive 
+                      ? 'bg-primary text-primary-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }
+                  `}
+                >
+                  <item.icon className="mr-3 h-5 w-5" />
+                  {item.name}
+                </NavLink>
+              );
+            })}
+          </nav>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-border">
+            <div className="text-xs text-muted-foreground text-center">
+              Powered by Blunari
+            </div>
+          </div>
+        </div>
+      </motion.aside>
+
       {/* Mobile sidebar toggle */}
       <div className="lg:hidden">
         <Button
@@ -61,14 +119,8 @@ const DashboardSidebar: React.FC = () => {
 
       {/* Sidebar */}
       <motion.aside
-        initial={{ x: -300 }}
-        animate={{ x: sidebarOpen ? 0 : -300 }}
-        transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-        className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex-shrink-0
-          lg:relative lg:translate-x-0
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        `}
+        initial={false}
+        className="w-64 bg-card border-r border-border flex-shrink-0 lg:block hidden"
       >
         <div className="flex h-full flex-col">
           {/* Logo and tenant info */}
