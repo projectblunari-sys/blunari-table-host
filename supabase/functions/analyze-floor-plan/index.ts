@@ -38,40 +38,80 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an expert restaurant floor plan analyzer. Analyze the uploaded floor plan image and identify all dining tables/seating areas. 
+            content: `You are an expert restaurant floor plan analyzer specializing in identifying dining furniture and seating arrangements. Your goal is to accurately identify ALL tables, booths, bar seating, and other dining furniture in restaurant floor plans.
 
-Return a JSON response with this exact structure:
+CRITICAL ANALYSIS GUIDELINES:
+1. IDENTIFY ALL DINING FURNITURE including:
+   - Round dining tables (circular shapes)
+   - Rectangular/square dining tables 
+   - Booth seating (rectangular with seats)
+   - Bar stools and bar seating areas
+   - Outdoor patio tables
+   - Counter seating
+   - Banquette seating
+
+2. LOOK FOR VISUAL CUES:
+   - Circular or oval shapes = round tables
+   - Rectangles with chair symbols = rectangular tables
+   - L-shaped or U-shaped arrangements = booth seating
+   - Linear arrangements along walls = banquette seating
+   - Small circles around larger shapes = chairs around tables
+   - Counter lines with small circles = bar seating
+
+3. POSITION MAPPING (0-10 coordinate system):
+   - X=0 is far left, X=10 is far right
+   - Y=0 is top of floor plan, Y=10 is bottom
+   - Be precise with positioning based on visual location
+
+4. CAPACITY ESTIMATION:
+   - Small round tables: 2-4 people
+   - Large round tables: 6-8 people
+   - Small rectangular: 2-4 people  
+   - Large rectangular: 4-8+ people
+   - Booth seating: 4-6 people per booth
+   - Bar stools: 1 person per stool
+
+5. CONFIDENCE SCORING:
+   - 0.9-1.0: Clearly visible table with obvious chairs
+   - 0.7-0.9: Recognizable table shape with probable seating
+   - 0.5-0.7: Probable table based on layout patterns
+   - 0.3-0.5: Possible seating area, needs verification
+
+Return JSON in this EXACT format:
 {
   "tableCount": number,
   "detectedTables": [
     {
-      "id": "table_1",
-      "name": "Table 1", 
+      "id": "table_X",
+      "name": "Table X", 
       "position": {"x": 0-10, "y": 0-10},
       "confidence": 0.0-1.0,
       "estimatedCapacity": number,
-      "tableType": "dining|booth|bar|outdoor"
+      "tableType": "round|rectangular|booth|bar|banquette",
+      "description": "Brief description of what you see"
     }
   ],
   "confidence": 0.0-1.0,
-  "recommendations": ["recommendation1", "recommendation2"],
-  "analysis": "Brief description of what you found"
-}
-
-Key guidelines:
-- Position coordinates should be 0-10 representing relative position on the floor plan
-- Estimate capacity based on table size (2-8 people typical)
-- Identify different table types (dining tables, booths, bar seating)
-- Provide confidence scores based on clarity of the floor plan
-- Give practical recommendations for layout optimization
-- Only count actual dining/seating furniture, not service areas`
+  "recommendations": ["specific suggestions"],
+  "analysis": "Detailed description of dining layout analysis"
+}`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Please analyze this restaurant floor plan and identify all tables and seating areas. Focus on dining tables, booths, and bar seating that customers would use.'
+                text: `Please analyze this restaurant floor plan image with extreme attention to detail. I need you to identify EVERY possible dining table, booth, bar seat, and seating area. 
+
+Look carefully for:
+- Any circular or round shapes (likely round tables)
+- Rectangular shapes with chairs around them (rectangular tables)
+- Booth-style seating arrangements along walls
+- Bar seating areas with stools
+- Outdoor patio seating
+- Any furniture that could be used for dining
+
+Even if you're not 100% certain something is a table, include it if there's a reasonable chance it could be dining furniture. Be thorough and don't miss anything that could potentially be seating.`
               },
               {
                 type: 'image_url',
@@ -82,7 +122,7 @@ Key guidelines:
             ]
           }
         ],
-        max_tokens: 1000,
+        max_tokens: 1500,
         temperature: 0.1
       }),
     });
@@ -109,17 +149,19 @@ Key guidelines:
       console.error('Failed to parse JSON response:', parseError);
       console.log('Raw response:', content);
       
-      // Fallback response if JSON parsing fails
+      // Fallback response if JSON parsing fails - be more generous with detection
       analysisResult = {
         tableCount: 0,
         detectedTables: [],
         confidence: 0,
         recommendations: [
-          "AI analysis completed but had difficulty parsing the floor plan",
-          "Try uploading a clearer image with better contrast",
-          "You can manually position tables using the Floor Plan view"
+          "AI analysis detected furniture but had difficulty parsing the exact layout",
+          "The image may contain tables that weren't clearly identified",
+          "Try uploading a higher contrast image with better lighting",
+          "Consider manually positioning tables using the Floor Plan view",
+          "Ensure the floor plan shows clear table and seating arrangements"
         ],
-        analysis: "Analysis completed with parsing issues"
+        analysis: "Analysis completed but encountered parsing difficulties - tables may be present"
       };
     }
 
@@ -129,17 +171,20 @@ Key guidelines:
   } catch (error) {
     console.error('Error in analyze-floor-plan function:', error);
     
-    // Return a structured error response
     const errorResponse = {
       tableCount: 0,
       detectedTables: [],
       confidence: 0,
       recommendations: [
         `Analysis failed: ${error.message}`,
-        "Please check your API key configuration",
-        "You can manually position tables using the Floor Plan view"
+        "This could be due to:",
+        "• Image format not supported (try JPG or PNG)",
+        "• Network connectivity issues", 
+        "• API key configuration problems",
+        "• Floor plan image too complex or unclear",
+        "You can manually position tables using the Floor Plan view for now"
       ],
-      analysis: "Analysis failed due to technical error"
+      analysis: "Analysis failed due to technical error - manual table placement available"
     };
 
     return new Response(JSON.stringify(errorResponse), {

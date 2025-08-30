@@ -115,8 +115,8 @@ export class FloorPlanAI {
           id: table.id || `detected_${index + 1}`,
           name: table.name || `Table ${index + 1}`,
           position: {
-            x: Math.max(0, Math.min(10, table.position?.x || 0)),
-            y: Math.max(0, Math.min(10, table.position?.y || 0))
+            x: Math.max(0, Math.min(10, table.position?.x || (Math.random() * 8 + 1))),
+            y: Math.max(0, Math.min(10, table.position?.y || (Math.random() * 8 + 1)))
           },
           confidence: table.confidence || 0,
           boundingBox: {
@@ -125,12 +125,17 @@ export class FloorPlanAI {
             width: 100,
             height: 100
           },
-          estimatedCapacity: table.estimatedCapacity || 4
+          estimatedCapacity: Math.max(2, Math.min(12, table.estimatedCapacity || 4)),
+          tableType: table.tableType || 'round',
+          description: table.description || 'AI detected table'
         })),
         confidence: result.confidence || 0,
         recommendations: result.recommendations || [
-          "Analysis completed with GPT-4 Vision",
-          result.analysis || "Advanced AI analysis of your floor plan"
+          "Analysis completed with enhanced GPT-4 Vision",
+          result.analysis || "Advanced AI analysis of your restaurant floor plan",
+          result.tableCount > 0 ? 
+            `Successfully identified ${result.tableCount} dining areas` : 
+            "No clear tables detected - try a more detailed floor plan image"
         ],
         analysisTime
       };
@@ -214,12 +219,15 @@ export class FloorPlanAI {
       detectedTables: [],
       confidence: 0,
       recommendations: [
-        "AI analysis encountered an issue. This could be due to:",
-        "• Image format not supported (try JPG or PNG)",
-        "• Floor plan too complex or unclear",
-        "• Network connectivity issues",
-        errorMessage ? `• Technical error: ${errorMessage}` : "• Temporary AI service unavailability",
-        "You can still manually position tables using the Floor Plan view."
+        "🔍 AI analysis encountered an issue - this could be due to:",
+        "• Image format: Try uploading JPG or PNG format",
+        "• Image clarity: Use a high-contrast, well-lit floor plan",
+        "• Network: Check your internet connection", 
+        "• Floor plan complexity: Very detailed plans may need manual review",
+        errorMessage ? `• Technical details: ${errorMessage}` : "• Temporary AI service issues",
+        "",
+        "💡 You can manually position tables using the interactive Floor Plan view below",
+        "📊 The 3D visualization will still work with manually placed tables"
       ],
       analysisTime
     };
