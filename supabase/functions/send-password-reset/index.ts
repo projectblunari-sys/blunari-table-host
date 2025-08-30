@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { SMTPClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -303,15 +303,10 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
     // Send email via Fastmail SMTP if credentials are available
     if (smtpUsername && smtpPassword && fromEmail) {
       const client = new SMTPClient({
-        connection: {
-          hostname: "smtp.fastmail.com",
-          port: 587,
-          tls: true,
-          auth: {
-            username: smtpUsername,
-            password: smtpPassword,
-          },
-        },
+        hostname: "smtp.fastmail.com",
+        port: 587,
+        username: smtpUsername,
+        password: smtpPassword,
       });
 
       await client.send({
@@ -323,17 +318,6 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
 This code will expire in 10 minutes.
 
 If you didn't request this password reset, please ignore this email.`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #333;">Password Reset Security Code</h2>
-            <p>Your password reset security code is:</p>
-            <div style="background: #f5f5f5; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 20px 0;">
-              ${securityCode}
-            </div>
-            <p>This code will expire in 10 minutes.</p>
-            <p style="color: #666; font-size: 14px;">If you didn't request this password reset, please ignore this email.</p>
-          </div>
-        `,
       });
 
       await client.close();
