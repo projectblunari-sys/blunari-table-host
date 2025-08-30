@@ -63,13 +63,13 @@ async function makeAPIRequest(
   }
   
   if (endpoint.includes('/booking/search')) {
-    const times = ['18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00'];
+    const times = ['13:00', '13:30', '14:00', '14:30', '15:00', '16:00', '16:30'];
     return {
       slots: times.map((time, index) => ({
-        time: `2024-01-15T${time}:00.000Z`,
+        time: `2025-08-30T${time}:00.000Z`,
         available_tables: Math.max(1, 5 - index),
-        revenue_projection: 150 + Math.random() * 100,
-        optimal: index === 2, // Make 19:00 optimal
+        revenue_projection: Math.round(150 + Math.random() * 100), // Round to whole numbers
+        optimal: index === 2, // Make 14:00 optimal
       })),
     };
   }
