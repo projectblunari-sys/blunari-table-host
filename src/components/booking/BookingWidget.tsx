@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { BookingState, TenantInfo, TimeSlot, GuestDetails } from '@/types/booking-api';
-import { sendAnalyticsEvent } from '@/api/booking-proxy';
+import { sendAnalyticsEvent, getTenantBySlug } from '@/api/booking-proxy';
 import PartySizeStep from './steps/PartySizeStep';
 import DateTimeStep from './steps/DateTimeStep';
 import GuestDetailsStep from './steps/GuestDetailsStep';
@@ -47,26 +47,9 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
         setTenantLoading(true);
         setTenantError(null);
         
-        // Mock tenant for demo - replace with actual API call
-        const mockTenant: TenantInfo = {
-          tenant_id: 'demo-tenant-id',
-          slug: slug,
-          name: 'Demo Restaurant',
-          timezone: 'America/New_York',
-          currency: 'USD',
-          branding: {
-            primary_color: '#3b82f6',
-            secondary_color: '#1e40af',
-            logo_url: undefined,
-          },
-          features: {
-            deposit_enabled: false,
-            revenue_optimization: true,
-          },
-        };
-        
-        setTenant(mockTenant);
-        setState(prev => ({ ...prev, tenant: mockTenant }));
+        const tenantInfo = await getTenantBySlug(slug);
+        setTenant(tenantInfo);
+        setState(prev => ({ ...prev, tenant: tenantInfo }));
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Failed to load restaurant information';
         setTenantError(errorMsg);
