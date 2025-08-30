@@ -123,8 +123,13 @@ Be very careful and precise - it's better to miss a table than to incorrectly id
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('OpenAI API error:', response.status, errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('OpenAI API error details:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        body: errorData
+      });
+      throw new Error(`OpenAI API error: ${response.status} - ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -143,7 +148,7 @@ Be very careful and precise - it's better to miss a table than to incorrectly id
       console.error('Failed to parse JSON response:', parseError);
       console.log('Raw response:', content);
       
-      // Fallback response if JSON parsing fails - be more generous with detection
+      // Fallback response if JSON parsing fails
       analysisResult = {
         tableCount: 0,
         detectedTables: [],
@@ -163,21 +168,47 @@ Be very careful and precise - it's better to miss a table than to incorrectly id
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error in analyze-floor-plan function:', error);
+    console.error('Error in analyze-floor-plan function:', {
+      message: error.message,
+      stack: error.stack,
+      type: error.constructor.name
+    });
     
+    // Handle specific OpenAI errors
+    let errorMessage = error.message;
+    let recommendations = [
+      `Analysis failed: ${error.message}`,
+      "This could be due to:",
+      "• API rate limits (OpenAI usage exceeded)",
+      "• Network connectivity issues", 
+      "• API key configuration problems",
+      "• Floor plan image too complex or unclear",
+      "You can manually position tables using the Floor Plan view for now"
+    ];
+
+    // Check for specific error types
+    if (error.message.includes('429')) {
+      recommendations = [
+        "OpenAI API rate limit exceeded",
+        "• Please wait a few minutes before trying again",
+        "• The free tier has usage limits",
+        "• You can manually position tables using the Floor Plan view",
+        "• Consider upgrading your OpenAI plan for higher limits"
+      ];
+    } else if (error.message.includes('401')) {
+      recommendations = [
+        "OpenAI API authentication failed",
+        "• Check if your OpenAI API key is valid",
+        "• Ensure the API key has proper permissions",
+        "• You can manually position tables for now"
+      ];
+    }
+
     const errorResponse = {
       tableCount: 0,
       detectedTables: [],
       confidence: 0,
-      recommendations: [
-        `Analysis failed: ${error.message}`,
-        "This could be due to:",
-        "• Image format not supported (try JPG or PNG)",
-        "• Network connectivity issues", 
-        "• API key configuration problems",
-        "• Floor plan image too complex or unclear",
-        "You can manually position tables using the Floor Plan view for now"
-      ],
+      recommendations,
       analysis: "Analysis failed due to technical error - manual table placement available"
     };
 

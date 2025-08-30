@@ -233,9 +233,15 @@ export default function FloorPlanManager() {
           const totalCapacity = entities.reduce((sum, e) => sum + e.seats, 0);
           toast.success(`🎯 Analysis complete! Detected ${analysisResult.tableCount} tables (${totalCapacity} seats) with intelligent positioning`);
         } else {
-          toast('🤖 No tables detected in this image', {
-            description: 'Try uploading a clearer floor plan or manually position tables below'
-          });
+          // Show specific error if it's a rate limit issue
+          const isRateLimit = analysisResult.recommendations?.some(r => r.includes('rate limit') || r.includes('429'));
+          if (isRateLimit) {
+            toast.error('⏱️ OpenAI rate limit exceeded. Please wait a few minutes and try again.');
+          } else {
+            toast('🤖 No tables detected in this image', {
+              description: 'Try uploading a clearer floor plan or manually position tables below'
+            });
+          }
         }
       }, 300);
       
