@@ -24,11 +24,16 @@ async function callEdgeFunction(functionName: string, body: any = {}): Promise<a
   try {
     console.log(`Calling edge function: ${functionName}`, body);
     
+    // Ensure we always send a valid object
+    const requestBody = {
+      ...body,
+      timestamp: new Date().toISOString(), // Add timestamp to ensure body is not empty
+    };
+    
+    console.log('Final request body being sent:', requestBody);
+    
     const { data, error } = await supabase.functions.invoke(functionName, {
-      body: body, // Don't stringify here - Supabase client handles it
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      body: requestBody,
     });
 
     console.log('Edge function response:', { data, error });

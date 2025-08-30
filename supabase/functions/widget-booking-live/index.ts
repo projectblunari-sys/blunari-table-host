@@ -37,32 +37,54 @@ serve(async (req) => {
     let requestData;
     try {
       const bodyText = await req.text();
+      console.log('Raw request body length:', bodyText ? bodyText.length : 0);
       console.log('Raw request body:', bodyText);
       console.log('Request method:', req.method);
       console.log('Request headers:', Object.fromEntries(req.headers.entries()));
       
       if (!bodyText || bodyText.trim() === '') {
         console.error('Empty request body received');
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: { code: 'EMPTY_BODY', message: 'Request body is required' } 
-          }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
+        // Try to get data from URL params as fallback
+        const url = new URL(req.url);
+        const params = Object.fromEntries(url.searchParams.entries());
+        console.log('URL params as fallback:', params);
+        
+        if (Object.keys(params).length === 0) {
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: { 
+                code: 'EMPTY_BODY', 
+                message: 'Request body is required. Received empty body.',
+                debug: {
+                  method: req.method,
+                  contentType: req.headers.get('content-type'),
+                  bodyLength: bodyText ? bodyText.length : 0
+                }
+              } 
+            }),
+            { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+        requestData = params;
+      } else {
+        requestData = JSON.parse(bodyText);
       }
       
-      requestData = JSON.parse(bodyText);
       console.log('Successfully parsed request data:', requestData);
     } catch (parseError) {
       console.error('Failed to parse request body:', parseError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: { code: 'INVALID_JSON', message: 'Invalid JSON in request body' } 
+          error: { 
+            code: 'INVALID_JSON', 
+            message: 'Invalid JSON in request body',
+            details: parseError instanceof Error ? parseError.message : 'Unknown parse error'
+          } 
         }),
         { 
           status: 400, 
