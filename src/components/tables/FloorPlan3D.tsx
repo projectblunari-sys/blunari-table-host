@@ -91,8 +91,7 @@ const Table3D: React.FC<Table3DProps> = ({ position, capacity, name, isAvailable
 
 // Floor Plan Plane Component
 const FloorPlanPlane: React.FC<{ imageUrl?: string }> = ({ imageUrl }) => {
-  const texture = useLoader(TextureLoader, imageUrl || '');
-  
+  // Always render the default plane if no image URL
   if (!imageUrl) {
     return (
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
@@ -101,6 +100,9 @@ const FloorPlanPlane: React.FC<{ imageUrl?: string }> = ({ imageUrl }) => {
       </mesh>
     );
   }
+
+  // Only load texture when we have a valid URL
+  const texture = useLoader(TextureLoader, imageUrl);
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
