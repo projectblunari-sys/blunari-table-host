@@ -146,27 +146,27 @@ serve(async (req) => {
 })
 
 async function handleAvailabilitySearch(supabase: any, requestData: any) {
+  const { tenant_id, party_size, service_date } = requestData
+  
+  // Get tenant info from Supabase for validation
+  const { data: tenant, error: tenantError } = await supabase
+    .from('tenants')
+    .select('*')
+    .eq('id', tenant_id)
+    .maybeSingle();
+
+  if (tenantError) {
+    console.error('Tenant query error:', tenantError);
+    throw new Error(`Failed to query tenant: ${tenantError.message}`);
+  }
+
+  if (!tenant) {
+    console.error('Tenant not found for ID:', tenant_id);
+    throw new Error(`Tenant not found: ${tenant_id}`);
+  }
+
+  // Try external Blunari API for availability search first
   try {
-    const { tenant_id, party_size, service_date } = requestData
-    
-    // Get tenant info from Supabase for validation
-    const { data: tenant, error: tenantError } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('id', tenant_id)
-      .maybeSingle();
-
-    if (tenantError) {
-      console.error('Tenant query error:', tenantError);
-      throw new Error(`Failed to query tenant: ${tenantError.message}`);
-    }
-
-    if (!tenant) {
-      console.error('Tenant not found for ID:', tenant_id);
-      throw new Error(`Tenant not found: ${tenant_id}`);
-    }
-
-    // Call external Blunari API for availability search
     const apiUrl = 'https://services.blunari.ai/api/public/booking/search'
     
     const searchPayload = {
@@ -213,62 +213,26 @@ async function handleAvailabilitySearch(supabase: any, requestData: any) {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
-
-  } catch (error) {
-    console.error('Availability search error:', error)
+  } catch (apiError) {
+    console.error('External API failed:', apiError)
+    console.log('Falling back to local data...')
     
     // Fallback to local Supabase data if external API fails
-    try {
-      console.log('Falling back to local data...')
-      const { tenant_id, party_size, service_date } = requestData
-      
-      // Get tables for the tenant
-      const { data: tables, error: tablesError } = await supabase
-        .from('restaurant_tables')
-        .select('*')
-        .eq('tenant_id', tenant_id)
-        .eq('active', true)
+    const { tenant_id, party_size, service_date } = requestData
+    
+    // Get tables for the tenant
+    const { data: tables, error: tablesError } = await supabase
+      .from('restaurant_tables')
+      .select('*')
+      .eq('tenant_id', tenant_id)
+      .eq('active', true)
 
-      if (tablesError) {
-        throw new Error(`Failed to fetch tables: ${tablesError.message}`)
-      }
-
-      // Get existing bookings for the date
-      const searchDate = new Date(service_date)
-      const dayStart = new Date(searchDate.getFullYear(), searchDate.getMonth(), searchDate.getDate())
-      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
-
-      const { data: bookings, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('tenant_id', tenant_id)
-        .gte('booking_time', dayStart.toISOString())
-        .lt('booking_time', dayEnd.toISOString())
-
-      if (bookingsError) {
-        throw new Error(`Failed to fetch bookings: ${bookingsError.message}`)
-      }
-
-      // Generate available time slots
-      const slots = generateTimeSlots(tables || [], bookings || [], party_size, searchDate)
-
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          slots,
-          _fallback: true
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    } catch (fallbackError) {
-      console.error('Fallback also failed:', fallbackError)
+    if (tablesError) {
+      console.error('Failed to fetch tables:', tablesError)
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: { code: 'SEARCH_FAILED', message: 'Booking service temporarily unavailable. Please try again.' }
+          error: { code: 'SEARCH_FAILED', message: 'Unable to load restaurant data. Please try again.' }
         }),
         { 
           status: 500, 
@@ -276,6 +240,38 @@ async function handleAvailabilitySearch(supabase: any, requestData: any) {
         }
       )
     }
+
+    // Get existing bookings for the date
+    const searchDate = new Date(service_date)
+    const dayStart = new Date(searchDate.getFullYear(), searchDate.getMonth(), searchDate.getDate())
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+
+    const { data: bookings, error: bookingsError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('tenant_id', tenant_id)
+      .gte('booking_time', dayStart.toISOString())
+      .lt('booking_time', dayEnd.toISOString())
+
+    if (bookingsError) {
+      console.error('Failed to fetch bookings:', bookingsError)
+      // Continue without bookings data
+    }
+
+    // Generate available time slots
+    const slots = generateTimeSlots(tables || [], bookings || [], party_size, searchDate)
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        slots,
+        _fallback: true
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
 }
 
