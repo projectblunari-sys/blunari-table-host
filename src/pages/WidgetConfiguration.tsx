@@ -42,7 +42,7 @@ interface WidgetSettings {
   };
 }
 
-const BookingWidget: React.FC = () => {
+const WidgetConfiguration: React.FC = () => {
   const { tenant } = useTenant();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('customize');
@@ -590,4 +590,4 @@ const BookingWidget: React.FC = () => {
   );
 };
 
-export default BookingWidget;
+export default WidgetConfiguration;
