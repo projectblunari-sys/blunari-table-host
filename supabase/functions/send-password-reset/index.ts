@@ -325,14 +325,12 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
       });
       
       console.log(`Connecting to Fastmail SMTP: ${smtpHost}:${smtpPort} (Secure: ${smtpSecure})`);
-      
-      await client.connect();
 
       await client.send({
         from: smtpFrom,
         to: email,
         subject: "Password Reset Security Code - Blunari",
-        text: `Your password reset security code is: ${securityCode}
+        content: `Your password reset security code is: ${securityCode}
 
 This code will expire in 10 minutes.
 
