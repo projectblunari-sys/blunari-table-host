@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useTenant } from '@/hooks/useTenant';
+import { useCustomerManagement, Customer } from '@/hooks/useCustomerManagement';
 import { 
   Users, 
   Search, 
@@ -19,92 +21,13 @@ import {
   AlertTriangle
 } from 'lucide-react';
 
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  total_visits: number;
-  total_spent: number;
-  last_visit: string;
-  average_party_size: number;
-  customer_type: 'regular' | 'vip' | 'new' | 'inactive';
-  preferences: string[];
-  allergies: string[];
-  special_occasions: Array<{
-    type: string;
-    date: string;
-    notes?: string;
-  }>;
-  loyalty_points: number;
-  address?: {
-    street: string;
-    city: string;
-    state: string;
-    zip: string;
-  };
-}
-
 const CustomerManagement: React.FC = () => {
   const { tenant } = useTenant();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerType, setSelectedCustomerType] = useState<string>('all');
 
-  // Mock customer data - in production this would come from the database
-  const customers: Customer[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@email.com',
-      phone: '+1 (555) 123-4567',
-      total_visits: 24,
-      total_spent: 2850,
-      last_visit: '2024-01-15',
-      average_party_size: 2.3,
-      customer_type: 'vip',
-      preferences: ['Window seating', 'Quiet atmosphere', 'Wine pairings'],
-      allergies: ['Shellfish'],
-      special_occasions: [
-        { type: 'Anniversary', date: '2024-03-15', notes: 'Married 5 years' }
-      ],
-      loyalty_points: 1250,
-      address: {
-        street: '123 Main St',
-        city: 'San Francisco',
-        state: 'CA',
-        zip: '94105'
-      }
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      email: 'michael.chen@email.com',
-      phone: '+1 (555) 987-6543',
-      total_visits: 8,
-      total_spent: 920,
-      last_visit: '2024-01-12',
-      average_party_size: 4.2,
-      customer_type: 'regular',
-      preferences: ['Booth seating', 'Family-friendly'],
-      allergies: ['Nuts', 'Dairy'],
-      special_occasions: [],
-      loyalty_points: 460,
-    },
-    {
-      id: '3',
-      name: 'Emily Rodriguez',
-      email: 'emily.rodriguez@email.com',
-      total_visits: 1,
-      total_spent: 85,
-      last_visit: '2024-01-10',
-      average_party_size: 2,
-      customer_type: 'new',
-      preferences: [],
-      allergies: [],
-      special_occasions: [],
-      loyalty_points: 25,
-    }
-  ];
+  // Fetch real customer data from database
+  const { customers, isLoading, addCustomer } = useCustomerManagement(tenant?.id);
 
   // Filter customers based on search and type
   const filteredCustomers = customers.filter(customer => {
@@ -166,66 +89,83 @@ const CustomerManagement: React.FC = () => {
       </motion.div>
 
       {/* Customer Statistics */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
-      >
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold">{customerStats.total}</div>
-              <div className="text-sm text-muted-foreground">Total Customers</div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">{customerStats.vip}</div>
-              <div className="text-sm text-muted-foreground">VIP</div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{customerStats.regular}</div>
-              <div className="text-sm text-muted-foreground">Regular</div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-success">{customerStats.new}</div>
-              <div className="text-sm text-muted-foreground">New</div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold">${customerStats.total_revenue.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Total Revenue</div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold">${Math.round(customerStats.average_spend)}</div>
-              <div className="text-sm text-muted-foreground">Avg. Spend</div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      {isLoading ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
+        >
+          {[...Array(6)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="pt-4">
+                <Skeleton className="h-16 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
+        >
+          <Card>
+            <CardContent className="pt-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{customerStats.total}</div>
+                <div className="text-sm text-muted-foreground">Total Customers</div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-600">{customerStats.vip}</div>
+                <div className="text-sm text-muted-foreground">VIP</div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{customerStats.regular}</div>
+                <div className="text-sm text-muted-foreground">Regular</div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-success">{customerStats.new}</div>
+                <div className="text-sm text-muted-foreground">New</div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold">${customerStats.total_revenue.toLocaleString()}</div>
+                <div className="text-sm text-muted-foreground">Total Revenue</div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold">${Math.round(customerStats.average_spend)}</div>
+                <div className="text-sm text-muted-foreground">Avg. Spend</div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Search and Filters */}
       <motion.div
@@ -272,29 +212,39 @@ const CustomerManagement: React.FC = () => {
           </TabsList>
 
           <TabsContent value={selectedCustomerType} className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCustomers.map((customer, index) => (
-                <motion.div
-                  key={customer.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                >
-                  <CustomerCard customer={customer} getCustomerTypeColor={getCustomerTypeColor} />
-                </motion.div>
-              ))}
-            </div>
-            
-            {filteredCustomers.length === 0 && (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">No customers found</h3>
-                  <p className="text-muted-foreground text-center max-w-sm">
-                    No customers match your current search criteria. Try adjusting your filters.
-                  </p>
-                </CardContent>
-              </Card>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-64 w-full" />
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredCustomers.map((customer, index) => (
+                    <motion.div
+                      key={customer.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                    >
+                      <CustomerCard customer={customer} getCustomerTypeColor={getCustomerTypeColor} />
+                    </motion.div>
+                  ))}
+                </div>
+                
+                {filteredCustomers.length === 0 && (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium text-foreground mb-2">No customers found</h3>
+                      <p className="text-muted-foreground text-center max-w-sm">
+                        No customers match your current search criteria. Try adjusting your filters or create your first booking to generate customer data.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </TabsContent>
         </Tabs>
