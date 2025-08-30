@@ -32,31 +32,36 @@ const providerInfo = {
   clover: {
     name: 'Clover',
     logo: '🍀',
-    color: 'bg-green-500',
+    gradient: 'from-green-500 to-emerald-600',
+    hoverGradient: 'from-green-400 to-emerald-500',
     description: 'POS and business management'
   },
   toast: {
     name: 'Toast',
     logo: '🍞',
-    color: 'bg-orange-500',
+    gradient: 'from-orange-500 to-red-500',
+    hoverGradient: 'from-orange-400 to-red-400',
     description: 'Restaurant management and POS system'
   },
   square: {
     name: 'Square',
     logo: '⬜',
-    color: 'bg-blue-500',
+    gradient: 'from-blue-500 to-indigo-600',
+    hoverGradient: 'from-blue-400 to-indigo-500',
     description: 'Payment processing and POS'
   },
   lightspeed: {
     name: 'Lightspeed',
     logo: '⚡',
-    color: 'bg-yellow-500',
+    gradient: 'from-yellow-500 to-orange-500',
+    hoverGradient: 'from-yellow-400 to-orange-400',
     description: 'Retail and restaurant POS'
   },
   spoton: {
     name: 'SpotOn',
     logo: '🎯',
-    color: 'bg-purple-500',
+    gradient: 'from-purple-500 to-pink-600',
+    hoverGradient: 'from-purple-400 to-pink-500',
     description: 'Restaurant technology platform'
   }
 };
@@ -215,7 +220,7 @@ const POSIntegrations: React.FC = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg ${provider?.color} flex items-center justify-center text-white text-lg`}>
+              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${provider?.gradient} flex items-center justify-center text-white text-lg shadow-lg`}>
                 {provider?.logo}
               </div>
               <div>
@@ -305,34 +310,72 @@ const POSIntegrations: React.FC = () => {
                 Add Integration
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Add POS Integration</DialogTitle>
-                <DialogDescription>
-                  Choose a POS provider to integrate with your restaurant
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
-                {availableProviders.map((providerId) => {
-                  const provider = providerInfo[providerId as keyof typeof providerInfo];
-                  return (
-                    <Card key={providerId} className="hover:shadow-md transition-shadow cursor-pointer">
-                      <CardContent className="p-6 text-center">
-                        <div className={`w-16 h-16 rounded-lg ${provider.color} flex items-center justify-center text-white text-2xl mx-auto mb-4`}>
-                          {provider.logo}
-                        </div>
-                        <h3 className="font-semibold text-lg mb-2">{provider.name}</h3>
-                        <p className="text-sm text-muted-foreground mb-4">{provider.description}</p>
-                        <Button 
-                          onClick={() => handleIntegrateProvider(providerId)}
-                          className="w-full"
-                        >
-                          Integrate
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+            <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
+              <div className="bg-gradient-to-br from-primary/5 via-background to-accent/5 p-6">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    Add POS Integration
+                  </DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    Choose a POS provider to integrate with your restaurant
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+              
+              <div className="p-6 pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {availableProviders.map((providerId, index) => {
+                    const provider = providerInfo[providerId as keyof typeof providerInfo];
+                    return (
+                      <motion.div
+                        key={providerId}
+                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ 
+                          duration: 0.4, 
+                          delay: index * 0.1,
+                          type: "spring",
+                          stiffness: 100
+                        }}
+                        whileHover={{ y: -4, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Card className="group relative overflow-hidden border-2 border-transparent hover:border-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+                          <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          
+                          <CardContent className="relative p-6 text-center space-y-4">
+                            <motion.div
+                              className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${provider.gradient} group-hover:${provider.hoverGradient} flex items-center justify-center text-white text-2xl mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300`}
+                              whileHover={{ rotate: 5, scale: 1.1 }}
+                              whileTap={{ rotate: -5, scale: 0.95 }}
+                            >
+                              {provider.logo}
+                            </motion.div>
+                            
+                            <div className="space-y-2">
+                              <h3 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors duration-300">
+                                {provider.name}
+                              </h3>
+                              <p className="text-sm text-muted-foreground leading-relaxed">
+                                {provider.description}
+                              </p>
+                            </div>
+                            
+                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                              <Button 
+                                onClick={() => handleIntegrateProvider(providerId)}
+                                className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white font-semibold py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+                              >
+                                <Plus className="w-4 h-4 mr-2" />
+                                Integrate
+                              </Button>
+                            </motion.div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -437,7 +480,7 @@ const POSIntegrations: React.FC = () => {
                     return (
                       <div key={integration.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center gap-3">
-                          <div className={`w-6 h-6 rounded ${provider?.color} flex items-center justify-center text-white text-xs`}>
+                          <div className={`w-6 h-6 rounded bg-gradient-to-br ${provider?.gradient} flex items-center justify-center text-white text-xs shadow-sm`}>
                             {provider?.logo}
                           </div>
                           <span className="font-medium">{provider?.name}</span>
