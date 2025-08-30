@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useTenant } from '@/hooks/useTenant';
 import { FloorPlan3DManager } from '@/components/tables/FloorPlan3D';
+import FloorPlanManager from '@/components/tables/FloorPlanManager';
+import FloorPlanViewer3D from '@/components/tables/FloorPlanViewer3D';
+import FloorPlanViewer2D from '@/components/tables/FloorPlanViewer2D';
 import { 
   Grid3X3, 
   Plus, 
@@ -243,20 +246,18 @@ const TableManagement: React.FC = () => {
             getTableIcon={getTableIcon}
           />
         ) : viewMode === '3d' ? (
-          <FloorPlan3DManager 
-            tables={tables.map(table => ({
-              id: table.id,
-              name: table.name,
-              capacity: table.capacity,
-              position: table.position,
-              active: table.status === 'available'
-            }))}
-            onTablesDetected={(detectedTables) => {
-              console.log('AI detected tables:', detectedTables);
-              // Here you could update the tables state with detected tables
-              // or show a dialog to confirm importing them
-            }}
-          />
+          <div className="space-y-6">
+            <FloorPlanManager />
+            <FloorPlanViewer3D />
+            <details className="mt-4">
+              <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
+                View 2D Preview (Fallback)
+              </summary>
+              <div className="mt-2">
+                <FloorPlanViewer2D />
+              </div>
+            </details>
+          </div>
         ) : (
           <GridView 
             tables={tables}
