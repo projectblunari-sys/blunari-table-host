@@ -260,11 +260,23 @@ export const FloorPlan3DManager: React.FC<{ tables: any[] }> = ({ tables }) => {
             </div>
           </div>
 
-          <div className="text-sm text-muted-foreground">
-            <p>• Upload a top-down view of your restaurant floor plan</p>
-            <p>• Tables will be positioned on the 3D view</p>
-            <p>• Use mouse to rotate, zoom, and pan the view</p>
-          </div>
+          {!floorPlanImage ? (
+            <div className="text-sm text-muted-foreground">
+              <p>• Upload a top-down view of your restaurant floor plan</p>
+              <p>• Once uploaded, you can position tables to match your layout</p>
+              <p>• Use mouse to rotate, zoom, and pan the 3D view</p>
+            </div>
+          ) : (
+            <div className="bg-muted/30 p-4 rounded-lg">
+              <h4 className="font-medium text-sm mb-2">Next Steps:</h4>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p>✅ Floor plan uploaded successfully</p>
+                <p>📍 <strong>Now:</strong> Switch to "Floor Plan" view to position your tables</p>
+                <p>🎯 Drag tables to match their real positions in your restaurant</p>
+                <p>💾 Changes will be saved automatically</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
