@@ -72,9 +72,24 @@ export class FloorPlanAI {
         throw new Error('Image not properly loaded');
       }
 
+      // Convert image to canvas for better compatibility
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Could not create canvas context');
+      }
+      
+      canvas.width = imageElement.naturalWidth;
+      canvas.height = imageElement.naturalHeight;
+      ctx.drawImage(imageElement, 0, 0);
+      
+      // Get image data URL for the AI model
+      const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
       // Detect objects in the image with timeout
       console.log('Running object detection...');
-      const detectionPromise = this.detector(imageElement);
+      const detectionPromise = this.detector(imageDataUrl);
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Detection timeout')), 30000)
       );
