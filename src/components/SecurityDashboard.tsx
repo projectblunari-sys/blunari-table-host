@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import SecurityConfigWarning from '@/components/SecurityConfigWarning';
 import SecurityFixesSummary from '@/components/SecurityFixesSummary';
+import TenantSecurityFixes from '@/components/TenantSecurityFixes';
 
 const SecurityDashboard: React.FC = () => {
   return (
@@ -42,6 +43,7 @@ const SecurityDashboard: React.FC = () => {
         </CardContent>
       </Card>
 
+      <TenantSecurityFixes />
       <SecurityFixesSummary />
       <SecurityConfigWarning />
     </div>

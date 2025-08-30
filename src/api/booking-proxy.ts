@@ -97,12 +97,11 @@ async function callEdgeFunction(functionName: string, body: any = {}): Promise<a
 
 export async function getTenantBySlug(slug: string) {
   try {
-    // First try direct Supabase query for better performance
+    // Use the secure public view for tenant lookup
     const { data: tenantData, error } = await supabase
-      .from('tenants')
+      .from('tenant_public_info')
       .select('*')
       .eq('slug', slug)
-      .eq('status', 'active')
       .single();
 
     if (error || !tenantData) {
@@ -116,8 +115,8 @@ export async function getTenantBySlug(slug: string) {
       timezone: tenantData.timezone,
       currency: tenantData.currency,
       branding: {
-        primary_color: tenantData.primary_color || '#3b82f6',
-        secondary_color: tenantData.secondary_color || '#1e40af',
+        primary_color: '#3b82f6', // Default primary color
+        secondary_color: '#1e40af', // Default secondary color
       },
       features: {
         deposit_enabled: false, // Get from policies later

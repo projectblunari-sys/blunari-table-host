@@ -4334,6 +4334,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_public_tenant_info: {
+        Args: { tenant_slug: string }
+        Returns: {
+          currency: string
+          id: string
+          name: string
+          slug: string
+          timezone: string
+        }[]
+      }
       get_user_admin_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["admin_role"]

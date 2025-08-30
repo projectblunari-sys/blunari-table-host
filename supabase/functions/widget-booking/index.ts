@@ -56,12 +56,11 @@ serve(async (req) => {
       )
     }
 
-    // Get tenant information
+    // Get tenant information using secure public view
     const { data: tenantData, error: tenantError } = await supabase
-      .from('tenants')
-      .select('id, name, slug, status')
+      .from('tenant_public_info')
+      .select('id, name, slug')
       .eq('slug', tenant)
-      .eq('status', 'active')
       .single()
 
     if (tenantError || !tenantData) {

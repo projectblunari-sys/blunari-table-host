@@ -65,12 +65,11 @@ export const useTenant = () => {
     queryFn: async () => {
       if (!tenantSlug) return null;
 
-      // Try to find tenant by slug first
+      // Use the secure public tenant info view for public access
       let { data, error } = await supabase
-        .from('tenants')
+        .from('tenant_public_info')
         .select('*')
         .eq('slug', tenantSlug)
-        .eq('status', 'active')
         .single();
 
       if (error && error.code === 'PGRST116') {
