@@ -2,58 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import BookingCard from "./BookingCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTodaysBookings } from "@/hooks/useRealtimeBookings";
+import { useTenant } from "@/hooks/useTenant";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const TodaysBookings = () => {
-  // Mock data - in real app this would come from API
-  const bookings = [
-    {
-      id: "1",
-      customerName: "Sarah Johnson",
-      time: "7:00 PM",
-      guests: 4,
-      table: "T-12",
-      phone: "+1 (555) 123-4567",
-      status: "confirmed" as const,
-      specialRequests: "Anniversary dinner, window table preferred"
-    },
-    {
-      id: "2",
-      customerName: "Michael Chen",
-      time: "6:30 PM",
-      guests: 2,
-      table: "T-8",
-      phone: "+1 (555) 987-6543",
-      status: "seated" as const
-    },
-    {
-      id: "3",
-      customerName: "Emily Rodriguez",
-      time: "8:00 PM",
-      guests: 6,
-      table: "T-15",
-      phone: "+1 (555) 456-7890",
-      status: "confirmed" as const,
-      specialRequests: "Birthday celebration"
-    },
-    {
-      id: "4",
-      customerName: "David Wilson",
-      time: "5:30 PM",
-      guests: 3,
-      table: "T-5",
-      phone: "+1 (555) 234-5678",
-      status: "completed" as const
-    },
-    {
-      id: "5",
-      customerName: "Lisa Thompson",
-      time: "7:30 PM",
-      guests: 2,
-      table: "T-3",
-      phone: "+1 (555) 345-6789",
-      status: "confirmed" as const
-    }
-  ];
+  const { tenant } = useTenant();
+  const { bookings, isLoading } = useTodaysBookings(tenant?.id);
 
   const getBookingStats = () => {
     const confirmed = bookings.filter(b => b.status === 'confirmed').length;
@@ -65,6 +20,23 @@ const TodaysBookings = () => {
   };
 
   const stats = getBookingStats();
+
+  if (isLoading) {
+    return (
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">Today's Bookings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="shadow-soft">
@@ -84,9 +56,31 @@ const TodaysBookings = () => {
       <CardContent>
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-4">
-            {bookings.map((booking) => (
-              <BookingCard key={booking.id} booking={booking} />
-            ))}
+            {bookings.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No bookings for today
+              </div>
+            ) : (
+              bookings.map((booking) => (
+                <BookingCard 
+                  key={booking.id} 
+                  booking={{
+                    id: booking.id,
+                    customerName: booking.guest_name,
+                    time: new Date(booking.booking_time).toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    }),
+                    guests: booking.party_size,
+                    table: booking.table_id || 'Unassigned',
+                    phone: booking.guest_phone || '',
+                    status: booking.status as any,
+                    specialRequests: booking.special_requests
+                  }}
+                />
+              ))
+            )}
           </div>
         </ScrollArea>
       </CardContent>
