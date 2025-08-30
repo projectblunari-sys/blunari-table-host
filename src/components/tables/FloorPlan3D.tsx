@@ -118,6 +118,23 @@ const FloorPlan3D: React.FC<FloorPlanProps> = ({ floorPlanImage, tables }) => {
     <Canvas
       camera={{ position: [0, 8, 8], fov: 60 }}
       style={{ height: '500px', background: 'linear-gradient(to bottom, #e0f2fe, #f0f9ff)' }}
+      gl={{ 
+        antialias: true,
+        alpha: false,
+        preserveDrawingBuffer: false,
+        powerPreference: "default"
+      }}
+      onCreated={({ gl }) => {
+        // Handle context lost/restored events
+        gl.domElement.addEventListener('webglcontextlost', (event) => {
+          event.preventDefault();
+          console.log('WebGL context lost');
+        });
+        
+        gl.domElement.addEventListener('webglcontextrestored', () => {
+          console.log('WebGL context restored');
+        });
+      }}
     >
       {/* Lighting */}
       <ambientLight intensity={0.6} />
