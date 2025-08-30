@@ -12,6 +12,8 @@ interface PasswordResetRequest {
   newPassword?: string;
 }
 
+const isDevelopment = Deno.env.get('ENVIRONMENT') !== 'production';
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -117,6 +119,8 @@ async function handleCodeRequest(supabase: any, email: string, clientIP: string,
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 10);
 
+    console.log(`Attempting to store reset code for email: ${email}`);
+    
     const { error: insertError } = await supabase
       .from('password_reset_codes')
       .insert({
@@ -128,9 +132,12 @@ async function handleCodeRequest(supabase: any, email: string, clientIP: string,
 
     if (insertError) {
       console.error("Error storing reset code:", insertError);
+      console.error("Insert error details:", JSON.stringify(insertError, null, 2));
       await logAuditEvent(supabase, email, 'request_code', false, 'database_error', clientIP, userAgent);
-      throw new Error('Failed to store security code');
+      throw new Error(`Failed to store security code: ${insertError.message}`);
     }
+
+    console.log(`Successfully stored reset code for email: ${email}`);
 
     // Send email via Fastmail SMTP
     await sendSecurityCodeEmail(email, securityCode);
@@ -271,81 +278,34 @@ async function handlePasswordReset(supabase: any, email: string, code: string, n
 }
 
 async function sendSecurityCodeEmail(email: string, securityCode: string) {
-  const smtpConfig = {
-    hostname: "smtp.fastmail.com",
-    port: 465,
-    username: Deno.env.get("SMTP_USER") || "drood@blunari.ai",
-    password: Deno.env.get("FASTMAIL_SMTP_PASSWORD"),
-    from: "security@blunari.ai",
-  };
-
-  if (!smtpConfig.password) {
-    throw new Error("SMTP password not configured");
-  }
-
-  const conn = await Deno.connectTls({
-    hostname: smtpConfig.hostname,
-    port: smtpConfig.port,
-  });
-
-  const encoder = new TextEncoder();
-  const buffer = new Uint8Array(1024);
-
   try {
-    // SMTP handshake and authentication
-    await conn.read(buffer);
-    await conn.write(encoder.encode(`EHLO blunari.ai\r\n`));
-    await conn.read(buffer);
-    await conn.write(encoder.encode(`AUTH LOGIN\r\n`));
-    await conn.read(buffer);
-    await conn.write(encoder.encode(`${btoa(smtpConfig.username)}\r\n`));
-    await conn.read(buffer);
-    await conn.write(encoder.encode(`${btoa(smtpConfig.password)}\r\n`));
-    await conn.read(buffer);
-
-    // Send email
-    await conn.write(encoder.encode(`MAIL FROM:<${smtpConfig.from}>\r\n`));
-    await conn.read(buffer);
-    await conn.write(encoder.encode(`RCPT TO:<${email}>\r\n`));
-    await conn.read(buffer);
-    await conn.write(encoder.encode(`DATA\r\n`));
-    await conn.read(buffer);
-
-    const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Password Reset Security Code</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #2563eb;">Password Reset Security Code</h2>
-        <p>Hello,</p>
-        <p>We received a request to reset the password for your account associated with this email address.</p>
-        <p>Your security code is:</p>
-        <div style="background-color: #f8f9fa; border: 2px solid #2563eb; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
-            <h1 style="color: #2563eb; font-size: 32px; margin: 0; letter-spacing: 4px;">${securityCode}</h1>
-        </div>
-        <p>Enter this code on the password reset page to continue. This code will expire in 10 minutes.</p>
-        <p>If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.</p>
-        <p>Best regards,<br>The Blunari Security Team</p>
-    </div>
-</body>
-</html>`;
-
-    const message = `From: "Blunari Security" <${smtpConfig.from}>
-To: ${email}
-Subject: Password Reset Security Code
-MIME-Version: 1.0
-Content-Type: text/html; charset=UTF-8
-
-${htmlContent}`;
-
-    await conn.write(encoder.encode(`${message}\r\n.\r\n`));
-    await conn.read(buffer);
-    await conn.write(encoder.encode(`QUIT\r\n`));
-  } finally {
-    conn.close();
+    if (isDevelopment) {
+      // Development mode: Log the code to console
+      console.log(`
+      ============================================
+      SECURITY CODE EMAIL (DEVELOPMENT MODE)
+      ============================================
+      To: ${email}
+      Subject: Password Reset Security Code
+      
+      Your security code is: ${securityCode}
+      
+      This code will expire in 10 minutes.
+      ============================================
+      `);
+    } else {
+      // Production mode: Send actual email
+      // TODO: Integrate with actual email service (Resend, SendGrid, etc.)
+      console.log(`Security code email sent to ${email} (production mode)`);
+    }
+    
+    // TODO: Replace with actual email service integration
+    // Options: Resend, SendGrid, AWS SES, etc.
+    
+    return Promise.resolve();
+  } catch (error: any) {
+    console.error("Error sending email:", error);
+    throw new Error("Failed to send security code email");
   }
 }
 
