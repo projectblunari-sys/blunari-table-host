@@ -59,12 +59,7 @@ export class FloorPlanAI {
     const startTime = Date.now();
     
     try {
-      if (!this.isInitialized) {
-        console.log('Initializing AI model...');
-        await this.initialize();
-      }
-
-      console.log('Starting floor plan analysis...');
+      console.log('Starting advanced floor plan analysis with GPT-4 Vision...');
       console.log('Image dimensions:', imageElement.width, 'x', imageElement.height);
       
       // Ensure image is loaded
@@ -72,7 +67,7 @@ export class FloorPlanAI {
         throw new Error('Image not properly loaded');
       }
 
-      // Convert image to canvas for better compatibility
+      // Convert image to canvas for better quality
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
@@ -80,87 +75,135 @@ export class FloorPlanAI {
         throw new Error('Could not create canvas context');
       }
       
-      canvas.width = imageElement.naturalWidth;
-      canvas.height = imageElement.naturalHeight;
-      ctx.drawImage(imageElement, 0, 0);
+      // Use original dimensions but limit size for API
+      const maxSize = 1024;
+      const scale = Math.min(maxSize / imageElement.naturalWidth, maxSize / imageElement.naturalHeight, 1);
       
-      // Get image data URL for the AI model
+      canvas.width = imageElement.naturalWidth * scale;
+      canvas.height = imageElement.naturalHeight * scale;
+      ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
+      
+      // Get high-quality image data
       const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      console.log('Image converted for AI analysis');
 
-      // Detect objects in the image with timeout
-      console.log('Running object detection...');
-      const detectionPromise = this.detector(imageDataUrl);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Detection timeout')), 30000)
-      );
-      
-      const detections = await Promise.race([detectionPromise, timeoutPromise]);
-      console.log('Detection complete. Found objects:', detections?.length || 0);
-      console.log('Raw detections:', detections);
+      // Call our edge function for GPT-4 Vision analysis
+      console.log('Sending to GPT-4 Vision for analysis...');
+      const response = await fetch('https://kbfbbkcaxhzlnbqxwgoz.supabase.co/functions/v1/analyze-floor-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageBase64: imageDataUrl
+        })
+      });
 
-      if (!detections || !Array.isArray(detections)) {
-        console.warn('Invalid detection results, creating fallback analysis');
-        return this.createFallbackAnalysis(startTime);
+      if (!response.ok) {
+        throw new Error(`Analysis API error: ${response.status}`);
       }
 
-      // Filter for table-like objects with more flexible criteria
-      const tableDetections = detections.filter((detection: any) => {
-        const isTable = this.isTableLikeObject(detection.label);
-        const hasGoodConfidence = detection.score > 0.1; // Lower threshold
-        console.log(`Detection: ${detection.label} (confidence: ${detection.score}) - isTable: ${isTable}`);
-        return isTable && hasGoodConfidence;
-      });
+      const result = await response.json();
+      console.log('GPT-4 Vision analysis result:', result);
 
-      console.log(`Found ${tableDetections.length} table-like objects`);
-
-      const detectedTables: DetectedTable[] = tableDetections.map((detection: any, index: number) => {
-        const boundingBox = detection.box;
-        
-        return {
-          id: `detected_${index + 1}`,
-          name: `Table ${index + 1}`,
-          position: {
-            x: Math.max(0, Math.min(10, (boundingBox.xmin + boundingBox.xmax) / 2 / imageElement.width * 10)),
-            y: Math.max(0, Math.min(10, (boundingBox.ymin + boundingBox.ymax) / 2 / imageElement.height * 10))
-          },
-          confidence: detection.score,
-          boundingBox: {
-            x: boundingBox.xmin,
-            y: boundingBox.ymin,
-            width: boundingBox.xmax - boundingBox.xmin,
-            height: boundingBox.ymax - boundingBox.ymin
-          },
-          estimatedCapacity: this.estimateTableCapacity(boundingBox)
-        };
-      });
-
+      // Convert GPT-4 response to our format
       const analysisTime = Date.now() - startTime;
-      const averageConfidence = detectedTables.length > 0 
-        ? detectedTables.reduce((sum, table) => sum + table.confidence, 0) / detectedTables.length 
-        : 0;
-
-      const recommendations = this.generateRecommendations(detectedTables, imageElement);
-
-      console.log('Analysis complete:', {
-        tableCount: detectedTables.length,
-        confidence: averageConfidence,
-        analysisTime
-      });
-
+      
       return {
-        tableCount: detectedTables.length,
-        detectedTables,
-        confidence: averageConfidence,
-        recommendations,
+        tableCount: result.tableCount || 0,
+        detectedTables: (result.detectedTables || []).map((table: any, index: number) => ({
+          id: table.id || `detected_${index + 1}`,
+          name: table.name || `Table ${index + 1}`,
+          position: {
+            x: Math.max(0, Math.min(10, table.position?.x || 0)),
+            y: Math.max(0, Math.min(10, table.position?.y || 0))
+          },
+          confidence: table.confidence || 0,
+          boundingBox: {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100
+          },
+          estimatedCapacity: table.estimatedCapacity || 4
+        })),
+        confidence: result.confidence || 0,
+        recommendations: result.recommendations || [
+          "Analysis completed with GPT-4 Vision",
+          result.analysis || "Advanced AI analysis of your floor plan"
+        ],
         analysisTime
       };
+
     } catch (error) {
-      console.error('Error analyzing floor plan:', error);
-      console.error('Error details:', error.message, error.stack);
+      console.error('Error in advanced floor plan analysis:', error);
       
-      // Return fallback analysis instead of throwing
-      return this.createFallbackAnalysis(startTime, error.message);
+      // Fallback to simple analysis if advanced fails
+      console.log('Falling back to basic object detection...');
+      try {
+        return await this.basicAnalysis(imageElement, startTime);
+      } catch (fallbackError) {
+        console.error('Fallback analysis also failed:', fallbackError);
+        return this.createFallbackAnalysis(startTime, error.message);
+      }
     }
+  }
+
+  // Keep the original DETR analysis as fallback
+  private static async basicAnalysis(imageElement: HTMLImageElement, startTime: number): Promise<FloorPlanAnalysis> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) throw new Error('Could not create canvas context');
+    
+    canvas.width = imageElement.naturalWidth;
+    canvas.height = imageElement.naturalHeight;
+    ctx.drawImage(imageElement, 0, 0);
+    
+    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    const detections = await this.detector(imageDataUrl);
+    
+    const tableDetections = detections.filter((detection: any) => 
+      this.isTableLikeObject(detection.label) && detection.score > 0.3
+    );
+
+    const detectedTables: DetectedTable[] = tableDetections.map((detection: any, index: number) => {
+      const boundingBox = detection.box;
+      
+      return {
+        id: `detected_${index + 1}`,
+        name: `Table ${index + 1}`,
+        position: {
+          x: Math.max(0, Math.min(10, (boundingBox.xmin + boundingBox.xmax) / 2 / imageElement.width * 10)),
+          y: Math.max(0, Math.min(10, (boundingBox.ymin + boundingBox.ymax) / 2 / imageElement.height * 10))
+        },
+        confidence: detection.score,
+        boundingBox: {
+          x: boundingBox.xmin,
+          y: boundingBox.ymin,
+          width: boundingBox.xmax - boundingBox.xmin,
+          height: boundingBox.ymax - boundingBox.ymin
+        },
+        estimatedCapacity: this.estimateTableCapacity(boundingBox)
+      };
+    });
+
+    const analysisTime = Date.now() - startTime;
+    const averageConfidence = detectedTables.length > 0 
+      ? detectedTables.reduce((sum, table) => sum + table.confidence, 0) / detectedTables.length 
+      : 0;
+
+    return {
+      tableCount: detectedTables.length,
+      detectedTables,
+      confidence: averageConfidence,
+      recommendations: this.generateRecommendations(detectedTables, imageElement),
+      analysisTime
+    };
   }
 
   private static createFallbackAnalysis(startTime: number, errorMessage?: string): FloorPlanAnalysis {
