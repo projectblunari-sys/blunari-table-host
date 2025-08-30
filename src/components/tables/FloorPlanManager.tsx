@@ -67,21 +67,43 @@ export default function FloorPlanManager() {
       // Use existing FloorPlanAI service
       const analysisResult = await FloorPlanAI.analyzeFloorPlan(img);
       
-      // Convert to our schema format
+      // Convert to our schema format with better distribution
       const runId = Math.random().toString(36).substring(2) + Date.now().toString(36);
-      const entities = analysisResult.detectedTables.map(table => ({
-        id: Math.random().toString(36).substring(2) + Date.now().toString(36),
-        type: 'TABLE' as const,
-        shape: 'ROUND' as const, // Default to round for now
-        x: table.position.x,
-        y: table.position.y,
-        radius: 0.5, // Default radius
-        rotation: 0,
-        seats: table.estimatedCapacity,
-        label: table.name,
-        confidence: table.confidence,
-        meta: {}
-      }));
+      
+      // If we have many tables detected, distribute them better across the space
+      const entities = analysisResult.detectedTables.map((table, index) => {
+        // Use the AI detected positions but ensure good distribution
+        let x = table.position.x;
+        let y = table.position.y;
+        
+        // If positions are too clustered (common AI issue), spread them out
+        if (analysisResult.tableCount > 3) {
+          const gridSize = Math.ceil(Math.sqrt(analysisResult.tableCount));
+          const spacing = 8 / gridSize; // Leave margins
+          const baseX = 1 + (index % gridSize) * spacing;
+          const baseY = 1 + Math.floor(index / gridSize) * spacing;
+          
+          // Blend AI position with grid distribution (70% AI, 30% grid)
+          x = x * 0.7 + baseX * 0.3;
+          y = y * 0.7 + baseY * 0.3;
+        }
+
+        return {
+          id: Math.random().toString(36).substring(2) + Date.now().toString(36) + index,
+          type: 'TABLE' as const,
+          shape: table.estimatedCapacity > 6 ? 'RECT' as const : 'ROUND' as const,
+          x: Math.max(0.5, Math.min(9.5, x)), // Ensure tables stay within bounds
+          y: Math.max(0.5, Math.min(9.5, y)),
+          radius: table.estimatedCapacity > 6 ? undefined : Math.max(0.3, Math.min(0.8, table.estimatedCapacity * 0.1 + 0.3)),
+          width: table.estimatedCapacity > 6 ? Math.max(0.8, Math.min(2.0, table.estimatedCapacity * 0.15 + 0.5)) : undefined,
+          height: table.estimatedCapacity > 6 ? Math.max(0.6, Math.min(1.2, table.estimatedCapacity * 0.1 + 0.4)) : undefined,
+          rotation: Math.random() * Math.PI * 0.5, // Small random rotation for realism
+          seats: Math.max(2, Math.min(12, table.estimatedCapacity)),
+          label: table.name || `Table ${index + 1}`,
+          confidence: table.confidence,
+          meta: {}
+        };
+      });
 
       const preview = {
         imgWidth: img.naturalWidth,
