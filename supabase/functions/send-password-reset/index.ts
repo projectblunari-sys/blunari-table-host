@@ -63,12 +63,17 @@ const handler = async (req: Request): Promise<Response> => {
 async function handleCodeRequest(supabase: any, email: string, clientIP: string, userAgent: string) {
   try {
     // Check rate limits
-    const { data: rateLimitResult } = await supabase.rpc('check_reset_rate_limit', {
+    const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc('check_reset_rate_limit', {
       p_email: email,
       p_ip_address: clientIP
     });
 
-    if (!rateLimitResult.allowed) {
+    if (rateLimitError) {
+      console.error("Rate limit check error:", rateLimitError);
+      throw new Error('Rate limit check failed');
+    }
+
+    if (!rateLimitResult || !rateLimitResult.allowed) {
       await logAuditEvent(supabase, email, 'request_code', false, rateLimitResult.reason, clientIP, userAgent);
       
       if (rateLimitResult.reason === 'account_locked') {
@@ -198,9 +203,28 @@ async function handlePasswordReset(supabase: any, email: string, code: string, n
       throw new Error('Failed to update reset code');
     }
 
+    // Get user by email first, then update password
+    const { data: users, error: userError } = await supabase.auth.admin.listUsers();
+    if (userError) {
+      console.error("Error getting users:", userError);
+      throw new Error('Failed to find user');
+    }
+
+    const user = users.users.find((u: any) => u.email === email);
+    if (!user) {
+      await logAuditEvent(supabase, email, 'reset_password', false, 'user_not_found', clientIP, userAgent);
+      return new Response(
+        JSON.stringify({ error: "User not found" }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     // Update password using Supabase Auth Admin API
     const { error: passwordError } = await supabase.auth.admin.updateUserById(
-      resetCode.email, // This should be user ID in real implementation
+      user.id,
       { password: newPassword }
     );
 
