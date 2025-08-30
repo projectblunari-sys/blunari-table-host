@@ -53,11 +53,20 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         selected_date: format(date, 'yyyy-MM-dd')
       });
       
-      const result = await searchAvailability(searchRequest);
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout - please try again')), 15000)
+      );
+      
+      const result = await Promise.race([
+        searchAvailability(searchRequest),
+        timeoutPromise
+      ]) as AvailabilityResponse;
+      
       console.log('Availability search result:', result);
       setAvailability(result);
       
-      if (result.slots.length === 0) {
+      if (result && result.slots && result.slots.length === 0) {
         toast('No availability found for this date', {
           description: 'Try selecting a different date or party size'
         });
@@ -68,7 +77,9 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       
       // Handle specific error types
       let errorMessage = 'Failed to load availability';
-      if (error.message.includes('TENANT_NOT_FOUND')) {
+      if (error.message.includes('timeout')) {
+        errorMessage = 'Request timed out - please try again';
+      } else if (error.message.includes('TENANT_NOT_FOUND')) {
         errorMessage = 'Restaurant configuration not found';
       } else if (error.message.includes('EDGE_FUNCTION_ERROR')) {
         errorMessage = 'Service temporarily unavailable';

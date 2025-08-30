@@ -24,23 +24,42 @@ async function callEdgeFunction(functionName: string, body: any = {}): Promise<a
   try {
     console.log(`Calling edge function: ${functionName}`, body);
     
-    // Ensure we always send a valid object
+    // Ensure we always send a valid object with required fields
     const requestBody = {
       ...body,
-      timestamp: new Date().toISOString(), // Add timestamp to ensure body is not empty
+      timestamp: new Date().toISOString(),
     };
     
     console.log('Final request body being sent:', requestBody);
     
-    const { data, error } = await supabase.functions.invoke(functionName, {
-      body: requestBody,
+    // Use fetch directly as a fallback since Supabase invoke might have issues
+    const supabaseUrl = 'https://kbfbbkcaxhzlnbqxwgoz.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtiZmJia2NheGh6bG5icXh3Z296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzNTY5NjAsImV4cCI6MjA3MTkzMjk2MH0.Ly3LKEkNUys_hHEHKDZjOgg5r8J5woPLh4_9LtvNX4s';
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseKey}`,
+        'apikey': supabaseKey,
+      },
+      body: JSON.stringify(requestBody),
     });
+    
+    console.log('Edge function HTTP response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Edge function HTTP error:', response.status, errorText);
+      throw new BookingAPIError('HTTP_ERROR', `HTTP ${response.status}: ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Edge function response data:', data);
 
-    console.log('Edge function response:', { data, error });
-
-    if (error) {
-      console.error(`Edge function ${functionName} error:`, error);
-      throw new BookingAPIError('EDGE_FUNCTION_ERROR', error.message || 'Edge function failed', error);
+    // Check for data validity
+    if (data.success === false && data.error) {
+      throw new BookingAPIError(data.error.code || 'API_ERROR', data.error.message, data.error);
     }
 
     if (!data) {
