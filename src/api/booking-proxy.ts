@@ -103,13 +103,18 @@ export async function getTenantBySlug(slug: string) {
 
 export async function searchAvailability(request: SearchRequest) {
   try {
-    const data = await callEdgeFunction('widget-booking-live', {
+    const payload = {
       action: 'search',
       ...request,
-    });
+    };
+    
+    console.log('Sending search availability payload:', payload);
+    
+    const data = await callEdgeFunction('widget-booking-live', payload);
     
     return AvailabilityResponseSchema.parse(data);
   } catch (error) {
+    console.error('Availability search error details:', error);
     throw new BookingAPIError('AVAILABILITY_SEARCH_FAILED', 'Failed to search availability', error);
   }
 }

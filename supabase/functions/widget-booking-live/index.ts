@@ -19,6 +19,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     if (req.method !== 'POST') {
+      console.log('Non-POST request received:', req.method);
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -30,6 +31,8 @@ serve(async (req) => {
         }
       )
     }
+
+    console.log('POST request received, processing...');
 
     let requestData;
     try {

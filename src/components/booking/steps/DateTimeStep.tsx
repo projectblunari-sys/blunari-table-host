@@ -46,6 +46,12 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       };
       
       console.log('Making availability search request:', searchRequest);
+      console.log('Tenant info available:', { 
+        tenant_id: tenant.tenant_id, 
+        name: tenant.name,
+        party_size: partySize,
+        selected_date: format(date, 'yyyy-MM-dd')
+      });
       
       const result = await searchAvailability(searchRequest);
       console.log('Availability search result:', result);
