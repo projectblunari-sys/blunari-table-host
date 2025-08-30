@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useTenant } from '@/hooks/useTenant';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,8 +29,14 @@ import {
 type DbRecord = any;
 
 const providerInfo = {
+  clover: {
+    name: 'Clover',
+    logo: '🍀',
+    color: 'bg-green-500',
+    description: 'POS and business management'
+  },
   toast: {
-    name: 'Toast POS',
+    name: 'Toast',
     logo: '🍞',
     color: 'bg-orange-500',
     description: 'Restaurant management and POS system'
@@ -40,31 +47,27 @@ const providerInfo = {
     color: 'bg-blue-500',
     description: 'Payment processing and POS'
   },
-  clover: {
-    name: 'Clover',
-    logo: '🍀',
-    color: 'bg-green-500',
-    description: 'POS and business management'
+  lightspeed: {
+    name: 'Lightspeed',
+    logo: '⚡',
+    color: 'bg-yellow-500',
+    description: 'Retail and restaurant POS'
   },
-  resy: {
-    name: 'Resy',
-    logo: '🍽️',
+  spoton: {
+    name: 'SpotOn',
+    logo: '🎯',
     color: 'bg-purple-500',
-    description: 'Restaurant reservation platform'
-  },
-  opentable: {
-    name: 'OpenTable',
-    logo: '🍴',
-    color: 'bg-red-500',
-    description: 'Reservation and table management'
-  },
-  custom_webhook: {
-    name: 'Custom Webhook',
-    logo: '🔗',
-    color: 'bg-gray-500',
-    description: 'Custom integration endpoint'
+    description: 'Restaurant technology platform'
   }
 };
+
+const availableProviders = [
+  'clover',
+  'toast', 
+  'square',
+  'lightspeed',
+  'spoton'
+];
 
 const POSIntegrations: React.FC = () => {
   const { tenant } = useTenant();
@@ -75,6 +78,7 @@ const POSIntegrations: React.FC = () => {
   const [events, setEvents] = useState<DbRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [healthCheckLoading, setHealthCheckLoading] = useState<string | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
     if (tenant?.id) {
@@ -136,6 +140,15 @@ const POSIntegrations: React.FC = () => {
       console.error('Error fetching events:', error);
       setLoading(false);
     }
+  };
+
+  const handleIntegrateProvider = (provider: string) => {
+    toast({
+      title: "Integration Started",
+      description: `Setting up ${providerInfo[provider as keyof typeof providerInfo].name} integration...`,
+    });
+    setIsAddDialogOpen(false);
+    // TODO: Implement actual integration setup
   };
 
   const runHealthCheck = async (integrationId: string) => {
@@ -285,10 +298,44 @@ const POSIntegrations: React.FC = () => {
               Connect and manage your Point of Sale systems
             </p>
           </div>
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Integration
-          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Integration
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Add POS Integration</DialogTitle>
+                <DialogDescription>
+                  Choose a POS provider to integrate with your restaurant
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+                {availableProviders.map((providerId) => {
+                  const provider = providerInfo[providerId as keyof typeof providerInfo];
+                  return (
+                    <Card key={providerId} className="hover:shadow-md transition-shadow cursor-pointer">
+                      <CardContent className="p-6 text-center">
+                        <div className={`w-16 h-16 rounded-lg ${provider.color} flex items-center justify-center text-white text-2xl mx-auto mb-4`}>
+                          {provider.logo}
+                        </div>
+                        <h3 className="font-semibold text-lg mb-2">{provider.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-4">{provider.description}</p>
+                        <Button 
+                          onClick={() => handleIntegrateProvider(providerId)}
+                          className="w-full"
+                        >
+                          Integrate
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </motion.div>
 
@@ -443,10 +490,14 @@ const POSIntegrations: React.FC = () => {
                   <p className="text-muted-foreground text-center mb-4">
                     Connect your first POS system to start syncing data
                   </p>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Integration
-                  </Button>
+                  <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Integration
+                      </Button>
+                    </DialogTrigger>
+                  </Dialog>
                 </CardContent>
               </Card>
             )}
