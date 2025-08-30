@@ -149,7 +149,7 @@ const Auth: React.FC = () => {
       if (result.success) {
         toast({
           title: 'Security code sent',
-          description: 'Check the console logs for your 6-digit security code (email simulation mode).',
+          description: 'Check the edge function logs for your 6-digit security code.',
         });
         
         setResetEmail(data.email);
