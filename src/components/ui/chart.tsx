@@ -74,27 +74,42 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
-  // Use React.createElement to avoid XSS vulnerability
+  const cssVars = Object.entries(THEMES).reduce(
+    (acc, [theme, prefix]) => {
+      colorConfig.forEach(([key, itemConfig]) => {
+        const color =
+          itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
+          itemConfig.color
+        if (color) {
+          const varKey = `--color-${key}`
+          if (!acc[varKey]) acc[varKey] = {}
+          acc[varKey][theme] = color
+        }
+      })
+      return acc
+    },
+    {} as Record<string, Record<string, string>>
+  )
+
+  if (!Object.keys(cssVars).length) {
+    return null
+  }
+
   const cssText = Object.entries(THEMES)
     .map(([theme, prefix]) => {
-      const themeRules = colorConfig
-        .map(([key, itemConfig]) => {
-          const color =
-            itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-            itemConfig.color
-          return color ? `  --color-${key}: ${color};` : null
-        })
+      const rules = Object.entries(cssVars)
+        .map(([varKey, themeColors]) => 
+          themeColors[theme] ? `  ${varKey}: ${themeColors[theme]};` : null
+        )
         .filter(Boolean)
-        .join("\n")
+        .join('\n')
       
-      return `${prefix} [data-chart=${id}] {\n${themeRules}\n}`
+      return rules ? `${prefix} [data-chart="${id}"] {\n${rules}\n}` : null
     })
-    .join("\n")
+    .filter(Boolean)
+    .join('\n')
 
-  return React.createElement('style', {
-    key: `chart-style-${id}`,
-    children: cssText
-  })
+  return <style>{cssText}</style>
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip

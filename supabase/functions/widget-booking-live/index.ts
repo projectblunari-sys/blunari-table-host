@@ -7,7 +7,25 @@ const corsHeaders = {
   'Content-Security-Policy': "default-src 'self'; script-src 'self'; object-src 'none';",
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
-  'Referrer-Policy': 'strict-origin-when-cross-origin'
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+}
+
+// Input validation and sanitization
+function validateAndSanitizeInput(data: any): boolean {
+  if (!data || typeof data !== 'object') return false
+  
+  // Check for required fields
+  if (!data.tenant_id || !data.action) return false
+  
+  // Validate UUID format for tenant_id
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  if (!uuidRegex.test(data.tenant_id)) return false
+  
+  // Validate party size (reasonable bounds)
+  if (data.party_size && (data.party_size < 1 || data.party_size > 20)) return false
+  
+  return true
 }
 
 serve(async (req) => {
@@ -107,6 +125,21 @@ serve(async (req) => {
         JSON.stringify({ 
           success: false, 
           error: { code: 'MISSING_ACTION', message: 'Action parameter is required' } 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Validate and sanitize input
+    if (!validateAndSanitizeInput(requestData)) {
+      console.error('Invalid input data:', requestData);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: { code: 'INVALID_INPUT', message: 'Invalid or malformed request data' } 
         }),
         { 
           status: 400, 
