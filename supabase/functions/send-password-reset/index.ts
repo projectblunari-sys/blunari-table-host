@@ -312,27 +312,21 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
 
     // Try to send email using Fastmail SMTP with correct settings
     try {
-      const client = new SMTPClient();
+      const client = new SMTPClient({
+        connection: {
+          hostname: smtpHost,
+          port: smtpPort,
+          tls: smtpSecure,
+          auth: {
+            username: smtpUser,
+            password: smtpPass,
+          },
+        },
+      });
       
       console.log(`Connecting to Fastmail SMTP: ${smtpHost}:${smtpPort} (Secure: ${smtpSecure})`);
       
-      if (smtpSecure && smtpPort === 465) {
-        // Use SSL connection for port 465
-        await client.connect({
-          hostname: smtpHost,
-          port: smtpPort,
-          username: smtpUser,
-          password: smtpPass,
-        });
-      } else {
-        // Use STARTTLS for port 587  
-        await client.connect({
-          hostname: smtpHost,
-          port: smtpPort,
-          username: smtpUser,
-          password: smtpPass,
-        });
-      }
+      await client.connect();
 
       await client.send({
         from: smtpFrom,
