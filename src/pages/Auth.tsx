@@ -34,6 +34,7 @@ const Auth: React.FC = () => {
     reset,
   } = useForm<AuthFormData>({
     resolver: zodResolver(authSchema),
+    mode: 'onSubmit', // Only validate on submit
   });
 
   // Redirect if already authenticated
