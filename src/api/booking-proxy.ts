@@ -35,11 +35,21 @@ async function callEdgeFunction(functionName: string, body: any = {}): Promise<a
 
     if (error) {
       console.error(`Edge function ${functionName} error:`, error);
-      throw new BookingAPIError('EDGE_FUNCTION_ERROR', error.message, error);
+      throw new BookingAPIError('EDGE_FUNCTION_ERROR', error.message || 'Edge function failed', error);
     }
 
-    if (data && !data.success && data.error) {
+    if (!data) {
+      throw new BookingAPIError('NO_DATA', 'No data received from booking service');
+    }
+
+    if (data.success === false && data.error) {
       throw new BookingAPIError(data.error.code || 'API_ERROR', data.error.message, data.error);
+    }
+
+    // Handle case where success is not explicitly set but no error exists
+    if (data.success !== true && !data.slots && !data.hold_id && !data.reservation_id) {
+      console.warn('Unexpected response format:', data);
+      throw new BookingAPIError('INVALID_RESPONSE', 'Invalid response from booking service');
     }
 
     return data;
