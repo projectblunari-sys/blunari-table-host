@@ -281,15 +281,24 @@ async function handlePasswordReset(supabase: any, email: string, code: string, n
 
 async function sendSecurityCodeEmail(email: string, securityCode: string) {
   try {
+    const smtpHost = Deno.env.get('SMTP_HOST') || 'smtp.fastmail.com';
+    const smtpPort = parseInt(Deno.env.get('SMTP_PORT') || '465');
+    const smtpSecure = Deno.env.get('SMTP_SECURE') === 'true';
     const smtpUser = Deno.env.get('SMTP_USER');
     const smtpPass = Deno.env.get('SMTP_PASS');
     const smtpFrom = Deno.env.get('SMTP_FROM');
 
     console.log(`Attempting to send security code to: ${email}`);
+    console.log(`SMTP Config: ${smtpHost}:${smtpPort}, Secure: ${smtpSecure}, User: ${smtpUser}, From: ${smtpFrom}`);
 
     // Check if credentials are available
     if (!smtpUser || !smtpPass || !smtpFrom) {
-      console.log(`Missing SMTP credentials - logging code instead`);
+      const missing = [];
+      if (!smtpUser) missing.push('SMTP_USER');
+      if (!smtpPass) missing.push('SMTP_PASS');  
+      if (!smtpFrom) missing.push('SMTP_FROM');
+      
+      console.log(`Missing SMTP credentials: ${missing.join(', ')} - logging code instead`);
       console.log(`
       ============================================
       SECURITY CODE EMAIL
@@ -301,18 +310,29 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
       return Promise.resolve();
     }
 
-    // Try to send email using Fastmail SMTP
+    // Try to send email using Fastmail SMTP with correct settings
     try {
       const client = new SmtpClient();
       
-      console.log(`Connecting to Fastmail SMTP for blunari.ai domain`);
+      console.log(`Connecting to Fastmail SMTP: ${smtpHost}:${smtpPort} (Secure: ${smtpSecure})`);
       
-      await client.connectTLS({
-        hostname: "smtp.fastmail.com",
-        port: 587,
-        username: smtpUser,
-        password: smtpPass,
-      });
+      if (smtpSecure && smtpPort === 465) {
+        // Use SSL connection for port 465
+        await client.connectTLS({
+          hostname: smtpHost,
+          port: smtpPort,
+          username: smtpUser,
+          password: smtpPass,
+        });
+      } else {
+        // Use STARTTLS for port 587
+        await client.connect({
+          hostname: smtpHost,
+          port: smtpPort,
+          username: smtpUser,
+          password: smtpPass,
+        });
+      }
 
       await client.send({
         from: smtpFrom,
