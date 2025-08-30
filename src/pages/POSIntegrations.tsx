@@ -323,8 +323,8 @@ const POSIntegrations: React.FC = () => {
               </div>
               
               <div className="p-6 pt-2">
-                <div className="grid grid-cols-3 gap-6">
-                  {availableProviders.map((providerId, index) => {
+                <div className="grid grid-cols-3 gap-6 max-w-4xl mx-auto">
+                  {availableProviders.slice(0, 3).map((providerId, index) => {
                     const provider = providerInfo[providerId as keyof typeof providerInfo];
                     return (
                       <motion.div
@@ -334,6 +334,60 @@ const POSIntegrations: React.FC = () => {
                         transition={{ 
                           duration: 0.4, 
                           delay: index * 0.1,
+                          type: "spring",
+                          stiffness: 100
+                        }}
+                        whileHover={{ y: -4, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Card className="group relative overflow-hidden border-2 border-transparent hover:border-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 h-64 flex flex-col">
+                          <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          
+                          <CardContent className="relative p-6 text-center space-y-4 flex-1 flex flex-col justify-between">
+                            <motion.div
+                              className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${provider.gradient} group-hover:${provider.hoverGradient} flex items-center justify-center text-white text-2xl mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300`}
+                              whileHover={{ rotate: 5, scale: 1.1 }}
+                              whileTap={{ rotate: -5, scale: 0.95 }}
+                            >
+                              {provider.logo}
+                            </motion.div>
+                            
+                            <div className="space-y-2">
+                              <h3 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors duration-300">
+                                {provider.name}
+                              </h3>
+                              <p className="text-sm text-muted-foreground leading-relaxed">
+                                {provider.description}
+                              </p>
+                            </div>
+                            
+                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                              <Button 
+                                onClick={() => handleIntegrateProvider(providerId)}
+                                className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white font-semibold py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+                              >
+                                <Plus className="w-4 h-4 mr-2" />
+                                Integrate
+                              </Button>
+                            </motion.div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-6 max-w-md mx-auto mt-6">
+                  {availableProviders.slice(3).map((providerId, index) => {
+                    const provider = providerInfo[providerId as keyof typeof providerInfo];
+                    return (
+                      <motion.div
+                        key={providerId}
+                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ 
+                          duration: 0.4, 
+                          delay: (index + 3) * 0.1,
                           type: "spring",
                           stiffness: 100
                         }}
