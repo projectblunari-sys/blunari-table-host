@@ -1272,7 +1272,15 @@ export type Database = {
           verification_record?: string | null
           verification_status?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "domains_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       employee_invitations: {
         Row: {
@@ -3790,6 +3798,8 @@ export type Database = {
           logo_url: string | null
           name: string
           phone: string | null
+          primary_color: string | null
+          secondary_color: string | null
           slug: string
           status: string
           timezone: string
@@ -3808,6 +3818,8 @@ export type Database = {
           logo_url?: string | null
           name: string
           phone?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
           slug: string
           status?: string
           timezone?: string
@@ -3826,6 +3838,8 @@ export type Database = {
           logo_url?: string | null
           name?: string
           phone?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
           slug?: string
           status?: string
           timezone?: string

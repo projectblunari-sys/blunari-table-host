@@ -439,7 +439,7 @@ const Auth: React.FC = () => {
                       <Input
                         id="code-email"
                         type="email"
-                        value={resetEmail}
+                        value={resetEmail || ''}
                         disabled
                         className="bg-muted"
                       />
