@@ -1,4 +1,5 @@
 import { pipeline, env } from '@huggingface/transformers';
+import { supabase } from '@/integrations/supabase/client';
 
 // Configure transformers.js
 env.allowLocalModels = false;
@@ -89,23 +90,16 @@ export class FloorPlanAI {
       const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
       console.log('Image converted for AI analysis');
 
-      // Call our edge function for GPT-4 Vision analysis
+      // Call our edge function for GPT-4 Vision analysis using Supabase client
       console.log('Sending to GPT-4 Vision for analysis...');
-      const response = await fetch('https://kbfbbkcaxhzlnbqxwgoz.supabase.co/functions/v1/analyze-floor-plan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageBase64: imageDataUrl
-        })
+      const { data: result, error } = await supabase.functions.invoke('analyze-floor-plan', {
+        body: { imageBase64: imageDataUrl }
       });
 
-      if (!response.ok) {
-        throw new Error(`Analysis API error: ${response.status}`);
+      if (error) {
+        throw new Error(`Analysis API error: ${error.message}`);
       }
 
-      const result = await response.json();
       console.log('GPT-4 Vision analysis result:', result);
 
       // Convert GPT-4 response to our format

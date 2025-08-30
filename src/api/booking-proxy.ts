@@ -1,4 +1,5 @@
-// Server-side API proxy functions - NO CLIENT SECRETS
+// Live booking API proxy via Supabase Edge Functions
+import { supabase } from '@/integrations/supabase/client';
 import { 
   TenantInfoSchema, 
   AvailabilityResponseSchema, 
@@ -11,19 +12,6 @@ import {
   APIError 
 } from '@/types/booking-api';
 
-// For demo purposes, we'll use mock responses since this is a client-side app
-// In production, this should be replaced with actual API calls through Supabase Edge Functions
-const API_BASE_URL = 'https://demo-booking-api.example.com'; // Mock URL for demo
-
-// Helper function to generate valid UUIDs for demo
-const generateUUID = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-};
-
 class BookingAPIError extends Error {
   constructor(public code: string, message: string, public details?: any) {
     super(message);
@@ -31,74 +19,123 @@ class BookingAPIError extends Error {
   }
 }
 
-async function makeAPIRequest(
-  endpoint: string, 
-  options: RequestInit = {}
-): Promise<any> {
-  // For demo purposes, return mock data instead of making real API calls
-  // In production, this should make actual HTTP requests to the booking API
-  
-  console.log('Mock API request:', endpoint, options);
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
-  
-  // Return mock responses based on endpoint
-  if (endpoint.includes('/tenants/by-slug/')) {
-    return {
-      tenant_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', // Valid UUID format
-      slug: endpoint.split('/').pop(),
-      name: 'Demo Restaurant',
-      timezone: 'America/New_York',
-      currency: 'USD',
+// Live API functions using Supabase edge functions
+async function callEdgeFunction(functionName: string, body: any = {}): Promise<any> {
+  try {
+    console.log(`Calling edge function: ${functionName}`, body);
+    
+    const { data, error } = await supabase.functions.invoke(functionName, {
+      body,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (error) {
+      console.error(`Edge function ${functionName} error:`, error);
+      throw new BookingAPIError('EDGE_FUNCTION_ERROR', error.message, error);
+    }
+
+    if (!data.success && data.error) {
+      throw new BookingAPIError(data.error.code || 'API_ERROR', data.error.message, data.error);
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof BookingAPIError) {
+      throw error;
+    }
+    console.error(`Failed to call edge function ${functionName}:`, error);
+    throw new BookingAPIError('NETWORK_ERROR', `Failed to communicate with booking service`, error);
+  }
+}
+
+export async function getTenantBySlug(slug: string) {
+  try {
+    // First try direct Supabase query for better performance
+    const { data: tenantData, error } = await supabase
+      .from('tenants')
+      .select('*')
+      .eq('slug', slug)
+      .eq('status', 'active')
+      .single();
+
+    if (error || !tenantData) {
+      throw new BookingAPIError('TENANT_NOT_FOUND', `Restaurant not found: ${slug}`);
+    }
+
+    const transformedData = {
+      tenant_id: tenantData.id,
+      slug: tenantData.slug,
+      name: tenantData.name,
+      timezone: tenantData.timezone,
+      currency: tenantData.currency,
       branding: {
-        primary_color: '#3b82f6',
-        secondary_color: '#1e40af',
+        primary_color: tenantData.primary_color || '#3b82f6',
+        secondary_color: tenantData.secondary_color || '#1e40af',
       },
       features: {
-        deposit_enabled: false,
+        deposit_enabled: false, // Get from policies later
         revenue_optimization: true,
       },
     };
+
+    return TenantInfoSchema.parse(transformedData);
+  } catch (error) {
+    if (error instanceof BookingAPIError) {
+      throw error;
+    }
+    throw new BookingAPIError('TENANT_LOOKUP_FAILED', 'Failed to lookup restaurant information', error);
   }
-  
-  if (endpoint.includes('/booking/search')) {
-    const times = ['13:00', '13:30', '14:00', '14:30', '15:00', '16:00', '16:30'];
-    return {
-      slots: times.map((time, index) => ({
-        time: `2025-08-30T${time}:00.000Z`,
-        available_tables: Math.max(1, 5 - index),
-        revenue_projection: Math.round(150 + Math.random() * 100), // Round to whole numbers
-        optimal: index === 2, // Make 14:00 optimal
-      })),
-    };
+}
+
+export async function searchAvailability(request: SearchRequest) {
+  try {
+    const data = await callEdgeFunction('widget-booking-live', {
+      action: 'search',
+      ...request,
+    });
+    
+    return AvailabilityResponseSchema.parse(data);
+  } catch (error) {
+    throw new BookingAPIError('AVAILABILITY_SEARCH_FAILED', 'Failed to search availability', error);
   }
-  
-  if (endpoint.includes('/booking/holds')) {
-    return {
-      hold_id: generateUUID(),
-      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-      table_identifiers: ['Table 5'],
-    };
+}
+
+export async function createHold(request: HoldRequest) {
+  try {
+    const data = await callEdgeFunction('widget-booking-live', {
+      action: 'hold',
+      ...request,
+    });
+    
+    return HoldResponseSchema.parse(data);
+  } catch (error) {
+    throw new BookingAPIError('HOLD_CREATION_FAILED', 'Failed to create booking hold', error);
   }
-  
-  if (endpoint.includes('/booking/reservations')) {
-    return {
-      reservation_id: generateUUID(),
-      confirmation_number: 'CONF' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-      status: 'confirmed',
-      summary: {
-        date: '2024-01-15T19:00:00.000Z',
-        time: '7:00 PM',
-        party_size: 4,
-        table_info: 'Table 5',
-        deposit_required: false,
-      },
-    };
+}
+
+export async function confirmReservation(
+  request: ReservationRequest, 
+  idempotencyKey: string
+) {
+  try {
+    const data = await callEdgeFunction('widget-booking-live', {
+      action: 'confirm',
+      idempotency_key: idempotencyKey,
+      ...request,
+    });
+    
+    return ReservationResponseSchema.parse(data);
+  } catch (error) {
+    throw new BookingAPIError('RESERVATION_CONFIRMATION_FAILED', 'Failed to confirm reservation', error);
   }
-  
-  if (endpoint.includes('/policies')) {
-    return {
+}
+
+export async function getTenantPolicies(tenantId: string) {
+  try {
+    // For now, return default policies - can be enhanced with database queries
+    const data = {
       deposit: {
         enabled: false,
       },
@@ -107,49 +144,11 @@ async function makeAPIRequest(
         fee_percentage: 10,
       },
     };
+    
+    return PolicyResponseSchema.parse(data);
+  } catch (error) {
+    throw new BookingAPIError('POLICY_RETRIEVAL_FAILED', 'Failed to retrieve policies', error);
   }
-  
-  throw new Error(`Unknown endpoint: ${endpoint}`);
-}
-
-export async function getTenantBySlug(slug: string) {
-  const data = await makeAPIRequest(`/api/public/tenants/by-slug/${slug}`);
-  return TenantInfoSchema.parse(data);
-}
-
-export async function searchAvailability(request: SearchRequest) {
-  const data = await makeAPIRequest('/api/public/booking/search', {
-    method: 'POST',
-    body: JSON.stringify(request),
-  });
-  return AvailabilityResponseSchema.parse(data);
-}
-
-export async function createHold(request: HoldRequest) {
-  const data = await makeAPIRequest('/api/public/booking/holds', {
-    method: 'POST',
-    body: JSON.stringify(request),
-  });
-  return HoldResponseSchema.parse(data);
-}
-
-export async function confirmReservation(
-  request: ReservationRequest, 
-  idempotencyKey: string
-) {
-  const data = await makeAPIRequest('/api/public/booking/reservations', {
-    method: 'POST',
-    headers: {
-      'x-idempotency-key': idempotencyKey,
-    },
-    body: JSON.stringify(request),
-  });
-  return ReservationResponseSchema.parse(data);
-}
-
-export async function getTenantPolicies(tenantId: string) {
-  const data = await makeAPIRequest(`/api/public/tenants/${tenantId}/policies`);
-  return PolicyResponseSchema.parse(data);
 }
 
 export async function sendAnalyticsEvent(
