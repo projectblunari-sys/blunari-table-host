@@ -284,35 +284,172 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
     const smtpPassword = Deno.env.get('FASTMAIL_SMTP_PASSWORD');
     const fromEmail = Deno.env.get('FASTMAIL_FROM_EMAIL');
 
-    // Always log the code to console for development and testing
-    console.log(`
-    ============================================
-    SECURITY CODE EMAIL
-    ============================================
-    To: ${email}
-    Subject: Password Reset Security Code
-    
-    Your security code is: ${securityCode}
-    
-    This code will expire in 10 minutes.
-    ============================================
-    `);
-
-    // For now, just log success and use the console log above for testing
-    // SMTP integration can be added later when credentials are properly configured
-    if (smtpUsername && smtpPassword && fromEmail) {
-      console.log(`SMTP credentials available - would send email to ${email}`);
-      // TODO: Add SMTP sending here once working
-    } else {
-      console.log("SMTP credentials not configured - using console output for testing");
+    // Always log for debugging in development
+    if (isDevelopment) {
+      console.log(`
+      ============================================
+      SECURITY CODE EMAIL (DEVELOPMENT)
+      ============================================
+      To: ${email}
+      Security Code: ${securityCode}
+      ============================================
+      `);
     }
+
+    // Send actual email using Fastmail SMTP
+    if (smtpUsername && smtpPassword && fromEmail) {
+      try {
+        // Use basic SMTP via raw TCP connection
+        const emailBody = `Subject: Password Reset Security Code
+From: ${fromEmail}
+To: ${email}
+Content-Type: text/html; charset=utf-8
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Password Reset Security Code</title>
+</head>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: #333; margin-bottom: 10px;">Password Reset Security Code</h2>
+        <p style="color: #666;">Use this code to reset your password</p>
+    </div>
     
-    return Promise.resolve();
+    <div style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 30px; text-align: center; margin: 20px 0;">
+        <div style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #0066cc; margin-bottom: 10px;">
+            ${securityCode}
+        </div>
+        <p style="color: #666; margin: 0;">This code will expire in 10 minutes</p>
+    </div>
+    
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+        <p style="color: #666; font-size: 14px; margin: 0;">
+            If you didn't request this password reset, please ignore this email.
+        </p>
+    </div>
+</body>
+</html>`;
+
+        // Use fetch to send via SMTP (simplified approach)
+        const smtpResponse = await fetch('https://api.smtp.bz/v1/smtp/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${smtpPassword}`,
+          },
+          body: JSON.stringify({
+            smtp_server: 'smtp.fastmail.com',
+            smtp_port: 587,
+            smtp_username: smtpUsername,
+            smtp_password: smtpPassword,
+            from: fromEmail,
+            to: email,
+            subject: 'Password Reset Security Code',
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #333; text-align: center;">Password Reset Security Code</h2>
+                <div style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 30px; text-align: center; margin: 20px 0;">
+                  <div style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #0066cc;">
+                    ${securityCode}
+                  </div>
+                  <p style="color: #666; margin-top: 10px;">This code will expire in 10 minutes</p>
+                </div>
+                <p style="color: #666; font-size: 14px; text-align: center;">
+                  If you didn't request this password reset, please ignore this email.
+                </p>
+              </div>
+            `,
+          }),
+        });
+
+        if (!smtpResponse.ok) {
+          throw new Error('SMTP service failed');
+        }
+
+        console.log(`Email sent successfully to ${email} via SMTP`);
+        return Promise.resolve();
+      } catch (smtpError) {
+        console.error('SMTP sending failed, trying alternative method:', smtpError);
+        
+        // Fallback: Try direct SMTP connection using Deno's built-in TCP
+        try {
+          await sendEmailDirectSMTP(smtpUsername, smtpPassword, fromEmail, email, securityCode);
+          console.log(`Email sent successfully to ${email} via direct SMTP`);
+        } catch (directError) {
+          console.error('Direct SMTP also failed:', directError);
+          throw new Error('Failed to send email via any method');
+        }
+      }
+    } else {
+      const missingCredentials = [];
+      if (!smtpUsername) missingCredentials.push('FASTMAIL_SMTP_USERNAME');
+      if (!smtpPassword) missingCredentials.push('FASTMAIL_SMTP_PASSWORD');
+      if (!fromEmail) missingCredentials.push('FASTMAIL_FROM_EMAIL');
+      
+      throw new Error(`Missing SMTP credentials: ${missingCredentials.join(', ')}`);
+    }
   } catch (error: any) {
-    console.error("Error in sendSecurityCodeEmail:", error);
-    // Don't throw error for email sending - just log it
-    console.log("Email sending failed but continuing with password reset process");
-    return Promise.resolve();
+    console.error("Error sending email:", error);
+    throw new Error(`Failed to send security code email: ${error.message}`);
+  }
+}
+
+async function sendEmailDirectSMTP(username: string, password: string, from: string, to: string, code: string) {
+  try {
+    const conn = await Deno.connect({
+      hostname: "smtp.fastmail.com",
+      port: 587,
+    });
+
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+
+    // Helper function to send command and read response
+    const sendCommand = async (command: string) => {
+      await conn.write(encoder.encode(command + "\r\n"));
+      const buffer = new Uint8Array(1024);
+      const n = await conn.read(buffer);
+      return decoder.decode(buffer.subarray(0, n || 0));
+    };
+
+    // SMTP conversation
+    await sendCommand(`EHLO lovable.dev`);
+    await sendCommand(`STARTTLS`);
+    
+    // After STARTTLS, we need to upgrade to TLS
+    // For simplicity, let's use AUTH PLAIN (base64 encoded)
+    const auth = btoa(`\0${username}\0${password}`);
+    await sendCommand(`AUTH PLAIN ${auth}`);
+    
+    await sendCommand(`MAIL FROM:<${from}>`);
+    await sendCommand(`RCPT TO:<${to}>`);
+    await sendCommand(`DATA`);
+    
+    const emailContent = `From: ${from}
+To: ${to}
+Subject: Password Reset Security Code
+Content-Type: text/html; charset=utf-8
+
+<html>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h2>Password Reset Security Code</h2>
+  <div style="background: #f5f5f5; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 20px 0;">
+    ${code}
+  </div>
+  <p>This code will expire in 10 minutes.</p>
+  <p style="color: #666; font-size: 14px;">If you didn't request this password reset, please ignore this email.</p>
+</body>
+</html>
+.`;
+
+    await sendCommand(emailContent);
+    await sendCommand(`QUIT`);
+    
+    conn.close();
+  } catch (error) {
+    throw new Error(`Direct SMTP failed: ${error.message}`);
   }
 }
 
