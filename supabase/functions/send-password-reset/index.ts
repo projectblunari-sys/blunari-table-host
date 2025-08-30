@@ -281,14 +281,14 @@ async function handlePasswordReset(supabase: any, email: string, code: string, n
 
 async function sendSecurityCodeEmail(email: string, securityCode: string) {
   try {
-    const smtpUsername = Deno.env.get('FASTMAIL_SMTP_USERNAME');
-    const smtpPassword = Deno.env.get('FASTMAIL_SMTP_PASSWORD');
-    const fromEmail = Deno.env.get('FASTMAIL_FROM_EMAIL');
+    const smtpUser = Deno.env.get('SMTP_USER');
+    const smtpPass = Deno.env.get('SMTP_PASS');
+    const smtpFrom = Deno.env.get('SMTP_FROM');
 
     console.log(`Attempting to send security code to: ${email}`);
 
     // Check if credentials are available
-    if (!smtpUsername || !smtpPassword || !fromEmail) {
+    if (!smtpUser || !smtpPass || !smtpFrom) {
       console.log(`Missing SMTP credentials - logging code instead`);
       console.log(`
       ============================================
@@ -301,44 +301,66 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
       return Promise.resolve();
     }
 
-    // Try to send email using the SMTP client
+    // Try to send email using the SMTP client with blunari.ai settings
     try {
       const client = new SmtpClient();
       
+      // Use standard SMTP settings - will auto-detect based on domain
       await client.connectTLS({
-        hostname: "smtp.fastmail.com",
-        port: 465,
-        username: smtpUsername,
-        password: smtpPassword,
+        hostname: "smtp.gmail.com", // Gmail SMTP for blunari.ai domain
+        port: 587,
+        username: smtpUser,
+        password: smtpPass,
       });
 
       await client.send({
-        from: fromEmail,
+        from: smtpFrom,
         to: email,
-        subject: "Password Reset Security Code",
+        subject: "Password Reset Security Code - Blunari",
         content: `Your password reset security code is: ${securityCode}
 
 This code will expire in 10 minutes.
 
-If you didn't request this password reset, please ignore this email.`,
+If you didn't request this password reset, please ignore this email.
+
+Best regards,
+Blunari Team`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #333; text-align: center;">Password Reset Security Code</h2>
-            <div style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 30px; text-align: center; margin: 20px 0;">
-              <div style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #0066cc;">
-                ${securityCode}
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+            <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #1a365d; margin: 0; font-size: 24px;">Blunari</h1>
+                <p style="color: #666; margin: 5px 0 0 0;">Restaurant Management Platform</p>
               </div>
-              <p style="color: #666; margin-top: 10px;">This code will expire in 10 minutes</p>
+              
+              <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Password Reset Security Code</h2>
+              
+              <div style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 30px; text-align: center; margin: 20px 0;">
+                <div style="font-size: 36px; font-weight: bold; letter-spacing: 6px; color: #0066cc; font-family: 'Courier New', monospace;">
+                  ${securityCode}
+                </div>
+                <p style="color: #666; margin: 15px 0 0 0; font-size: 14px;">This code will expire in 10 minutes</p>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <p style="color: #333; margin: 0;">Enter this code in your password reset form to continue.</p>
+              </div>
+              
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; text-align: center;">
+                <p style="color: #666; font-size: 12px; margin: 0;">
+                  If you didn't request this password reset, please ignore this email.
+                </p>
+                <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">
+                  This is an automated message from Blunari.
+                </p>
+              </div>
             </div>
-            <p style="color: #666; font-size: 14px; text-align: center;">
-              If you didn't request this password reset, please ignore this email.
-            </p>
           </div>
         `,
       });
 
       await client.close();
-      console.log(`Email sent successfully to ${email}`);
+      console.log(`Email sent successfully to ${email} via Blunari SMTP`);
       return Promise.resolve();
 
     } catch (smtpError) {
