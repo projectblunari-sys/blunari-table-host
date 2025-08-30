@@ -250,13 +250,18 @@ export const FloorPlan3DManager: React.FC<{ tables: any[], onTablesDetected?: (t
     try {
       // Create image element for AI analysis
       const img = new Image();
+      img.crossOrigin = 'anonymous'; // Handle CORS
       img.src = floorPlanImage;
       
       await new Promise((resolve, reject) => {
         img.onload = resolve;
-        img.onerror = reject;
+        img.onerror = (error) => {
+          console.error('Image load error:', error);
+          reject(new Error('Failed to load image for analysis'));
+        };
       });
 
+      console.log('Image loaded successfully, starting AI analysis...');
       const analysisResult = await FloorPlanAI.analyzeFloorPlan(img);
       setAnalysis(analysisResult);
       
@@ -264,16 +269,42 @@ export const FloorPlan3DManager: React.FC<{ tables: any[], onTablesDetected?: (t
         onTablesDetected(analysisResult.detectedTables);
       }
 
-      toast({
-        title: "Analysis complete!",
-        description: `Detected ${analysisResult.tableCount} tables with ${(analysisResult.confidence * 100).toFixed(1)}% confidence`
-      });
+      if (analysisResult.tableCount > 0) {
+        toast({
+          title: "Analysis complete!",
+          description: `Detected ${analysisResult.tableCount} tables with ${(analysisResult.confidence * 100).toFixed(1)}% confidence`
+        });
+      } else {
+        toast({
+          title: "Analysis complete",
+          description: "No tables detected. You can manually position tables in Floor Plan view.",
+          variant: "default"
+        });
+      }
     } catch (error) {
       console.error('Analysis failed:', error);
+      
+      // Create fallback analysis result
+      const fallbackAnalysis = {
+        tableCount: 0,
+        detectedTables: [],
+        confidence: 0,
+        recommendations: [
+          "AI analysis failed. This could be due to:",
+          "• Image format not supported (try JPG or PNG)",
+          "• Floor plan image unclear or too complex",
+          "• Temporary AI service issues",
+          "You can still manually position tables using the Floor Plan view."
+        ],
+        analysisTime: 0
+      };
+      
+      setAnalysis(fallbackAnalysis);
+      
       toast({
-        title: "Analysis failed",
-        description: "Failed to analyze floor plan. Please try again.",
-        variant: "destructive"
+        title: "Analysis had issues",
+        description: "Check recommendations below. You can still manually set up tables.",
+        variant: "default"
       });
     } finally {
       setIsAnalyzing(false);

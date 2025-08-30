@@ -30,41 +30,73 @@ export class FloorPlanAI {
     
     try {
       console.log('Initializing AI object detection model...');
-      this.detector = await pipeline(
-        'object-detection', 
-        'Xenova/detr-resnet-50',
-        { device: 'webgpu' }
-      );
+      
+      // Try WebGPU first, then fall back to CPU
+      try {
+        this.detector = await pipeline(
+          'object-detection', 
+          'Xenova/detr-resnet-50',
+          { device: 'webgpu' }
+        );
+        console.log('AI model initialized with WebGPU successfully');
+      } catch (webgpuError) {
+        console.warn('WebGPU not available, falling back to CPU:', webgpuError);
+        this.detector = await pipeline(
+          'object-detection', 
+          'Xenova/detr-resnet-50'
+        );
+        console.log('AI model initialized with CPU successfully');
+      }
+      
       this.isInitialized = true;
-      console.log('AI model initialized successfully');
     } catch (error) {
-      console.warn('WebGPU not available, falling back to CPU');
-      this.detector = await pipeline(
-        'object-detection', 
-        'Xenova/detr-resnet-50'
-      );
-      this.isInitialized = true;
+      console.error('Failed to initialize AI model:', error);
+      throw new Error(`Failed to load AI model: ${error.message}`);
     }
   }
 
   static async analyzeFloorPlan(imageElement: HTMLImageElement): Promise<FloorPlanAnalysis> {
     const startTime = Date.now();
     
-    if (!this.isInitialized) {
-      await this.initialize();
-    }
-
     try {
-      console.log('Analyzing floor plan for tables...');
+      if (!this.isInitialized) {
+        console.log('Initializing AI model...');
+        await this.initialize();
+      }
+
+      console.log('Starting floor plan analysis...');
+      console.log('Image dimensions:', imageElement.width, 'x', imageElement.height);
       
-      // Detect objects in the image
-      const detections = await this.detector(imageElement);
+      // Ensure image is loaded
+      if (!imageElement.complete || imageElement.naturalHeight === 0) {
+        throw new Error('Image not properly loaded');
+      }
+
+      // Detect objects in the image with timeout
+      console.log('Running object detection...');
+      const detectionPromise = this.detector(imageElement);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Detection timeout')), 30000)
+      );
+      
+      const detections = await Promise.race([detectionPromise, timeoutPromise]);
+      console.log('Detection complete. Found objects:', detections?.length || 0);
       console.log('Raw detections:', detections);
 
-      // Filter for table-like objects
-      const tableDetections = detections.filter((detection: any) => 
-        this.isTableLikeObject(detection.label)
-      );
+      if (!detections || !Array.isArray(detections)) {
+        console.warn('Invalid detection results, creating fallback analysis');
+        return this.createFallbackAnalysis(startTime);
+      }
+
+      // Filter for table-like objects with more flexible criteria
+      const tableDetections = detections.filter((detection: any) => {
+        const isTable = this.isTableLikeObject(detection.label);
+        const hasGoodConfidence = detection.score > 0.1; // Lower threshold
+        console.log(`Detection: ${detection.label} (confidence: ${detection.score}) - isTable: ${isTable}`);
+        return isTable && hasGoodConfidence;
+      });
+
+      console.log(`Found ${tableDetections.length} table-like objects`);
 
       const detectedTables: DetectedTable[] = tableDetections.map((detection: any, index: number) => {
         const boundingBox = detection.box;
@@ -73,8 +105,8 @@ export class FloorPlanAI {
           id: `detected_${index + 1}`,
           name: `Table ${index + 1}`,
           position: {
-            x: (boundingBox.xmin + boundingBox.xmax) / 2 / imageElement.width * 10,
-            y: (boundingBox.ymin + boundingBox.ymax) / 2 / imageElement.height * 10
+            x: Math.max(0, Math.min(10, (boundingBox.xmin + boundingBox.xmax) / 2 / imageElement.width * 10)),
+            y: Math.max(0, Math.min(10, (boundingBox.ymin + boundingBox.ymax) / 2 / imageElement.height * 10))
           },
           confidence: detection.score,
           boundingBox: {
@@ -94,6 +126,12 @@ export class FloorPlanAI {
 
       const recommendations = this.generateRecommendations(detectedTables, imageElement);
 
+      console.log('Analysis complete:', {
+        tableCount: detectedTables.length,
+        confidence: averageConfidence,
+        analysisTime
+      });
+
       return {
         tableCount: detectedTables.length,
         detectedTables,
@@ -103,8 +141,30 @@ export class FloorPlanAI {
       };
     } catch (error) {
       console.error('Error analyzing floor plan:', error);
-      throw new Error('Failed to analyze floor plan. Please try again.');
+      console.error('Error details:', error.message, error.stack);
+      
+      // Return fallback analysis instead of throwing
+      return this.createFallbackAnalysis(startTime, error.message);
     }
+  }
+
+  private static createFallbackAnalysis(startTime: number, errorMessage?: string): FloorPlanAnalysis {
+    const analysisTime = Date.now() - startTime;
+    
+    return {
+      tableCount: 0,
+      detectedTables: [],
+      confidence: 0,
+      recommendations: [
+        "AI analysis encountered an issue. This could be due to:",
+        "• Image format not supported (try JPG or PNG)",
+        "• Floor plan too complex or unclear",
+        "• Network connectivity issues",
+        errorMessage ? `• Technical error: ${errorMessage}` : "• Temporary AI service unavailability",
+        "You can still manually position tables using the Floor Plan view."
+      ],
+      analysisTime
+    };
   }
 
   private static isTableLikeObject(label: string): boolean {
