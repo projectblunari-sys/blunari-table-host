@@ -172,6 +172,54 @@ const Auth: React.FC = () => {
     }
   };
 
+  const onResendCode = async () => {
+    setResetLoading(true);
+    
+    try {
+      const response = await fetch('https://kbfbbkcaxhzlnbqxwgoz.supabase.co/functions/v1/send-password-reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = 'Failed to resend security code';
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: 'Security code resent',
+          description: 'Check the edge function logs for your new 6-digit security code.',
+        });
+      } else {
+        throw new Error(result.error || 'Failed to resend security code');
+      }
+    } catch (error: any) {
+      console.error('Resend code error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const onCodeSubmit = async (data: CodeVerifyFormData) => {
     setCodeLoading(true);
     
@@ -485,8 +533,18 @@ const Auth: React.FC = () => {
                       <Button
                         type="button"
                         variant="link"
+                        onClick={onResendCode}
+                        disabled={resetLoading}
+                        className="text-sm text-primary hover:text-primary/80 disabled:opacity-50"
+                      >
+                        {resetLoading ? 'Sending...' : "Didn't receive the code? Resend"}
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="link"
                         onClick={() => setShowCodeForm(false)}
-                        className="text-sm text-muted-foreground hover:text-foreground"
+                        className="block text-sm text-muted-foreground hover:text-foreground"
                       >
                         Back to email entry
                       </Button>
