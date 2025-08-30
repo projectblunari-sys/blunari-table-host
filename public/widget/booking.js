@@ -199,21 +199,62 @@
       submitBtn.disabled = true;
     }
 
-    // In a real implementation, this would submit to your API
-    // For now, we'll simulate a successful booking
-    setTimeout(() => {
-      showMessage('Booking submitted successfully! We will contact you soon to confirm.', 'success');
+    // Create booking data
+    const bookingData = {
+      booking_time: `${formData.date}T${formData.time}:00.000Z`,
+      party_size: parseInt(formData.partySize),
+      guest_name: formData.name,
+      guest_email: formData.email,
+      guest_phone: formData.phone || null,
+      special_requests: formData.specialRequests || null,
+      status: 'confirmed',
+      duration_minutes: 120
+    };
+
+    // Submit to API
+    fetch('https://kbfbbkcaxhzlnbqxwgoz.supabase.co/functions/v1/widget-booking', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tenant: scriptConfig.tenant,
+        ...bookingData
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showMessage('Booking submitted successfully! We will contact you soon to confirm.', 'success');
+        // Reset form
+        const form = document.getElementById('blunari-booking-form');
+        if (form) {
+          form.reset();
+          // Reset date and time to defaults
+          const dateInput = document.querySelector('input[name="date"]');
+          const timeInput = document.querySelector('input[name="time"]');
+          if (dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+          }
+          if (timeInput) {
+            timeInput.value = '19:00';
+          }
+        }
+      } else {
+        showMessage(data.message || 'Booking failed. Please try again.', 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Booking error:', error);
+      showMessage('Booking failed. Please try again.', 'error');
+    })
+    .finally(() => {
       if (submitBtn) {
         submitBtn.textContent = 'Book Table';
         submitBtn.disabled = false;
       }
-      
-      // Reset form
-      const form = document.getElementById('blunari-booking-form');
-      if (form) {
-        form.reset();
-      }
-    }, 1500);
+    });
   }
 
   // Initialize widget

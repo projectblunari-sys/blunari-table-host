@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.tenant-provision]
 verify_jwt = false
+
+[functions.pos-webhook]
+verify_jwt = false
+
+[functions.pos-health-check]
+verify_jwt = false
+
+[functions.widget-booking]
+verify_jwt = false
