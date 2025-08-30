@@ -37,7 +37,7 @@ async function makeAPIRequest(
   // Return mock responses based on endpoint
   if (endpoint.includes('/tenants/by-slug/')) {
     return {
-      tenant_id: 'demo-tenant-id',
+      tenant_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', // Valid UUID format
       slug: endpoint.split('/').pop(),
       name: 'Demo Restaurant',
       timezone: 'America/New_York',

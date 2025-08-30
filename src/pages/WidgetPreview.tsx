@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { ExternalLink, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,11 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTenant } from '@/hooks/useTenant';
 
 const WidgetPreview: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
   const { tenant, isLoading } = useTenant();
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
-  const bookingUrl = `/book/${slug}`;
+  // Use the current tenant's slug for the booking URL
+  const bookingUrl = `/book/${tenant?.slug || 'demo'}`;
   const fullBookingUrl = `${window.location.origin}${bookingUrl}`;
 
   const deviceSizes = {
