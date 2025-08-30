@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
-import { SmtpClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 
 const corsHeaders = {
@@ -312,20 +312,20 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
 
     // Try to send email using Fastmail SMTP with correct settings
     try {
-      const client = new SmtpClient();
+      const client = new SMTPClient();
       
       console.log(`Connecting to Fastmail SMTP: ${smtpHost}:${smtpPort} (Secure: ${smtpSecure})`);
       
       if (smtpSecure && smtpPort === 465) {
         // Use SSL connection for port 465
-        await client.connectTLS({
+        await client.connect({
           hostname: smtpHost,
           port: smtpPort,
           username: smtpUser,
           password: smtpPass,
         });
       } else {
-        // Use STARTTLS for port 587
+        // Use STARTTLS for port 587  
         await client.connect({
           hostname: smtpHost,
           port: smtpPort,
@@ -338,7 +338,7 @@ async function sendSecurityCodeEmail(email: string, securityCode: string) {
         from: smtpFrom,
         to: email,
         subject: "Password Reset Security Code - Blunari",
-        content: `Your password reset security code is: ${securityCode}
+        text: `Your password reset security code is: ${securityCode}
 
 This code will expire in 10 minutes.
 
