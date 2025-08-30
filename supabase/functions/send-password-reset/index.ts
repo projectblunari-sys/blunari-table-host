@@ -382,6 +382,7 @@ Blunari Team`,
 
       await client.close();
       console.log(`Email sent successfully to ${email} via Fastmail SMTP`);
+      console.log(`SUCCESS: Email delivery confirmed for ${email}`);
       return Promise.resolve();
 
     } catch (smtpError) {
