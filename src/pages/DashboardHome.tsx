@@ -26,7 +26,7 @@ const DashboardHome: React.FC = () => {
   const { alerts, dismissAlert, clearAllAlerts } = useAlertSystem(tenant?.id);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Tenant Access Information */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -45,7 +45,7 @@ const DashboardHome: React.FC = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative overflow-hidden bg-gradient-primary rounded-2xl p-8 text-primary-foreground shadow-strong"
+        className="relative overflow-hidden bg-gradient-primary rounded-2xl p-6 text-primary-foreground shadow-strong"
       >
         <div className="relative z-10">
           <h1 className="text-4xl font-bold mb-2">
@@ -145,7 +145,7 @@ const DashboardHome: React.FC = () => {
       </motion.div>
 
       {/* Enhanced Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Today's Bookings with Enhanced Animation */}
         <motion.div
           initial={{ opacity: 0, x: -40 }}
@@ -173,7 +173,7 @@ const DashboardHome: React.FC = () => {
             type: "spring",
             stiffness: 80
           }}
-          className="space-y-8"
+          className="space-y-6"
         >
           <div className="bg-gradient-to-br from-card to-card/80 rounded-2xl shadow-medium border border-border/50 overflow-hidden">
             <AlertSystem 
