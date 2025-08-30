@@ -310,9 +310,10 @@ const POSIntegrations: React.FC = () => {
                 Add Integration
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden" aria-describedby="pos-integration-description">
               <div className="bg-gradient-to-br from-primary/5 via-background to-accent/5 p-6">
                 <DialogHeader>
+                  <p id="pos-integration-description" className="sr-only">POS integration setup and configuration details</p>
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                     Add POS Integration
                   </DialogTitle>
