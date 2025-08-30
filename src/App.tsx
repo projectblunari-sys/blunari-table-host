@@ -16,7 +16,6 @@ import CustomerManagement from "./pages/CustomerManagement";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import WidgetPreview from "./pages/WidgetPreview";
-import WidgetConfiguration from "./pages/WidgetConfiguration";
 import POSIntegrations from "./pages/POSIntegrations";
 import NotFound from "./pages/NotFound";
 import BookingPage from "./pages/BookingPage";
@@ -48,7 +47,6 @@ const App = () => (
               <Route path="tables" element={<TableManagement />} />
               <Route path="customers" element={<CustomerManagement />} />
               <Route path="widget-preview" element={<WidgetPreview />} />
-              <Route path="widget-configuration" element={<WidgetConfiguration />} />
               <Route path="pos-integrations" element={<POSIntegrations />} />
               <Route path="waitlist" element={<div>Waitlist - Coming Soon</div>} />
               <Route path="staff" element={<div>Staff Management - Coming Soon</div>} />
