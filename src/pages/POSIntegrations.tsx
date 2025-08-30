@@ -323,7 +323,7 @@ const POSIntegrations: React.FC = () => {
               </div>
               
               <div className="p-6 pt-2">
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+                <div className="grid grid-cols-3 gap-6">
                   {availableProviders.map((providerId, index) => {
                     const provider = providerInfo[providerId as keyof typeof providerInfo];
                     return (
