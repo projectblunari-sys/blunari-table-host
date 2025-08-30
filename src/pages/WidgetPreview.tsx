@@ -268,17 +268,6 @@ const WidgetPreview: React.FC = () => {
             <div className={`${deviceConfigs[previewDevice].width} transition-all duration-300`}>
               <Card className="overflow-hidden shadow-2xl">
                 <CardContent className="p-0">
-                  <div className="bg-muted/30 p-3 border-b flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                      <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                    </div>
-                    <div className="flex-1 bg-background rounded px-3 py-1 text-sm text-muted-foreground">
-                      {fullBookingUrl}
-                    </div>
-                  </div>
-                  
                   <iframe
                     key={refreshing.toString()}
                     src={bookingUrl}
