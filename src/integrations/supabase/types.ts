@@ -1808,6 +1808,108 @@ export type Database = {
         }
         Relationships: []
       }
+      password_reset_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          email: string
+          failure_reason: string | null
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          email: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          success: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          email?: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      password_reset_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          status: Database["public"]["Enums"]["reset_attempt_status"]
+          used_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          status?: Database["public"]["Enums"]["reset_attempt_status"]
+          used_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["reset_attempt_status"]
+          used_at?: string | null
+        }
+        Relationships: []
+      }
+      password_reset_rate_limits: {
+        Row: {
+          attempts: number
+          created_at: string
+          email: string
+          id: string
+          ip_address: unknown | null
+          locked_until: string | null
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: unknown | null
+          locked_until?: string | null
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: unknown | null
+          locked_until?: string | null
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       payment_reminders: {
         Row: {
           created_at: string
@@ -3974,6 +4076,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_reset_rate_limit: {
+        Args: { p_email: string; p_ip_address?: unknown }
+        Returns: Json
+      }
       check_service_health: {
         Args: { p_service_id: string }
         Returns: Json
@@ -3985,6 +4091,10 @@ export type Database = {
           domain_id: string
           domain_name: string
         }[]
+      }
+      cleanup_expired_reset_codes: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       cleanup_expired_sessions: {
         Args: Record<PropertyKey, never>
@@ -4064,6 +4174,10 @@ export type Database = {
       }
       hash_api_key: {
         Args: { api_key: string }
+        Returns: string
+      }
+      hash_reset_code: {
+        Args: { p_code: string; p_email: string }
         Returns: string
       }
       log_api_request: {
@@ -4240,6 +4354,7 @@ export type Database = {
       employee_role: "SUPER_ADMIN" | "ADMIN" | "SUPPORT" | "OPS" | "VIEWER"
       employee_status: "ACTIVE" | "INACTIVE" | "PENDING" | "SUSPENDED"
       plan_tier: "FREE" | "BASIC" | "PREMIUM" | "ENTERPRISE"
+      reset_attempt_status: "pending" | "used" | "expired" | "failed"
       ssl_status: "pending" | "active" | "error" | "expired" | "renewing"
     }
     CompositeTypes: {
@@ -4374,6 +4489,7 @@ export const Constants = {
       employee_role: ["SUPER_ADMIN", "ADMIN", "SUPPORT", "OPS", "VIEWER"],
       employee_status: ["ACTIVE", "INACTIVE", "PENDING", "SUSPENDED"],
       plan_tier: ["FREE", "BASIC", "PREMIUM", "ENTERPRISE"],
+      reset_attempt_status: ["pending", "used", "expired", "failed"],
       ssl_status: ["pending", "active", "error", "expired", "renewing"],
     },
   },
