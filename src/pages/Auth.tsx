@@ -128,22 +128,39 @@ const Auth: React.FC = () => {
         body: JSON.stringify({ email: data.email }),
       });
 
-      const result = await response.json();
-
+      // Check if response is ok before parsing JSON
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to send security code');
+        const errorText = await response.text();
+        let errorMessage = 'Failed to send security code';
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorMessage;
+        } catch {
+          // If JSON parsing fails, use the raw text or default message
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      toast({
-        title: 'Security code sent',
-        description: 'Check your email for the 6-digit security code.',
-      });
-      
-      setResetEmail(data.email);
-      setCodeValue('email', data.email);
-      setShowCodeForm(true);
-      resetForm();
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: 'Security code sent',
+          description: 'Check your email for the 6-digit security code.',
+        });
+        
+        setResetEmail(data.email);
+        setCodeValue('email', data.email);
+        setShowCodeForm(true);
+        resetForm();
+      } else {
+        throw new Error(result.error || 'Failed to send security code');
+      }
     } catch (error: any) {
+      console.error('Reset password error:', error);
       toast({
         title: 'Error',
         description: error.message || 'Something went wrong. Please try again.',
@@ -170,21 +187,38 @@ const Auth: React.FC = () => {
         }),
       });
 
-      const result = await response.json();
-
+      // Check if response is ok before parsing JSON
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to reset password');
+        const errorText = await response.text();
+        let errorMessage = 'Failed to reset password';
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorMessage;
+        } catch {
+          // If JSON parsing fails, use the raw text or default message
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      toast({
-        title: 'Password reset successful',
-        description: 'Your password has been updated. You can now sign in.',
-      });
-      
-      setShowCodeForm(false);
-      resetCodeForm();
-      setActiveTab('signin');
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: 'Password reset successful',
+          description: 'Your password has been updated. You can now sign in.',
+        });
+        
+        setShowCodeForm(false);
+        resetCodeForm();
+        setActiveTab('signin');
+      } else {
+        throw new Error(result.error || 'Failed to reset password');
+      }
     } catch (error: any) {
+      console.error('Code verification error:', error);
       toast({
         title: 'Error',
         description: error.message || 'Invalid security code. Please try again.',
