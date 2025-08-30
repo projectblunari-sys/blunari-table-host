@@ -224,63 +224,7 @@ const Auth: React.FC = () => {
     setCodeLoading(true);
     
     try {
-      // First verify the code
-      const response = await fetch('https://kbfbbkcaxhzlnbqxwgoz.supabase.co/functions/v1/send-password-reset', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          code: data.code,
-          // Don't send password yet, just verify the code
-        }),
-      });
-
-      // Check if response is ok before parsing JSON
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage = 'Failed to verify code';
-        
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorMessage = errorJson.error || errorMessage;
-        } catch {
-          errorMessage = errorText || errorMessage;
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast({
-          title: 'Code verified',
-          description: 'Please enter your new password.',
-        });
-        
-        // Move to password form step
-        setShowPasswordForm(true);
-      } else {
-        throw new Error(result.error || 'Failed to verify code');
-      }
-    } catch (error: any) {
-      console.error('Code verification error:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Invalid security code. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setCodeLoading(false);
-    }
-  };
-
-  const onPasswordSubmit = async (data: CodeVerifyFormData) => {
-    setCodeLoading(true);
-    
-    try {
+      // Send both code and new password to reset password
       const response = await fetch('https://kbfbbkcaxhzlnbqxwgoz.supabase.co/functions/v1/send-password-reset', {
         method: 'POST',
         headers: {
@@ -327,14 +271,13 @@ const Auth: React.FC = () => {
       console.error('Password reset error:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to reset password. Please try again.',
+        description: error.message || 'Invalid security code or failed to reset password. Please try again.',
         variant: 'destructive',
       });
     } finally {
       setCodeLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
@@ -447,8 +390,7 @@ const Auth: React.FC = () => {
                 <CardTitle className="text-center">Reset Password</CardTitle>
                 <CardDescription className="text-center">
                   {!showCodeForm ? 'Enter your email to receive a security code' : 
-                   !showPasswordForm ? 'Enter the security code from your email' : 
-                   'Create your new password'}
+                   'Enter the security code and your new password'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -490,7 +432,7 @@ const Auth: React.FC = () => {
                       </Button>
                     </div>
                   </form>
-                ) : !showPasswordForm ? (
+                ) : (
                   <form onSubmit={handleCodeSubmit(onCodeSubmit)} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="code-email">Email</Label>
@@ -516,63 +458,6 @@ const Auth: React.FC = () => {
                       {codeErrors.code && (
                         <p className="text-sm text-destructive">{codeErrors.code.message}</p>
                       )}
-                    </div>
-                    
-                    <Button type="submit" className="w-full" disabled={codeLoading}>
-                      {codeLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Verifying...
-                        </>
-                      ) : (
-                        'Verify Code'
-                      )}
-                    </Button>
-                    
-                    <div className="text-center space-y-2">
-                      <Button
-                        type="button"
-                        variant="link"
-                        onClick={onResendCode}
-                        disabled={resetLoading}
-                        className="text-sm text-primary hover:text-primary/80 disabled:opacity-50"
-                      >
-                        {resetLoading ? 'Sending...' : "Didn't receive the code? Resend"}
-                      </Button>
-                      
-                      <Button
-                        type="button"
-                        variant="link"
-                        onClick={() => setShowCodeForm(false)}
-                        className="block text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        Back to email entry
-                      </Button>
-                      <br />
-                      <Button
-                        type="button"
-                        variant="link"
-                        onClick={() => {
-                          setShowCodeForm(false);
-                          setActiveTab('signin');
-                        }}
-                        className="text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        Back to sign in
-                      </Button>
-                    </div>
-                  </form>
-                ) : (
-                  <form onSubmit={handleCodeSubmit(onPasswordSubmit)} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="final-email">Email</Label>
-                      <Input
-                        id="final-email"
-                        type="email"
-                        value={resetEmail}
-                        disabled
-                        className="bg-muted"
-                      />
                     </div>
 
                     <div className="space-y-2">
@@ -607,7 +492,7 @@ const Auth: React.FC = () => {
                       {codeLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Resetting...
+                          Resetting Password...
                         </>
                       ) : (
                         'Reset Password'
@@ -618,10 +503,20 @@ const Auth: React.FC = () => {
                       <Button
                         type="button"
                         variant="link"
-                        onClick={() => setShowPasswordForm(false)}
-                        className="text-sm text-muted-foreground hover:text-foreground"
+                        onClick={onResendCode}
+                        disabled={resetLoading}
+                        className="text-sm text-primary hover:text-primary/80 disabled:opacity-50"
                       >
-                        Back to code entry
+                        {resetLoading ? 'Sending...' : "Didn't receive the code? Resend"}
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="link"
+                        onClick={() => setShowCodeForm(false)}
+                        className="block text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        Back to email entry
                       </Button>
                       <br />
                       <Button
@@ -629,7 +524,6 @@ const Auth: React.FC = () => {
                         variant="link"
                         onClick={() => {
                           setShowCodeForm(false);
-                          setShowPasswordForm(false);
                           setActiveTab('signin');
                         }}
                         className="text-sm text-muted-foreground hover:text-foreground"
