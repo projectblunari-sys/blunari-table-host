@@ -387,7 +387,7 @@ Blunari Team`,
     } catch (smtpError) {
       console.error('Fastmail SMTP sending failed:', smtpError);
       
-      // Fallback: log the code for testing
+      // Log the detailed error for debugging
       console.log(`
       ============================================
       FASTMAIL SMTP FAILED - SECURITY CODE EMAIL
@@ -395,11 +395,12 @@ Blunari Team`,
       To: ${email}
       Security Code: ${securityCode}
       Error: ${smtpError.message}
+      Stack: ${smtpError.stack}
       ============================================
       `);
       
-      // Don't throw error, just log it for now
-      return Promise.resolve();
+      // Throw error so the function properly reports failure
+      throw new Error(`Failed to send email via SMTP: ${smtpError.message}`);
     }
 
   } catch (error: any) {
