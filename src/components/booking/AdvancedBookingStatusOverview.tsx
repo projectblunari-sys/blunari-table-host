@@ -182,6 +182,75 @@ const AdvancedBookingStatusOverview: React.FC<AdvancedBookingStatusOverviewProps
     };
   }, [bookings, timeRange]);
 
+  // Timeline data generation
+  const getTimelineData = () => {
+    const now = new Date();
+    const periods = [];
+    
+    if (timeRange === 'today') {
+      // Hourly data for today
+      for (let i = 23; i >= 0; i--) {
+        const hour = new Date(now);
+        hour.setHours(now.getHours() - i, 0, 0, 0);
+        const nextHour = new Date(hour);
+        nextHour.setHours(hour.getHours() + 1);
+        
+        const hourBookings = bookings.filter(b => {
+          const bookingTime = new Date(b.booking_time);
+          return bookingTime >= hour && bookingTime < nextHour;
+        });
+        
+        periods.push({
+          period: `${hour.getHours()}:00`,
+          bookings: hourBookings.length,
+          confirmed: hourBookings.filter(b => ['confirmed', 'seated', 'completed'].includes(b.status)).length
+        });
+      }
+    } else if (timeRange === 'week') {
+      // Daily data for past 7 days
+      for (let i = 6; i >= 0; i--) {
+        const day = new Date(now);
+        day.setDate(now.getDate() - i);
+        day.setHours(0, 0, 0, 0);
+        const nextDay = new Date(day);
+        nextDay.setDate(day.getDate() + 1);
+        
+        const dayBookings = bookings.filter(b => {
+          const bookingTime = new Date(b.booking_time);
+          return bookingTime >= day && bookingTime < nextDay;
+        });
+        
+        periods.push({
+          period: day.toLocaleDateString('en-US', { weekday: 'short' }),
+          bookings: dayBookings.length,
+          confirmed: dayBookings.filter(b => ['confirmed', 'seated', 'completed'].includes(b.status)).length
+        });
+      }
+    } else {
+      // Weekly data for past 4 weeks
+      for (let i = 3; i >= 0; i--) {
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - (i * 7) - now.getDay());
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 7);
+        
+        const weekBookings = bookings.filter(b => {
+          const bookingTime = new Date(b.booking_time);
+          return bookingTime >= weekStart && bookingTime < weekEnd;
+        });
+        
+        periods.push({
+          period: `Week ${4 - i}`,
+          bookings: weekBookings.length,
+          confirmed: weekBookings.filter(b => ['confirmed', 'seated', 'completed'].includes(b.status)).length
+        });
+      }
+    }
+    
+    return periods;
+  };
+
   // Pie chart data
   const pieData = Object.entries(analytics.statusCounts)
     .filter(([status]) => status !== 'all' && analytics.statusCounts[status] > 0)
@@ -475,9 +544,54 @@ const AdvancedBookingStatusOverview: React.FC<AdvancedBookingStatusOverviewProps
                   <CardTitle className="text-base">Booking Timeline</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center text-muted-foreground py-8">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Detailed timeline analytics coming soon</p>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={getTimelineData()}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis 
+                          dataKey="period" 
+                          className="text-xs"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis 
+                          className="text-xs"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--background))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="bookings" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="confirmed" 
+                          stroke="hsl(var(--success))" 
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 3 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex items-center justify-center gap-6 mt-4 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-0.5 bg-primary rounded"></div>
+                      <span className="text-muted-foreground">Total Bookings</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-0.5 bg-success rounded border-dashed border border-success"></div>
+                      <span className="text-muted-foreground">Confirmed</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
