@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { useTenant } from '@/hooks/useTenant';
 import { useAdvancedBookings } from '@/hooks/useAdvancedBookings';
 import BookingCard from '@/components/dashboard/BookingCard';
+import AdvancedBookingStatusOverview from '@/components/booking/AdvancedBookingStatusOverview';
 import SmartBookingWizard from '@/components/booking/SmartBookingWizard';
 import AdvancedFilters from '@/components/booking/AdvancedFilters';
 import { 
@@ -375,80 +376,33 @@ const BookingManagement: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Enhanced Booking Status Tabs */}
+      {/* Advanced Booking Status Overview */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Booking Status Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={selectedStatus} onValueChange={setSelectedStatus}>
-              <TabsList className="grid w-full grid-cols-7 h-auto p-1">
-                <TabsTrigger value="all" className="flex flex-col items-center gap-1 p-3">
-                  <span className="font-medium">All</span>
-                  <Badge variant="secondary" className="text-xs px-2">
-                    {statusCounts.all}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="pending" className="flex flex-col items-center gap-1 p-3">
-                  <span className="font-medium">Pending</span>
-                  <Badge variant="secondary" className="text-xs px-2">
-                    {statusCounts.pending}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="confirmed" className="flex flex-col items-center gap-1 p-3">
-                  <span className="font-medium">Confirmed</span>
-                  <Badge variant="secondary" className="text-xs px-2">
-                    {statusCounts.confirmed}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="seated" className="flex flex-col items-center gap-1 p-3">
-                  <span className="font-medium">Seated</span>
-                  <Badge variant="secondary" className="text-xs px-2">
-                    {statusCounts.seated}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="completed" className="flex flex-col items-center gap-1 p-3">
-                  <span className="font-medium">Completed</span>
-                  <Badge variant="secondary" className="text-xs px-2">
-                    {statusCounts.completed}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="cancelled" className="flex flex-col items-center gap-1 p-3">
-                  <span className="font-medium">Cancelled</span>
-                  <Badge variant="secondary" className="text-xs px-2">
-                    {statusCounts.cancelled}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="noshow" className="flex flex-col items-center gap-1 p-3">
-                  <span className="font-medium">No Show</span>
-                  <Badge variant="secondary" className="text-xs px-2">
-                    {statusCounts.noshow}
-                  </Badge>
-                </TabsTrigger>
-              </TabsList>
+        <AdvancedBookingStatusOverview
+          bookings={bookings}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          isLoading={isLoading}
+        />
+      </motion.div>
 
-              <Separator className="my-6" />
-
-              <TabsContent value={selectedStatus} className="mt-6">
-                <BookingsList 
-                  bookings={currentBookings} 
-                  isLoading={isLoading}
-                  selectedBookings={selectedBookings}
-                  onSelectBooking={handleSelectBooking}
-                  onUpdateBooking={updateBooking}
-                />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+      {/* Bookings List */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <BookingsList 
+          bookings={currentBookings} 
+          isLoading={isLoading}
+          selectedBookings={selectedBookings}
+          onSelectBooking={handleSelectBooking}
+          onUpdateBooking={updateBooking}
+        />
       </motion.div>
 
       {/* Smart Booking Wizard */}
