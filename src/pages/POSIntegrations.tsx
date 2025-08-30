@@ -356,9 +356,6 @@ const POSIntegrations: React.FC = () => {
                               <h3 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors duration-300">
                                 {provider.name}
                               </h3>
-                              <p className="text-sm text-muted-foreground leading-relaxed">
-                                {provider.description}
-                              </p>
                             </div>
                             
                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -410,9 +407,6 @@ const POSIntegrations: React.FC = () => {
                               <h3 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors duration-300">
                                 {provider.name}
                               </h3>
-                              <p className="text-sm text-muted-foreground leading-relaxed">
-                                {provider.description}
-                              </p>
                             </div>
                             
                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
