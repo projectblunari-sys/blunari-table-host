@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useFloorPlanStore } from '@/state/useFloorPlanStore';
 import { WORLD_W, WORLD_H } from '@/lib/floorplan/normalize';
 import { FloorPlanAI } from '@/services/FloorPlanAI';
+import type { DetectedEntity } from '@/lib/floorplan/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -130,48 +131,91 @@ export default function FloorPlanManager() {
       // Convert to our schema format with enhanced distribution
       const runId = Math.random().toString(36).substring(2) + Date.now().toString(36);
       
-      // Enhanced table positioning and sizing algorithm
+      // Enhanced table positioning and sizing algorithm with better AI integration
       const entities = analysisResult.detectedTables.map((table, index) => {
-        let x = table.position.x;
-        let y = table.position.y;
+        console.log(`Processing table ${index + 1}:`, table);
         
-        // Smart distribution algorithm
-        if (analysisResult.tableCount > 3) {
+        // Use AI positioning with smart fallbacks
+        let x = table.position?.x || 0;
+        let y = table.position?.y || 0;
+        
+        // Validate and adjust AI coordinates (0-10 range)
+        if (x < 0 || x > 10 || y < 0 || y > 10) {
+          console.warn(`Invalid AI coordinates for table ${index + 1}: (${x}, ${y}), using fallback`);
+          // Fallback to grid positioning if AI coordinates are invalid
           const gridSize = Math.ceil(Math.sqrt(analysisResult.tableCount));
-          const spacing = 7 / gridSize; // Better spacing
-          const margin = (10 - 7) / 2; // Center the grid
+          const spacing = 8 / Math.max(gridSize, 1);
+          const margin = (10 - 8) / 2;
           
-          const baseX = margin + (index % gridSize) * spacing;
-          const baseY = margin + Math.floor(index / gridSize) * spacing;
-          
-          // Blend AI position with smart grid (60% AI, 40% grid for better distribution)
-          x = x * 0.6 + baseX * 0.4;
-          y = y * 0.6 + baseY * 0.4;
+          x = margin + (index % gridSize) * spacing + 1;
+          y = margin + Math.floor(index / gridSize) * spacing + 1;
+        }
+        
+        // Smart distribution for multiple tables to avoid clustering
+        if (analysisResult.tableCount > 1) {
+          // Add slight randomization to prevent perfect grid alignment
+          const jitter = 0.3;
+          x += (Math.random() - 0.5) * jitter;
+          y += (Math.random() - 0.5) * jitter;
         }
 
-        // Smart table sizing based on capacity
-        const capacity = Math.max(2, Math.min(12, table.estimatedCapacity));
-        const isLargeTable = capacity > 6;
+        // Enhanced table sizing based on AI analysis and capacity
+        const capacity = Math.max(2, Math.min(12, table.estimatedCapacity || 4));
+        const tableType = (table as any).tableType || 'round';
         
-        return {
-          id: Math.random().toString(36).substring(2) + Date.now().toString(36) + index,
+        // Determine shape based on AI analysis or capacity
+        let shape: 'ROUND' | 'RECT';
+        if (tableType === 'rectangular' || tableType === 'booth' || capacity > 6) {
+          shape = 'RECT';
+        } else {
+          shape = 'ROUND';
+        }
+        
+        // Calculate appropriate dimensions
+        let radius: number | undefined;
+        let width: number | undefined;
+        let height: number | undefined;
+        
+        if (shape === 'ROUND') {
+          // Round table sizing: base 0.4 + capacity scaling
+          radius = Math.max(0.3, Math.min(1.2, 0.4 + capacity * 0.08));
+        } else {
+          // Rectangular table sizing
+          if (tableType === 'booth') {
+            // Booths are typically longer and narrower
+            width = Math.max(1.2, Math.min(3.0, capacity * 0.25 + 0.8));
+            height = Math.max(0.6, Math.min(1.2, capacity * 0.1 + 0.5));
+          } else {
+            // Regular rectangular tables
+            width = Math.max(1.0, Math.min(2.8, capacity * 0.2 + 0.6));
+            height = Math.max(0.8, Math.min(2.0, capacity * 0.15 + 0.6));
+          }
+        }
+        
+        const entity: DetectedEntity = {
+          id: `table_${runId}_${index}`,
           type: 'TABLE' as const,
-          shape: isLargeTable ? 'RECT' as const : 'ROUND' as const,
+          shape,
           x: Math.max(0.8, Math.min(9.2, x)),
           y: Math.max(0.8, Math.min(9.2, y)),
-          radius: !isLargeTable ? Math.max(0.4, Math.min(1.0, capacity * 0.08 + 0.35)) : undefined,
-          width: isLargeTable ? Math.max(1.0, Math.min(2.5, capacity * 0.18 + 0.6)) : undefined,
-          height: isLargeTable ? Math.max(0.8, Math.min(1.5, capacity * 0.12 + 0.5)) : undefined,
-          rotation: (Math.random() - 0.5) * Math.PI * 0.3, // More natural rotation
+          radius,
+          width,
+          height,
+          rotation: (Math.random() - 0.5) * Math.PI * 0.2, // Subtle random rotation
           seats: capacity,
           label: table.name || `Table ${index + 1}`,
-          confidence: table.confidence,
+          confidence: table.confidence || 0.5,
           meta: {
-            originalX: table.position.x,
-            originalY: table.position.y,
-            detectionIndex: index
+            aiDetected: true,
+            tableType,
+            originalPosition: table.position,
+            detectionIndex: index,
+            description: (table as any).description || 'AI detected table'
           }
         };
+        
+        console.log(`Created entity for table ${index + 1}:`, entity);
+        return entity;
       });
 
       const preview = {
@@ -182,16 +226,18 @@ export default function FloorPlanManager() {
       };
 
       setTimeout(() => {
+        console.log('Setting floor plan run with entities:', entities);
         setRun(runId, entities, preview);
         
         if (analysisResult.tableCount > 0) {
-          toast.success(`🎯 Analysis complete! Detected ${analysisResult.tableCount} tables with smart positioning`);
+          const totalCapacity = entities.reduce((sum, e) => sum + e.seats, 0);
+          toast.success(`🎯 Analysis complete! Detected ${analysisResult.tableCount} tables (${totalCapacity} seats) with intelligent positioning`);
         } else {
-          toast('🤖 No tables detected', {
-            description: 'Try a clearer image or manually position tables'
+          toast('🤖 No tables detected in this image', {
+            description: 'Try uploading a clearer floor plan or manually position tables below'
           });
         }
-      }, 500);
+      }, 300);
       
     } catch (error) {
       console.error('Enhanced analysis failed:', error);

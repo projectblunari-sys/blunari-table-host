@@ -11,6 +11,8 @@ export interface DetectedTable {
   confidence: number;
   boundingBox: { x: number; y: number; width: number; height: number };
   estimatedCapacity: number;
+  tableType?: string;
+  description?: string;
 }
 
 export interface FloorPlanAnalysis {
