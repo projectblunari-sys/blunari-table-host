@@ -15,6 +15,15 @@ import {
 // In production, this should be replaced with actual API calls through Supabase Edge Functions
 const API_BASE_URL = 'https://demo-booking-api.example.com'; // Mock URL for demo
 
+// Helper function to generate valid UUIDs for demo
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 class BookingAPIError extends Error {
   constructor(public code: string, message: string, public details?: any) {
     super(message);
@@ -67,7 +76,7 @@ async function makeAPIRequest(
   
   if (endpoint.includes('/booking/holds')) {
     return {
-      hold_id: 'demo-hold-' + Date.now(),
+      hold_id: generateUUID(),
       expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
       table_identifiers: ['Table 5'],
     };
@@ -75,7 +84,7 @@ async function makeAPIRequest(
   
   if (endpoint.includes('/booking/reservations')) {
     return {
-      reservation_id: 'demo-reservation-' + Date.now(),
+      reservation_id: generateUUID(),
       confirmation_number: 'CONF' + Math.random().toString(36).substr(2, 6).toUpperCase(),
       status: 'confirmed',
       summary: {

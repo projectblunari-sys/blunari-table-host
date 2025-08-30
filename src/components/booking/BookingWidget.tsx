@@ -141,9 +141,20 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
       }
     } catch (err) {
       const error = err as Error;
-      setStepError(error.message);
+      let errorMessage = error.message;
+      
+      // Provide more user-friendly error messages
+      if (errorMessage.includes('Invalid UUID')) {
+        errorMessage = 'There was a technical issue with your booking. Please try again.';
+      } else if (errorMessage.includes('network')) {
+        errorMessage = 'Connection issue. Please check your internet and try again.';
+      } else if (errorMessage.includes('timeout')) {
+        errorMessage = 'The request took too long. Please try again.';
+      }
+      
+      setStepError(errorMessage);
       onError?.(error);
-      toast.error('Step completion failed. Please try again.');
+      toast.error(errorMessage);
     } finally {
       setStepLoading(false);
     }
