@@ -340,10 +340,10 @@ const POSIntegrations: React.FC = () => {
                         whileHover={{ y: -4, scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <Card className="group relative overflow-hidden border-2 border-transparent hover:border-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+                        <Card className="group relative overflow-hidden border-2 border-transparent hover:border-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 h-64 flex flex-col">
                           <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           
-                          <CardContent className="relative p-6 text-center space-y-4">
+                          <CardContent className="relative p-6 text-center space-y-4 flex-1 flex flex-col justify-between">
                             <motion.div
                               className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${provider.gradient} group-hover:${provider.hoverGradient} flex items-center justify-center text-white text-2xl mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300`}
                               whileHover={{ rotate: 5, scale: 1.1 }}
