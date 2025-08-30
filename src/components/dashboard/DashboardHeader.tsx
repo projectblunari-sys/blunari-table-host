@@ -39,10 +39,10 @@ const DashboardHeader: React.FC = () => {
   });
 
   return (
-    <header className="bg-gradient-subtle border-b border-border px-4 py-6 md:px-6">
+    <header className="bg-gradient-to-r from-background via-card to-background border-b border-border/50 px-4 py-6 md:px-6 backdrop-blur-sm">
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         {/* Restaurant Info & Date */}
-        <div className="space-y-1">
+        <div className="space-y-2">
           <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             {restaurantName}
           </h1>
@@ -52,38 +52,49 @@ const DashboardHeader: React.FC = () => {
           </p>
         </div>
 
-        {/* Quick Stats */}
-        <div className="flex flex-wrap gap-3">
-          <Card className="px-3 py-2 bg-gradient-warm">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-secondary-foreground" />
-              <div className="text-sm">
-                <div className="font-semibold text-secondary-foreground">87%</div>
-                <div className="text-xs text-secondary-foreground/80">Capacity</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="px-3 py-2">
-            <div className="flex items-center gap-2">
-              {/* Real-time connection indicator */}
-              <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-success animate-pulse-soft' : 'bg-destructive'}`}></div>
-              <div className="text-sm">
-                <div className="font-semibold">
-                  {isConnected ? 'Live' : 'Offline'}
+        {/* Enhanced Quick Stats */}
+        <div className="flex flex-wrap gap-4">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-warm rounded-xl opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+            <div className="relative px-4 py-3 bg-card/80 backdrop-blur-sm rounded-xl border border-border/50 shadow-soft hover:shadow-medium transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-secondary/10 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-secondary" />
                 </div>
-                <div className="text-xs text-muted-foreground">Status</div>
+                <div className="text-sm">
+                  <div className="font-semibold text-foreground">87%</div>
+                  <div className="text-xs text-muted-foreground">Capacity</div>
+                </div>
               </div>
             </div>
-          </Card>
+          </div>
+
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-primary rounded-xl opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+            <div className="relative px-4 py-3 bg-card/80 backdrop-blur-sm rounded-xl border border-border/50 shadow-soft hover:shadow-medium transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${isConnected ? 'bg-success/10' : 'bg-destructive/10'}`}>
+                  <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-success animate-pulse-soft' : 'bg-destructive'}`}></div>
+                </div>
+                <div className="text-sm">
+                  <div className="font-semibold text-foreground">
+                    {isConnected ? 'Live' : 'Offline'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Status</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          {/* Real-time connection status */}
+        {/* Enhanced Actions */}
+        <div className="flex items-center gap-3">
+          {/* Enhanced Real-time connection status */}
           <Badge 
             variant={isConnected ? "default" : "destructive"} 
-            className="flex items-center gap-1"
+            className={`flex items-center gap-2 px-3 py-1 transition-all duration-300 ${
+              isConnected ? 'bg-success/10 text-success border-success/20 hover:bg-success/20' : ''
+            }`}
           >
             {isConnected ? (
               <>
@@ -98,20 +109,32 @@ const DashboardHeader: React.FC = () => {
             )}
           </Badge>
 
-          <Button variant="outline" size="sm" className="relative">
-            <Bell className="h-4 w-4" />
-            <Badge className="absolute -top-1 -right-1 h-2 w-2 p-0 bg-destructive"></Badge>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="relative group hover:bg-primary/5 hover:border-primary/20 transition-all duration-300"
+          >
+            <Bell className="h-4 w-4 group-hover:text-primary transition-colors duration-300" />
+            <Badge className="absolute -top-1 -right-1 h-2 w-2 p-0 bg-destructive animate-pulse-soft"></Badge>
           </Button>
           
-          <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4" />
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="group hover:bg-primary/5 hover:border-primary/20 transition-all duration-300"
+          >
+            <Settings className="h-4 w-4 group-hover:text-primary transition-colors duration-300" />
           </Button>
 
-          {/* User menu */}
+          {/* Enhanced User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <User className="h-4 w-4" />
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="group hover:bg-primary/5 hover:border-primary/20 transition-all duration-300"
+              >
+                <User className="h-4 w-4 group-hover:text-primary transition-colors duration-300" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
