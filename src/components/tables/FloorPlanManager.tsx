@@ -1,21 +1,40 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { useFloorPlanStore } from '@/state/useFloorPlanStore';
 import { WORLD_W, WORLD_H } from '@/lib/floorplan/normalize';
-import { AnalyzeResponseSchema } from '@/lib/floorplan/schema';
 import { FloorPlanAI } from '@/services/FloorPlanAI';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { Upload, Brain, RotateCcw, CheckCircle2, AlertTriangle, Camera, Zap } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Upload, 
+  Brain, 
+  RotateCcw, 
+  CheckCircle2, 
+  Camera, 
+  Zap, 
+  FileImage,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Eye,
+  Settings,
+  Download,
+  Share,
+  Users
+} from 'lucide-react';
 
 export default function FloorPlanManager() {
   const [file, setFile] = useState<File | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const { 
     entities, 
     runId, 
@@ -27,12 +46,34 @@ export default function FloorPlanManager() {
     reset 
   } = useFloorPlanStore();
 
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-    if (!selectedFile) return;
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
 
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  }, []);
+
+  const handleFile = useCallback((selectedFile: File) => {
     if (!selectedFile.type.startsWith('image/')) {
       toast.error('Please upload an image file (JPG, PNG, etc.)');
+      return;
+    }
+
+    if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
+      toast.error('Image size should be less than 10MB');
       return;
     }
 
@@ -42,8 +83,15 @@ export default function FloorPlanManager() {
     const imageUrl = URL.createObjectURL(selectedFile);
     setUploadedImage(imageUrl);
     
-    toast.success('Image uploaded! Ready for analysis');
+    toast.success('✨ Image uploaded successfully! Ready for AI analysis');
   }, [setUploadedImage]);
+
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      handleFile(selectedFile);
+    }
+  }, [handleFile]);
 
   const analyzeFloorPlan = useCallback(async () => {
     if (!file || !uploadedImage) {
@@ -51,10 +99,16 @@ export default function FloorPlanManager() {
       return;
     }
 
-    console.log('[FloorPlanManager] Starting analysis...');
+    console.log('[FloorPlanManager] Starting enhanced analysis...');
     setAnalyzing(true);
+    setAnalysisProgress(0);
     
     try {
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setAnalysisProgress(prev => Math.min(prev + 15, 85));
+      }, 500);
+
       // Create image element for AI analysis
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -65,44 +119,58 @@ export default function FloorPlanManager() {
         img.onerror = () => reject(new Error('Failed to load image'));
       });
 
+      setAnalysisProgress(90);
+      
       // Use existing FloorPlanAI service
       const analysisResult = await FloorPlanAI.analyzeFloorPlan(img);
       
-      // Convert to our schema format with better distribution
+      clearInterval(progressInterval);
+      setAnalysisProgress(100);
+      
+      // Convert to our schema format with enhanced distribution
       const runId = Math.random().toString(36).substring(2) + Date.now().toString(36);
       
-      // If we have many tables detected, distribute them better across the space
+      // Enhanced table positioning and sizing algorithm
       const entities = analysisResult.detectedTables.map((table, index) => {
-        // Use the AI detected positions but ensure good distribution
         let x = table.position.x;
         let y = table.position.y;
         
-        // If positions are too clustered (common AI issue), spread them out
+        // Smart distribution algorithm
         if (analysisResult.tableCount > 3) {
           const gridSize = Math.ceil(Math.sqrt(analysisResult.tableCount));
-          const spacing = 8 / gridSize; // Leave margins
-          const baseX = 1 + (index % gridSize) * spacing;
-          const baseY = 1 + Math.floor(index / gridSize) * spacing;
+          const spacing = 7 / gridSize; // Better spacing
+          const margin = (10 - 7) / 2; // Center the grid
           
-          // Blend AI position with grid distribution (70% AI, 30% grid)
-          x = x * 0.7 + baseX * 0.3;
-          y = y * 0.7 + baseY * 0.3;
+          const baseX = margin + (index % gridSize) * spacing;
+          const baseY = margin + Math.floor(index / gridSize) * spacing;
+          
+          // Blend AI position with smart grid (60% AI, 40% grid for better distribution)
+          x = x * 0.6 + baseX * 0.4;
+          y = y * 0.6 + baseY * 0.4;
         }
 
+        // Smart table sizing based on capacity
+        const capacity = Math.max(2, Math.min(12, table.estimatedCapacity));
+        const isLargeTable = capacity > 6;
+        
         return {
           id: Math.random().toString(36).substring(2) + Date.now().toString(36) + index,
           type: 'TABLE' as const,
-          shape: table.estimatedCapacity > 6 ? 'RECT' as const : 'ROUND' as const,
-          x: Math.max(0.5, Math.min(9.5, x)), // Ensure tables stay within bounds
-          y: Math.max(0.5, Math.min(9.5, y)),
-          radius: table.estimatedCapacity > 6 ? undefined : Math.max(0.3, Math.min(0.8, table.estimatedCapacity * 0.1 + 0.3)),
-          width: table.estimatedCapacity > 6 ? Math.max(0.8, Math.min(2.0, table.estimatedCapacity * 0.15 + 0.5)) : undefined,
-          height: table.estimatedCapacity > 6 ? Math.max(0.6, Math.min(1.2, table.estimatedCapacity * 0.1 + 0.4)) : undefined,
-          rotation: Math.random() * Math.PI * 0.5, // Small random rotation for realism
-          seats: Math.max(2, Math.min(12, table.estimatedCapacity)),
+          shape: isLargeTable ? 'RECT' as const : 'ROUND' as const,
+          x: Math.max(0.8, Math.min(9.2, x)),
+          y: Math.max(0.8, Math.min(9.2, y)),
+          radius: !isLargeTable ? Math.max(0.4, Math.min(1.0, capacity * 0.08 + 0.35)) : undefined,
+          width: isLargeTable ? Math.max(1.0, Math.min(2.5, capacity * 0.18 + 0.6)) : undefined,
+          height: isLargeTable ? Math.max(0.8, Math.min(1.5, capacity * 0.12 + 0.5)) : undefined,
+          rotation: (Math.random() - 0.5) * Math.PI * 0.3, // More natural rotation
+          seats: capacity,
           label: table.name || `Table ${index + 1}`,
           confidence: table.confidence,
-          meta: {}
+          meta: {
+            originalX: table.position.x,
+            originalY: table.position.y,
+            detectionIndex: index
+          }
         };
       });
 
@@ -113,20 +181,26 @@ export default function FloorPlanManager() {
         worldHeight: WORLD_H
       };
 
-      setRun(runId, entities, preview);
+      setTimeout(() => {
+        setRun(runId, entities, preview);
+        
+        if (analysisResult.tableCount > 0) {
+          toast.success(`🎯 Analysis complete! Detected ${analysisResult.tableCount} tables with smart positioning`);
+        } else {
+          toast('🤖 No tables detected', {
+            description: 'Try a clearer image or manually position tables'
+          });
+        }
+      }, 500);
       
-      if (analysisResult.tableCount > 0) {
-        toast.success(`Analysis complete! Detected ${analysisResult.tableCount} tables`);
-      } else {
-        toast('No tables detected', {
-          description: 'Try a clearer image or manually position tables'
-        });
-      }
     } catch (error) {
-      console.error('Analysis failed:', error);
+      console.error('Enhanced analysis failed:', error);
       toast.error('Analysis failed. Please try again or position tables manually.');
     } finally {
-      setAnalyzing(false);
+      setTimeout(() => {
+        setAnalyzing(false);
+        setAnalysisProgress(0);
+      }, 1000);
     }
   }, [file, uploadedImage, setAnalyzing, setRun]);
 
@@ -136,142 +210,249 @@ export default function FloorPlanManager() {
     }
     setFile(null);
     reset();
-    toast('Floor plan cleared');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    toast('🗑️ Floor plan cleared');
   }, [uploadedImage, reset]);
 
   const hasAnalysis = runId && entities.length > 0;
+  const totalCapacity = entities.reduce((sum, e) => sum + e.seats, 0);
+  const avgConfidence = entities.length > 0 
+    ? entities.reduce((sum, e) => sum + (e.confidence || 0), 0) / entities.length 
+    : 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Camera className="w-5 h-5" />
-          Floor Plan from Photo
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <Label htmlFor="floorplan-upload">Upload Floor Plan Image</Label>
-            <div className="flex gap-2 mt-2">
-              <Input
-                id="floorplan-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                disabled={isAnalyzing}
-                className="flex-1"
-              />
-              <Button
-                onClick={clearFloorPlan}
-                variant="outline"
-                disabled={!uploadedImage && !hasAnalysis}
-                size="sm"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </Button>
+    <div className="space-y-6">
+      {/* Enhanced Upload Card */}
+      <Card className="relative overflow-hidden animate-fade-in">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20" />
+        <CardHeader className="relative">
+          <CardTitle className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+              <Camera className="w-5 h-5" />
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Badge variant={uploadedImage ? "default" : "secondary"}>
-              {uploadedImage ? "Image Ready" : "No Image"}
-            </Badge>
-            {file && (
-              <p className="text-sm text-muted-foreground">
-                {file.name}
+            <div>
+              <h3 className="text-xl font-semibold">AI Floor Plan Analysis</h3>
+              <p className="text-sm text-muted-foreground font-normal">
+                Upload your restaurant floor plan for intelligent table detection
               </p>
-            )}
-          </div>
-        </div>
-
-        {!uploadedImage ? (
-          <div className="text-sm text-muted-foreground bg-muted/30 p-4 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Upload className="w-4 h-4" />
-              <span className="font-medium">Upload Instructions</span>
             </div>
-            <ul className="space-y-1">
-              <li>• Upload a clear top-down photo or sketch of your restaurant floor plan</li>
-              <li>• Ensure tables are clearly visible and not obstructed</li>
-              <li>• Best results with good lighting and minimal shadows</li>
-              <li>• AI will automatically detect tables and estimate seating capacity</li>
-            </ul>
+            <div className="ml-auto">
+              <Badge variant="secondary" className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 dark:from-blue-900 dark:to-purple-900 dark:text-blue-300">
+                GPT-4 Vision
+              </Badge>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="relative space-y-6">
+          {/* Drag & Drop Zone */}
+          <div
+            className={`
+              relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 cursor-pointer hover-scale
+              ${dragActive 
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20 scale-[1.02]' 
+                : uploadedImage 
+                  ? 'border-green-300 bg-green-50 dark:bg-green-950/20'
+                  : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800/50'
+              }
+            `}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="flex flex-col items-center text-center space-y-4">
+              {uploadedImage ? (
+                <>
+                  <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/20 animate-scale-in">
+                    <CheckCircle2 className="w-8 h-8 text-green-600" />
+                  </div>
+                  <div className="animate-fade-in">
+                    <h4 className="text-lg font-medium text-green-800 dark:text-green-300">
+                      Image Ready for Analysis
+                    </h4>
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      {file?.name} • {((file?.size || 0) / 1024 / 1024).toFixed(1)}MB
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20 animate-scale-in">
+                    <FileImage className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <div className="animate-fade-in">
+                    <h4 className="text-lg font-medium">
+                      Drop your floor plan here
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      or click to browse • JPG, PNG up to 10MB
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+            
+            <Input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
           </div>
-        ) : !hasAnalysis ? (
-          <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Zap className="w-4 h-4 text-blue-600" />
-                Ready for AI Analysis
-              </h4>
-              <Button 
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button
                 onClick={analyzeFloorPlan}
-                disabled={isAnalyzing}
-                size="sm"
-                className="flex items-center gap-2"
+                disabled={!uploadedImage || isAnalyzing}
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 hover-scale"
               >
                 {isAnalyzing ? (
-                  <Spinner size="sm" />
+                  <>
+                    <Spinner size="sm" className="mr-2" />
+                    Analyzing...
+                  </>
                 ) : (
-                  <Brain className="w-4 h-4" />
+                  <>
+                    <Brain className="w-5 h-5 mr-2" />
+                    Analyze Floor Plan
+                  </>
                 )}
-                {isAnalyzing ? 'Analyzing...' : 'Analyze Floor Plan'}
               </Button>
+              
+              {uploadedImage && (
+                <Button
+                  onClick={clearFloorPlan}
+                  variant="outline"
+                  size="lg"
+                  className="hover:bg-red-50 hover:border-red-300 hover:text-red-700 dark:hover:bg-red-950/20 hover-scale"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Clear
+                </Button>
+              )}
             </div>
-            <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <p>🤖 GPT-4 Vision will analyze your floor plan</p>
-              <p>📊 Detect tables and estimate seating capacity</p>
-              <p>🎯 Generate interactive 3D visualization</p>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                Analysis Complete
-              </h4>
-              <Button 
-                onClick={analyzeFloorPlan}
-                disabled={isAnalyzing}
-                size="sm"
-                variant="outline"
-              >
-                Re-analyze
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-3">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{entities.length}</div>
-                <div className="text-xs text-muted-foreground">Tables Detected</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {Math.round((entities.reduce((sum, e) => sum + (e.confidence || 0), 0) / Math.max(1, entities.length)) * 100)}%
-                </div>
-                <div className="text-xs text-muted-foreground">Avg Confidence</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {entities.reduce((sum, e) => sum + e.seats, 0)}
-                </div>
-                <div className="text-xs text-muted-foreground">Total Capacity</div>
-              </div>
-            </div>
-            <div className="text-sm text-green-700 dark:text-green-300">
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                <span>Tables mapped to 3D coordinates and ready for visualization</span>
-              </div>
-            </div>
-          </div>
-        )}
 
-        <div className="text-xs text-muted-foreground">
-          <span>World coordinates: {WORLD_W}×{WORLD_H} units</span>
-        </div>
-      </CardContent>
-    </Card>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="hover-scale">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+              <Button variant="ghost" size="sm" className="hover-scale">
+                <Share className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            </div>
+          </div>
+
+          {/* Analysis Progress */}
+          {isAnalyzing && (
+            <div className="space-y-3 animate-fade-in">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">AI Analysis Progress</span>
+                <span className="font-medium">{analysisProgress}%</span>
+              </div>
+              <Progress value={analysisProgress} className="h-2" />
+              <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                <Sparkles className="w-4 h-4 animate-pulse" />
+                <span>GPT-4 Vision is analyzing your floor plan...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Analysis Results */}
+          {hasAnalysis && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-fade-in">
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800 hover-scale">
+                <CardContent className="p-4 text-center">
+                  <Target className="w-6 h-6 mx-auto mb-2 text-green-600" />
+                  <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                    {entities.length}
+                  </div>
+                  <div className="text-xs text-green-600 dark:text-green-400">
+                    Tables Detected
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border-blue-200 dark:border-blue-800 hover-scale">
+                <CardContent className="p-4 text-center">
+                  <TrendingUp className="w-6 h-6 mx-auto mb-2 text-blue-600" />
+                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                    {Math.round(avgConfidence * 100)}%
+                  </div>
+                  <div className="text-xs text-blue-600 dark:text-blue-400">
+                    Avg Confidence
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800 hover-scale">
+                <CardContent className="p-4 text-center">
+                  <Users className="w-6 h-6 mx-auto mb-2 text-purple-600" />
+                  <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                    {totalCapacity}
+                  </div>
+                  <div className="text-xs text-purple-600 dark:text-purple-400">
+                    Total Capacity
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 border-orange-200 dark:border-orange-800 hover-scale">
+                <CardContent className="p-4 text-center">
+                  <Zap className="w-6 h-6 mx-auto mb-2 text-orange-600" />
+                  <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
+                    AI
+                  </div>
+                  <div className="text-xs text-orange-600 dark:text-orange-400">
+                    Enhanced
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Instructions */}
+          {!uploadedImage && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+              <div className="flex items-start gap-3 animate-fade-in">
+                <div className="p-1 rounded bg-blue-100 dark:bg-blue-900/20">
+                  <Camera className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-foreground">Clear Photo</div>
+                  <div>Take a top-down photo of your restaurant floor plan</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 animate-fade-in">
+                <div className="p-1 rounded bg-purple-100 dark:bg-purple-900/20">
+                  <Brain className="w-4 h-4 text-purple-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-foreground">AI Analysis</div>
+                  <div>GPT-4 Vision detects tables and estimates capacity</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 animate-fade-in">
+                <div className="p-1 rounded bg-green-100 dark:bg-green-900/20">
+                  <Eye className="w-4 h-4 text-green-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-foreground">3D Visualization</div>
+                  <div>View and interact with your floor plan in 3D</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
