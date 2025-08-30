@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Users, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Clock, Users, Calendar, CheckCircle, AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { BookingState, TenantInfo, TimeSlot, GuestDetails } from '@/types/booking-api';
 import { sendAnalyticsEvent, getTenantBySlug } from '@/api/booking-proxy';
@@ -39,6 +40,7 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
   
   const [stepLoading, setStepLoading] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
+  const [achievements, setAchievements] = useState<string[]>([]);
 
   // Load tenant info on mount
   useEffect(() => {
@@ -160,13 +162,15 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
     });
 
     // Local achievement tracking (no backend data)
-    const achievements = [];
-    if (totalTime < 60000) achievements.push('Speed Demon'); // Under 1 minute
-    if (totalTime < 120000) achievements.push('Quick Booker'); // Under 2 minutes
-    if (state.selected_slot?.optimal) achievements.push('Optimizer');
+    const newAchievements = [];
+    if (totalTime < 60000) newAchievements.push('Speed Demon'); // Under 1 minute
+    if (totalTime < 120000) newAchievements.push('Quick Booker'); // Under 2 minutes
+    if (state.selected_slot?.optimal) newAchievements.push('Optimizer');
 
-    if (achievements.length > 0) {
-      toast.success(`🎉 Achievement${achievements.length > 1 ? 's' : ''} unlocked: ${achievements.join(', ')}`);
+    setAchievements(newAchievements);
+
+    if (newAchievements.length > 0) {
+      toast.success(`🎉 Achievement${newAchievements.length > 1 ? 's' : ''} unlocked: ${newAchievements.join(', ')}`);
     }
   }, [state.start_time, state.step_times, state.selected_slot, tenant]);
 
@@ -186,40 +190,69 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
   const handleBack = useCallback(() => {
     if (state.step > 1) {
       setState(prev => ({ ...prev, step: (prev.step - 1) as 1 | 2 | 3 | 4 }));
+      setStepError(null);
     }
   }, [state.step]);
 
   const progressPercentage = (state.step / 4) * 100;
 
-  // Loading state
+  const stepTitles = {
+    1: 'Party Size',
+    2: 'Date & Time',
+    3: 'Guest Details',
+    4: 'Confirmation'
+  };
+
+  // Enhanced loading state
   if (tenantLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-            <h2 className="text-lg font-semibold mb-2">Loading...</h2>
-            <p className="text-muted-foreground">Fetching restaurant information</p>
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardContent className="p-8 text-center">
+            <div className="relative mb-6">
+              <div className="animate-spin w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full mx-auto"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-primary" />
+              </div>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Loading Restaurant</h2>
+            <p className="text-muted-foreground">
+              Please wait while we prepare your booking experience...
+            </p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Error state
+  // Enhanced error state
   if (tenantError || !tenant) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-            <h2 className="text-lg font-semibold mb-2">Restaurant Unavailable</h2>
-            <p className="text-muted-foreground mb-4">
-              {tenantError || 'Unable to load restaurant information. Please try again later.'}
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-lg border-destructive/20">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="w-16 h-16 text-destructive mx-auto mb-6" />
+            <h2 className="text-xl font-semibold mb-3">Restaurant Unavailable</h2>
+            <p className="text-muted-foreground mb-6">
+              {tenantError || 'We couldn\'t load the restaurant information. This might be temporary.'}
             </p>
-            <Button onClick={() => window.location.reload()}>
-              Try Again
-            </Button>
+            <div className="space-y-3">
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="w-full"
+              >
+                <Loader2 className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => window.history.back()}
+                className="w-full"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Go Back
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -228,13 +261,23 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
 
   if (stepError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 flex items-center justify-center">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="p-6 text-center">
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-lg border-destructive/20">
+          <CardContent className="p-8 text-center">
             <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Booking Error</h3>
-            <p className="text-muted-foreground mb-4">{stepError}</p>
-            <Button onClick={() => setStepError(null)}>Try Again</Button>
+            <p className="text-muted-foreground mb-6">{stepError}</p>
+            <div className="space-y-3">
+              <Button onClick={() => setStepError(null)} className="w-full">
+                Try Again
+              </Button>
+              {state.step > 1 && (
+                <Button variant="outline" onClick={handleBack} className="w-full">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Go Back
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -243,79 +286,134 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
 
   return (
     <ErrorBoundary onError={onError}>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Header with branding */}
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+        <div className="max-w-4xl mx-auto p-4 pt-8">
+          {/* Enhanced Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-8"
           >
-            <h1 className="text-3xl font-bold mb-2">{tenant.name}</h1>
-            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <BookingTimer startTime={state.start_time} />
-              </div>
-              <Badge variant="outline">Step {state.step} of 4</Badge>
+            <div className="mb-6">
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                {tenant.name}
+              </h1>
+              <p className="text-lg text-muted-foreground">Reserve your table in just a few steps</p>
             </div>
+
+            {/* Progress Section */}
+            <Card className="max-w-2xl mx-auto shadow-md">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-primary" />
+                    <BookingTimer startTime={state.start_time} />
+                  </div>
+                  <Badge variant="secondary" className="font-medium">
+                    Step {state.step} of 4: {stepTitles[state.step as keyof typeof stepTitles]}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Progress value={progressPercentage} className="h-2" />
+                
+                {/* Step indicators */}
+                <div className="flex justify-between mt-4">
+                  {[1, 2, 3, 4].map((step) => (
+                    <div 
+                      key={step}
+                      className={`flex flex-col items-center text-xs ${
+                        step <= state.step ? 'text-primary' : 'text-muted-foreground'
+                      }`}
+                    >
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${
+                        step < state.step 
+                          ? 'bg-primary text-primary-foreground' 
+                          : step === state.step 
+                            ? 'bg-primary/20 text-primary border-2 border-primary' 
+                            : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {step < state.step ? (
+                          <CheckCircle className="w-3 h-3" />
+                        ) : (
+                          <span className="font-medium">{step}</span>
+                        )}
+                      </div>
+                      <span className="font-medium">{stepTitles[step as keyof typeof stepTitles]}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
 
-          {/* Progress bar */}
-          <Progress value={progressPercentage} className="mb-8" />
-
-          {/* Step content */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={state.step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {state.step === 1 && (
-                <PartySizeStep
-                  tenant={tenant}
-                  onComplete={handleStepComplete}
-                  loading={stepLoading}
-                />
-              )}
-              
-              {state.step === 2 && (
-                <DateTimeStep
-                  tenant={tenant}
-                  partySize={state.party_size!}
-                  onComplete={handleStepComplete}
-                  onBack={handleBack}
-                  loading={stepLoading}
-                />
-              )}
-              
-              {state.step === 3 && (
-                <GuestDetailsStep
-                  tenant={tenant}
-                  onComplete={handleStepComplete}
-                  onBack={handleBack}
-                  loading={stepLoading}
-                />
-              )}
-              
-              {state.step === 4 && (
-                <ConfirmationStep
-                  state={state}
-                  onComplete={handleBookingComplete}
-                  onError={handleBookingError}
-                  onBack={handleBack}
-                  loading={stepLoading}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
+          {/* Step Content */}
+          <div className="max-w-2xl mx-auto">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={state.step}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {state.step === 1 && (
+                  <PartySizeStep
+                    tenant={tenant}
+                    onComplete={handleStepComplete}
+                    loading={stepLoading}
+                  />
+                )}
+                
+                {state.step === 2 && (
+                  <DateTimeStep
+                    tenant={tenant}
+                    partySize={state.party_size!}
+                    onComplete={handleStepComplete}
+                    onBack={handleBack}
+                    loading={stepLoading}
+                  />
+                )}
+                
+                {state.step === 3 && (
+                  <GuestDetailsStep
+                    tenant={tenant}
+                    onComplete={handleStepComplete}
+                    onBack={handleBack}
+                    loading={stepLoading}
+                  />
+                )}
+                
+                {state.step === 4 && (
+                  <ConfirmationStep
+                    state={state}
+                    onComplete={handleBookingComplete}
+                    onError={handleBookingError}
+                    onBack={handleBack}
+                    loading={stepLoading}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
           {/* Footer */}
-          <div className="text-center mt-8 text-xs text-muted-foreground">
-            Powered by Real-Time Booking System
-          </div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center mt-12 pb-8"
+          >
+            <Separator className="mb-6" />
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p>Powered by <span className="font-medium text-foreground">Real-Time Booking System</span></p>
+              <div className="flex items-center justify-center gap-4 text-xs">
+                <span>🔒 Secure & Private</span>
+                <span>⚡ Instant Confirmation</span>
+                <span>📱 Mobile Optimized</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </ErrorBoundary>
