@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, RotateCcw, ZoomIn, ZoomOut, Move3D } from 'lucide-react';
+import { Upload, RotateCcw, ZoomIn, ZoomOut, Move3D, Brain, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { FloorPlanAI, type FloorPlanAnalysis, type DetectedTable } from '@/services/FloorPlanAI';
 
 interface Table3DProps {
   position: [number, number, number];
@@ -196,11 +197,13 @@ const FloorPlan3D: React.FC<FloorPlanProps> = ({ floorPlanImage, tables }) => {
 };
 
 // Main Component
-export const FloorPlan3DManager: React.FC<{ tables: any[] }> = ({ tables }) => {
+export const FloorPlan3DManager: React.FC<{ tables: any[], onTablesDetected?: (tables: DetectedTable[]) => void }> = ({ tables, onTablesDetected }) => {
   const { toast } = useToast();
   const [floorPlanImage, setFloorPlanImage] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState<FloorPlanAnalysis | null>(null);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -217,6 +220,7 @@ export const FloorPlan3DManager: React.FC<{ tables: any[] }> = ({ tables }) => {
 
     setIsUploading(true);
     setUploadedFile(file);
+    setAnalysis(null);
 
     try {
       // Create a local URL for preview
@@ -225,7 +229,7 @@ export const FloorPlan3DManager: React.FC<{ tables: any[] }> = ({ tables }) => {
       
       toast({
         title: "Floor plan uploaded!",
-        description: "Your 3D floor plan has been updated"
+        description: "Ready for AI analysis"
       });
     } catch (error) {
       toast({
@@ -238,9 +242,48 @@ export const FloorPlan3DManager: React.FC<{ tables: any[] }> = ({ tables }) => {
     }
   }, [toast]);
 
+  const analyzeFloorPlan = useCallback(async () => {
+    if (!uploadedFile) return;
+
+    setIsAnalyzing(true);
+    
+    try {
+      // Create image element for AI analysis
+      const img = new Image();
+      img.src = floorPlanImage;
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+
+      const analysisResult = await FloorPlanAI.analyzeFloorPlan(img);
+      setAnalysis(analysisResult);
+      
+      if (onTablesDetected && analysisResult.detectedTables.length > 0) {
+        onTablesDetected(analysisResult.detectedTables);
+      }
+
+      toast({
+        title: "Analysis complete!",
+        description: `Detected ${analysisResult.tableCount} tables with ${(analysisResult.confidence * 100).toFixed(1)}% confidence`
+      });
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      toast({
+        title: "Analysis failed",
+        description: "Failed to analyze floor plan. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [uploadedFile, floorPlanImage, onTablesDetected, toast]);
+
   const clearFloorPlan = () => {
     setFloorPlanImage('');
     setUploadedFile(null);
+    setAnalysis(null);
     if (floorPlanImage) {
       URL.revokeObjectURL(floorPlanImage);
     }
@@ -294,17 +337,80 @@ export const FloorPlan3DManager: React.FC<{ tables: any[] }> = ({ tables }) => {
           {!floorPlanImage ? (
             <div className="text-sm text-muted-foreground">
               <p>• Upload a top-down view of your restaurant floor plan</p>
-              <p>• Once uploaded, you can position tables to match your layout</p>
-              <p>• Use mouse to rotate, zoom, and pan the 3D view</p>
+              <p>• AI will automatically detect and count tables</p>
+              <p>• Get instant analytics and 3D visualization</p>
+            </div>
+          ) : !analysis ? (
+            <div className="bg-muted/30 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-sm">Ready for AI Analysis</h4>
+                <Button 
+                  onClick={analyzeFloorPlan}
+                  disabled={isAnalyzing}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  {isAnalyzing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Brain className="w-4 h-4" />
+                  )}
+                  {isAnalyzing ? 'Analyzing...' : 'Analyze Floor Plan'}
+                </Button>
+              </div>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p>🤖 AI will detect tables and estimate capacity</p>
+                <p>📊 Get detailed analytics and recommendations</p>
+                <p>🎯 Automatically create 3D table representations</p>
+              </div>
             </div>
           ) : (
             <div className="bg-muted/30 p-4 rounded-lg">
-              <h4 className="font-medium text-sm mb-2">Next Steps:</h4>
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p>✅ Floor plan uploaded successfully</p>
-                <p>📍 <strong>Now:</strong> Switch to "Floor Plan" view to position your tables</p>
-                <p>🎯 Drag tables to match their real positions in your restaurant</p>
-                <p>💾 Changes will be saved automatically</p>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  Analysis Complete
+                </h4>
+                <Button 
+                  onClick={analyzeFloorPlan}
+                  disabled={isAnalyzing}
+                  size="sm"
+                  variant="outline"
+                >
+                  Re-analyze
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{analysis.tableCount}</div>
+                  <div className="text-xs text-muted-foreground">Tables Detected</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {(analysis.confidence * 100).toFixed(0)}%
+                  </div>
+                  <div className="text-xs text-muted-foreground">Confidence</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {analysis.detectedTables.reduce((sum, t) => sum + t.estimatedCapacity, 0)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Est. Capacity</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {(analysis.analysisTime / 1000).toFixed(1)}s
+                  </div>
+                  <div className="text-xs text-muted-foreground">Analysis Time</div>
+                </div>
+              </div>
+              <div className="space-y-1">
+                {analysis.recommendations.map((rec, index) => (
+                  <p key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                    <AlertTriangle className="w-3 h-3 mt-0.5 text-amber-500 flex-shrink-0" />
+                    {rec}
+                  </p>
+                ))}
               </div>
             </div>
           )}

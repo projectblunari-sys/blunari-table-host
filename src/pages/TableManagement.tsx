@@ -251,6 +251,11 @@ const TableManagement: React.FC = () => {
               position: table.position,
               active: table.status === 'available'
             }))}
+            onTablesDetected={(detectedTables) => {
+              console.log('AI detected tables:', detectedTables);
+              // Here you could update the tables state with detected tables
+              // or show a dialog to confirm importing them
+            }}
           />
         ) : (
           <GridView 
