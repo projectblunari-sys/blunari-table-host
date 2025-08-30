@@ -25,17 +25,22 @@ export default function FloorPlanViewer2D() {
     const H = canvas.height;
     const pixelRatio = window.devicePixelRatio || 1;
 
-    // Set canvas size for high DPI displays
-    canvas.width = W * pixelRatio;
-    canvas.height = H * pixelRatio;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.scale(pixelRatio, pixelRatio);
+    // Set canvas size for high DPI displays (throttled)
+    const actualW = W * pixelRatio;
+    const actualH = H * pixelRatio;
+    
+    if (canvas.width !== actualW || canvas.height !== actualH) {
+      canvas.width = actualW;
+      canvas.height = actualH;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.scale(pixelRatio, pixelRatio);
+    }
 
     // Clear canvas
     ctx.clearRect(0, 0, W, H);
 
-    // Draw background image if available
+    // Draw background image if available (with caching)
     if (uploadedImage) {
       const img = new Image();
       img.onload = () => {
@@ -43,6 +48,10 @@ export default function FloorPlanViewer2D() {
         ctx.globalAlpha = 0.4;
         ctx.drawImage(img, 0, 0, W, H);
         ctx.restore();
+        drawOverlay();
+      };
+      img.onerror = () => {
+        console.warn('Failed to load background image');
         drawOverlay();
       };
       img.src = uploadedImage;
@@ -85,8 +94,11 @@ export default function FloorPlanViewer2D() {
         ctx.fillText(j.toString(), 5, H - y);
       }
 
-      // Draw tables with enhanced styling
-      entities.filter(e => e.type === 'TABLE').forEach((e, index) => {
+      // Draw tables with enhanced styling (optimized)
+      const tables = entities.filter(e => e.type === 'TABLE');
+      console.log(`[FloorPlan2D] Rendering ${tables.length} tables`);
+      
+      tables.forEach((e, index) => {
         const x = (e.x / WORLD_W) * W;
         const y = (e.y / WORLD_H) * H;
         

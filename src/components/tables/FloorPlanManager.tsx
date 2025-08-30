@@ -51,6 +51,7 @@ export default function FloorPlanManager() {
       return;
     }
 
+    console.log('[FloorPlanManager] Starting analysis...');
     setAnalyzing(true);
     
     try {

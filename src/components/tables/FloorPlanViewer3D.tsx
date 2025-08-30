@@ -22,9 +22,14 @@ function RoundTable({ x, y, r, rotation, label, seats, confidence }: {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
+  // Remove excessive animations that cause performance issues
   useFrame((state) => {
     if (groupRef.current && hovered) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 2) * 0.05;
+      // Reduced animation frequency and intensity
+      const time = state.clock.elapsedTime;
+      if (time % 0.1 < 0.01) { // Only update 10 times per second when hovered
+        groupRef.current.rotation.y = rotation + Math.sin(time * 1) * 0.02;
+      }
     }
   });
 
@@ -36,8 +41,14 @@ function RoundTable({ x, y, r, rotation, label, seats, confidence }: {
       ref={groupRef}
       position={[x - 5, 0, y - 5]} 
       rotation={[0, rotation, 0]}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        setHovered(false);
+      }}
     >
       {/* Table Shadow */}
       <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -137,9 +148,14 @@ function RectTable({ x, y, w, h, rotation, label, seats, confidence }: {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
+  // Remove excessive animations that cause performance issues
   useFrame((state) => {
     if (groupRef.current && hovered) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 2) * 0.05;
+      // Reduced animation frequency and intensity
+      const time = state.clock.elapsedTime;
+      if (time % 0.1 < 0.01) { // Only update 10 times per second when hovered
+        groupRef.current.rotation.y = rotation + Math.sin(time * 1) * 0.02;
+      }
     }
   });
 
@@ -151,8 +167,14 @@ function RectTable({ x, y, w, h, rotation, label, seats, confidence }: {
       ref={groupRef}
       position={[x - 5, 0, y - 5]} 
       rotation={[0, rotation, 0]}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        setHovered(false);
+      }}
     >
       {/* Table Shadow */}
       <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -351,6 +373,8 @@ export default function FloorPlanViewer3D() {
                 : { position: [0, 15, 0], fov: 60 }
             }
             shadows
+            frameloop="demand" // Only render when needed
+            performance={{ min: 0.1 }} // Reduce performance when not in focus
           >
             {/* Enhanced Lighting */}
             <ambientLight intensity={0.4} />
