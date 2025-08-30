@@ -1,4 +1,7 @@
 project_id = "kbfbbkcaxhzlnbqxwgoz"
 
+[functions.send-password-reset]
+verify_jwt = false
+
 [functions.tenant-provision]
 verify_jwt = false
