@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useTenant } from '@/hooks/useTenant';
+import { FloorPlan3DManager } from '@/components/tables/FloorPlan3D';
 import { 
   Grid3X3, 
   Plus, 
@@ -14,7 +15,9 @@ import {
   Eye,
   EyeOff,
   Utensils,
-  Coffee
+  Coffee,
+  Move3D,
+  LayoutGrid
 } from 'lucide-react';
 
 interface Table {
@@ -33,7 +36,7 @@ interface Table {
 
 const TableManagement: React.FC = () => {
   const { tenant } = useTenant();
-  const [viewMode, setViewMode] = useState<'grid' | 'floor'>('floor');
+  const [viewMode, setViewMode] = useState<'grid' | 'floor' | '3d'>('floor');
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
 
   // Mock table data - in production this would come from the database
@@ -150,11 +153,19 @@ const TableManagement: React.FC = () => {
             Floor Plan
           </Button>
           <Button
+            variant={viewMode === '3d' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('3d')}
+          >
+            <Move3D className="h-4 w-4 mr-2" />
+            3D View
+          </Button>
+          <Button
             variant={viewMode === 'grid' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('grid')}
           >
-            <Grid3X3 className="h-4 w-4 mr-2" />
+            <LayoutGrid className="h-4 w-4 mr-2" />
             Grid View
           </Button>
           <Button>
@@ -230,6 +241,16 @@ const TableManagement: React.FC = () => {
             onSelectTable={setSelectedTable}
             getStatusColor={getStatusColor}
             getTableIcon={getTableIcon}
+          />
+        ) : viewMode === '3d' ? (
+          <FloorPlan3DManager 
+            tables={tables.map(table => ({
+              id: table.id,
+              name: table.name,
+              capacity: table.capacity,
+              position: table.position,
+              active: table.status === 'available'
+            }))}
           />
         ) : (
           <GridView 
