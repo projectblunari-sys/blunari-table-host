@@ -25,7 +25,7 @@ async function callEdgeFunction(functionName: string, body: any = {}): Promise<a
     console.log(`Calling edge function: ${functionName}`, body);
     
     const { data, error } = await supabase.functions.invoke(functionName, {
-      body: JSON.stringify(body),
+      body: body, // Don't stringify here - Supabase client handles it
       headers: {
         'Content-Type': 'application/json',
       },

@@ -35,18 +35,31 @@ serve(async (req) => {
     try {
       const bodyText = await req.text();
       console.log('Raw request body:', bodyText);
+      console.log('Request method:', req.method);
+      console.log('Request headers:', Object.fromEntries(req.headers.entries()));
       
       if (!bodyText || bodyText.trim() === '') {
-        throw new Error('Empty request body');
+        console.error('Empty request body received');
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: { code: 'EMPTY_BODY', message: 'Request body is required' } 
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
       
       requestData = JSON.parse(bodyText);
+      console.log('Successfully parsed request data:', requestData);
     } catch (parseError) {
       console.error('Failed to parse request body:', parseError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: { code: 'INVALID_REQUEST', message: 'Invalid request body' } 
+          error: { code: 'INVALID_JSON', message: 'Invalid JSON in request body' } 
         }),
         { 
           status: 400, 
