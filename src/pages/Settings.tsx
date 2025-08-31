@@ -18,11 +18,23 @@ import { useSettings } from '@/hooks/useSettings';
 import { useTenant } from '@/hooks/useTenant';
 import BrandingSettings from '@/components/settings/BrandingSettings';
 import OperationalSettings from '@/components/settings/OperationalSettings';
+import NotificationSettings from '@/components/settings/NotificationSettings';
+import SecuritySettings from '@/components/settings/SecuritySettings';
+import IntegrationSettings from '@/components/settings/IntegrationSettings';
 import { toast } from '@/hooks/use-toast';
 
 const Settings: React.FC = () => {
   const { tenant } = useTenant();
-  const { settings, isLoading, updateBranding, updateOperational, isUpdating } = useSettings();
+  const { 
+    settings, 
+    isLoading, 
+    updateBranding, 
+    updateOperational, 
+    updateNotifications,
+    updateSecurity,
+    updateIntegrations,
+    isUpdating 
+  } = useSettings();
   const [activeTab, setActiveTab] = useState('branding');
 
   if (isLoading || !settings) {
@@ -261,66 +273,27 @@ const Settings: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plug className="h-5 w-5 text-primary" />
-                Integrations
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Plug className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Integration Settings</h3>
-                <p className="text-muted-foreground mb-4">
-                  Configure SMS, email, POS, and analytics integrations
-                </p>
-                <Badge variant="outline">Coming Soon</Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <IntegrationSettings
+            settings={settings.integrations}
+            onUpdate={updateIntegrations}
+            isUpdating={isUpdating}
+          />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-primary" />
-                Notification Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Notification Preferences</h3>
-                <p className="text-muted-foreground mb-4">
-                  Manage email, SMS, and staff notification settings
-                </p>
-                <Badge variant="outline">Coming Soon</Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <NotificationSettings
+            settings={settings.notifications}
+            onUpdate={updateNotifications}
+            isUpdating={isUpdating}
+          />
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                Security Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Security Configuration</h3>
-                <p className="text-muted-foreground mb-4">
-                  Configure 2FA, session management, and API security
-                </p>
-                <Badge variant="outline">Coming Soon</Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <SecuritySettings
+            settings={settings.security}
+            onUpdate={updateSecurity}
+            isUpdating={isUpdating}
+          />
         </TabsContent>
       </Tabs>
 
