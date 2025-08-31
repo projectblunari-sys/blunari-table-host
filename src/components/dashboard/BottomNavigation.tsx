@@ -22,6 +22,9 @@ const navigation = [
   { name: 'Tables', href: '/dashboard/tables', icon: TableProperties },
   { name: 'Customers', href: '/dashboard/customers', icon: Users },
   { name: 'Widget', href: '/dashboard/widget-preview', icon: Code },
+];
+
+const secondaryNavigation = [
   { name: 'POS', href: '/dashboard/pos-integrations', icon: Plug },
   { name: 'Waitlist', href: '/dashboard/waitlist', icon: Clock },
   { name: 'Staff', href: '/dashboard/staff', icon: ChefHat },
@@ -34,69 +37,73 @@ const BottomNavigation: React.FC = () => {
   const location = useLocation();
 
   return (
-    <motion.nav
+    <motion.div
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-      className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg"
     >
-      <div className="grid grid-cols-5 gap-1 px-2 py-2">
-        {navigation.slice(0, 5).map((item) => {
+      {/* Main Navigation Row */}
+      <div className="grid grid-cols-5 px-2 py-3">
+        {navigation.map((item) => {
           const isActive = location.pathname === item.href;
           return (
             <NavLink
               key={item.name}
               to={item.href}
               className={`
-                relative flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 min-h-[60px]
+                flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200
                 ${isActive 
-                  ? 'bg-primary text-primary-foreground shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  ? 'text-primary' 
+                  : 'text-muted-foreground hover:text-foreground'
                 }
               `}
             >
-              <item.icon className="h-5 w-5 mb-1" />
-              <span className="text-xs font-medium truncate">{item.name}</span>
-              {isActive && (
-                <motion.div
-                  layoutId="bottomActiveIndicator"
-                  className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary-foreground rounded-full"
-                  transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-                />
-              )}
+              <div className={`
+                p-2 rounded-lg transition-all duration-200
+                ${isActive 
+                  ? 'bg-primary/10' 
+                  : 'hover:bg-muted'
+                }
+              `}>
+                <item.icon className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-medium mt-1 truncate">{item.name}</span>
             </NavLink>
           );
         })}
       </div>
       
-      {/* Secondary Navigation - Scrollable */}
+      {/* Secondary Navigation Row */}
       <div className="border-t border-border bg-muted/30">
-        <div className="flex gap-1 px-2 py-2 overflow-x-auto scrollbar-none">
-          {navigation.slice(5).map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={`
-                  flex items-center gap-2 py-2 px-3 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0
-                  ${isActive 
-                    ? 'bg-primary text-primary-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }
-                `}
-              >
-                <item.icon className="h-4 w-4" />
-                <span className="text-xs font-medium">{item.name}</span>
-              </NavLink>
-            );
-          })}
+        <div className="flex justify-center">
+          <div className="flex gap-1 px-4 py-2 max-w-full overflow-x-auto scrollbar-none">
+            {secondaryNavigation.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  className={`
+                    flex items-center gap-2 py-2 px-3 rounded-md transition-all duration-200 whitespace-nowrap flex-shrink-0 text-sm
+                    ${isActive 
+                      ? 'bg-primary text-primary-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                    }
+                  `}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span className="font-medium">{item.name}</span>
+                </NavLink>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Safe area for mobile devices */}
-      <div className="h-safe-area-bottom bg-card"></div>
-    </motion.nav>
+      <div className="h-safe-area-bottom bg-background"></div>
+    </motion.div>
   );
 };
 
