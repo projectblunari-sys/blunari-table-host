@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
-// Basic skeleton building blocks
+// Basic skeleton building blocks with reduced motion support
 export const SkeletonBox: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`animate-pulse bg-surface-2 rounded-md ${className}`} />
+  <div className={`animate-pulse motion-reduce:animate-none bg-surface-2 rounded-md ${className}`} />
 );
 
 export const SkeletonText: React.FC<{ lines?: number; className?: string }> = ({ 
@@ -108,7 +108,7 @@ export const SkeletonChart: React.FC<{
     </CardHeader>
     <CardContent className="space-y-4">
       {/* Chart area */}
-      <div className={`relative ${height} bg-surface-2 rounded-lg animate-pulse`}>
+      <div className={`relative ${height} bg-surface-2 rounded-lg animate-pulse motion-reduce:animate-none`}>
         {/* Mock chart elements */}
         <div className="absolute bottom-0 left-0 right-0 h-3/4 bg-surface-3 rounded-t-lg" />
         <div className="absolute bottom-0 left-1/4 right-3/4 h-1/2 bg-brand/20 rounded-t-sm" />

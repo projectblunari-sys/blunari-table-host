@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +15,9 @@ import { AnalyticsInsights, type InsightData } from '@/components/analytics/Anal
 import PageHeader from '@/components/ui/page-header';
 import EmptyState from '@/components/ui/empty-state';
 import ErrorState from '@/components/ui/error-state';
-import { SkeletonPage, SkeletonChart, SkeletonMetricsCard } from '@/components/ui/skeleton-components';
+import { SkeletonAnalyticsDashboard } from '@/components/ui/skeleton-dashboard';
+import { SkeletonPage } from '@/components/ui/skeleton-components';
+import { PerformanceWrapper } from '@/components/ui/performance-wrapper';
 import { toast } from '@/lib/toast';
 
 const Analytics: React.FC = () => {
@@ -141,22 +143,9 @@ const Analytics: React.FC = () => {
     console.log('Setting up analytics...');
   };
 
-  // Loading state
+  // Show skeleton loading state
   if (isLoading) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="space-y-6"
-      >
-        <PageHeader
-          title="Analytics & ROI"
-          description="Comprehensive business intelligence dashboard"
-        />
-        <SkeletonPage />
-      </motion.div>
-    );
+    return <SkeletonAnalyticsDashboard />;
   }
 
   // Error state
@@ -418,4 +407,4 @@ const Analytics: React.FC = () => {
   );
 };
 
-export default Analytics;
+export default memo(Analytics);

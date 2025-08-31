@@ -21,6 +21,7 @@ const config: Config = {
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
+      fontDisplay: 'swap', // Ensure font-display: swap for performance
       fontSize: {
         // Typography scale with exact line heights
         'h1': ['30px', '36px'],
@@ -156,6 +157,12 @@ const config: Config = {
         "scale-in": "scale-in 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "shake": "shake 0.5s ease-in-out",
+      },
+      // Performance optimizations
+      willChange: {
+        'transform': 'transform',
+        'opacity': 'opacity',
+        'scroll': 'scroll-position',
       },
     },
   },

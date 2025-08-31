@@ -13,17 +13,21 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Bookings from "./pages/Bookings";
-import Tables from "./pages/Tables";
 import Customers from "./pages/Customers";
 import BookingWidget from "./pages/BookingWidget";
 import POSIntegration from "./pages/POSIntegration";
 import Waitlist from "./pages/Waitlist";
 import Staff from "./pages/Staff";
 import Messages from "./pages/Messages";
-import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import BookingPage from "./pages/BookingPage";
+import { Suspense, lazy } from "react";
+import { SkeletonPage } from "@/components/ui/skeleton-components";
+
+// Code splitting for heavy pages
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Tables = lazy(() => import("./pages/Tables"));
 
 const queryClient = new QueryClient();
 
@@ -51,14 +55,22 @@ const App = () => (
             }>
               <Route index element={<Dashboard />} />
               <Route path="bookings" element={<Bookings />} />
-              <Route path="tables" element={<Tables />} />
+              <Route path="tables" element={
+                <Suspense fallback={<SkeletonPage />}>
+                  <Tables />
+                </Suspense>
+              } />
               <Route path="customers" element={<Customers />} />
               <Route path="widget-preview" element={<BookingWidget />} />
               <Route path="pos-integrations" element={<POSIntegration />} />
               <Route path="waitlist" element={<Waitlist />} />
               <Route path="staff" element={<Staff />} />
               <Route path="messages" element={<Messages />} />
-              <Route path="analytics" element={<Analytics />} />
+              <Route path="analytics" element={
+                <Suspense fallback={<SkeletonPage />}>
+                  <Analytics />
+                </Suspense>
+              } />
               <Route path="settings" element={<Settings />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

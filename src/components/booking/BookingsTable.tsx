@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -282,4 +282,4 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
   );
 };
 
-export default BookingsTable;
+export default memo(BookingsTable);
