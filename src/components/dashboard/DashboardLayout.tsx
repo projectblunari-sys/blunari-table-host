@@ -6,9 +6,11 @@ import BottomNavigation from './BottomNavigation';
 import BreadcrumbHeader from './BreadcrumbHeader';
 import GlobalStatusStrip from './GlobalStatusStrip';
 import { useNavigation } from '@/contexts/NavigationContext';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
 const DashboardLayout: React.FC = () => {
   const { actualLayout } = useNavigation();
+  const { getLayoutClasses } = useResponsiveLayout();
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,9 +38,7 @@ const DashboardLayout: React.FC = () => {
           <main 
             id="main-content"
             role="main" 
-            className={`flex-1 overflow-y-auto bg-surface-2/50 p-6 ${
-              actualLayout === 'bottom' ? 'pb-safe-mobile' : ''
-            }`}
+            className={getLayoutClasses().main}
           >
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -47,7 +47,7 @@ const DashboardLayout: React.FC = () => {
                 duration: 0.3,
                 ease: "easeOut"
               }}
-              className="max-w-7xl mx-auto page-padding motion-reduce:transform-none"
+              className={getLayoutClasses().container}
             >
               <Outlet />
             </motion.div>

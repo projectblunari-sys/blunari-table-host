@@ -45,12 +45,22 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
     };
 
+    // Initial update
     updateActualLayout();
 
-    if (preference === 'auto') {
-      window.addEventListener('resize', updateActualLayout);
-      return () => window.removeEventListener('resize', updateActualLayout);
-    }
+    // Always listen for resize events in auto mode, and also when preference changes
+    const handleResize = () => {
+      if (preference === 'auto') {
+        updateActualLayout();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    // Also trigger update when preference changes
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, [preference]);
 
   return (

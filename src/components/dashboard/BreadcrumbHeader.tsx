@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTenantBranding } from '@/contexts/TenantBrandingContext';
 import { useRealtimeBookings } from '@/hooks/useRealtimeBookings';
 import { useTenant } from '@/hooks/useTenant';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
 // Route mapping for breadcrumbs
 const routeMap: Record<string, { title: string; icon?: React.ComponentType }> = {
@@ -36,6 +37,7 @@ const BreadcrumbHeader: React.FC = () => {
   const { restaurantName } = useTenantBranding();
   const { tenant } = useTenant();
   const { isConnected } = useRealtimeBookings(tenant?.id);
+  const { actualLayout, isMobile } = useResponsiveLayout();
 
   const currentRoute = routeMap[location.pathname];
   const isHomePage = location.pathname === '/dashboard';
@@ -50,17 +52,19 @@ const BreadcrumbHeader: React.FC = () => {
   };
 
   return (
-    <div className="sticky top-0 z-30 bg-surface/95 backdrop-blur-sm border-b border-border/50 px-6 py-4">
-      <div className="flex items-center justify-between">
+    <div className={`sticky top-0 z-30 bg-surface/95 backdrop-blur-sm border-b border-border/50 ${
+      actualLayout === 'sidebar' ? 'px-6 py-4' : 'px-4 py-3'
+    }`}>
+      <div className={`flex items-center justify-between ${isMobile ? 'gap-2' : 'gap-4'}`}>
         {/* Breadcrumb & Page Title */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
-            <Home className="h-4 w-4" />
-            <span>{restaurantName}</span>
+        <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-4'}`}>
+          <div className={`flex items-center gap-2 ${isMobile ? 'text-sm' : 'text-body-sm'} text-muted-foreground`}>
+            <Home className={isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+            <span className={isMobile ? 'truncate max-w-[120px]' : ''}>{restaurantName}</span>
             {!isHomePage && (
               <>
-                <ChevronRight className="h-4 w-4" />
-                <span className="text-foreground font-medium">
+                <ChevronRight className={isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+                <span className={`text-foreground font-medium ${isMobile ? 'truncate max-w-[100px]' : ''}`}>
                   {currentRoute?.title || 'Page'}
                 </span>
               </>
@@ -69,7 +73,7 @@ const BreadcrumbHeader: React.FC = () => {
         </div>
 
         {/* Quick Actions & Status */}
-        <div className="flex items-center gap-3">
+        <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-3'}`}>
           {/* Connection Status */}
           <Badge 
             variant={isConnected ? "default" : "destructive"}
@@ -81,26 +85,42 @@ const BreadcrumbHeader: React.FC = () => {
           </Badge>
 
           {/* Quick Actions */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefresh}
-              className="h-8 px-3 hover:bg-primary/5"
-            >
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              Refresh
-            </Button>
+          <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
+            {!isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRefresh}
+                className="h-8 px-3 hover:bg-primary/5"
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                Refresh
+              </Button>
+            )}
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleQuickSave}
-              className="h-8 px-3 hover:bg-primary/5"
-            >
-              <Save className="h-3.5 w-3.5 mr-1.5" />
-              Quick Save
-            </Button>
+            {!isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleQuickSave}
+                className="h-8 px-3 hover:bg-primary/5"
+              >
+                <Save className="h-3.5 w-3.5 mr-1.5" />
+                Quick Save
+              </Button>
+            )}
+
+            {/* Mobile quick actions */}
+            {isMobile && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleRefresh}
+                className="h-8 w-8 p-0 hover:bg-primary/5"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </Button>
+            )}
 
             {/* Notification Bell */}
             <Button 
@@ -108,18 +128,20 @@ const BreadcrumbHeader: React.FC = () => {
               size="sm"
               className="h-8 w-8 p-0 relative hover:bg-primary/5"
             >
-              <Bell className="h-4 w-4" />
+              <Bell className={isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
               <Badge className="absolute -top-1 -right-1 h-2 w-2 p-0 bg-destructive"></Badge>
             </Button>
 
             {/* Settings */}
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="h-8 w-8 p-0 hover:bg-primary/5"
-            >
-              <Settings2 className="h-4 w-4" />
-            </Button>
+            {!isMobile && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-primary/5"
+              >
+                <Settings2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
