@@ -217,7 +217,7 @@
 
   /* Text utilities */
   .text-brand {
-    @apply text-brand;
+    color: hsl(var(--brand));
   }
 
   /* Mobile Safe Areas & Bottom Navigation Utilities */
