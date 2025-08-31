@@ -12,20 +12,34 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Skip to main content for keyboard navigation */}
+      <a href="#main-content" className="skip-to-main">
+        Skip to main content
+      </a>
       {/* Global Status Strip */}
       <GlobalStatusStrip />
       
       <div className="flex min-h-screen">
         {/* Sidebar - Show based on user preference */}
-        {actualLayout === 'sidebar' && <DashboardSidebar />}
+        {actualLayout === 'sidebar' && (
+          <nav role="navigation" aria-label="Main navigation">
+            <DashboardSidebar />
+          </nav>
+        )}
         
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Breadcrumb Header */}
-          <BreadcrumbHeader />
+          <header role="banner">
+            <BreadcrumbHeader />
+          </header>
           
-          <main className={`flex-1 overflow-y-auto bg-surface-2/50 p-6 ${
-            actualLayout === 'bottom' ? 'pb-safe-mobile' : ''
-          }`}>
+          <main 
+            id="main-content"
+            role="main" 
+            className={`flex-1 overflow-y-auto bg-surface-2/50 p-6 ${
+              actualLayout === 'bottom' ? 'pb-safe-mobile' : ''
+            }`}
+          >
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -33,7 +47,7 @@ const DashboardLayout: React.FC = () => {
                 duration: 0.3,
                 ease: "easeOut"
               }}
-              className="max-w-7xl mx-auto page-padding"
+              className="max-w-7xl mx-auto page-padding motion-reduce:transform-none"
             >
               <Outlet />
             </motion.div>
@@ -42,7 +56,11 @@ const DashboardLayout: React.FC = () => {
       </div>
 
       {/* Bottom Navigation - Show based on user preference */}
-      {actualLayout === 'bottom' && <BottomNavigation />}
+      {actualLayout === 'bottom' && (
+        <nav role="navigation" aria-label="Mobile navigation">
+          <BottomNavigation />
+        </nav>
+      )}
     </div>
   );
 };

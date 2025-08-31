@@ -68,21 +68,21 @@ const DashboardSidebar: React.FC = () => {
         {collapsed ? (
           <img 
             src={logoUrl} 
-            alt="Restaurant Logo" 
+            alt={`${restaurantName} logo`} 
             className="h-8 w-8 rounded-lg"
           />
         ) : (
           <>
             <img 
               src={logoUrl} 
-              alt="Restaurant Logo" 
+              alt={`${restaurantName} logo`} 
               className="h-8 w-auto"
             />
             <div className="ml-3 min-w-0 flex-1">
               <h2 className="text-body-sm font-semibold text-foreground truncate">
                 {restaurantName}
               </h2>
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs" aria-label={`Restaurant status: ${tenant?.status || 'Active'}`}>
                 {tenant?.status || 'Active'}
               </Badge>
             </div>
@@ -99,7 +99,7 @@ const DashboardSidebar: React.FC = () => {
             
             const linkContent = (
               <div className={`
-                group flex items-center transition-all duration-150
+                group flex items-center transition-all duration-150 motion-reduce:transition-none
                 ${collapsed 
                   ? 'justify-center w-12 h-12 rounded-xl' 
                   : 'px-3 py-3 rounded-lg'
@@ -108,11 +108,15 @@ const DashboardSidebar: React.FC = () => {
                   ? 'bg-brand text-brand-foreground shadow-sm' 
                   : 'text-muted-foreground hover:text-foreground hover:bg-surface-2'
                 }
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2
               `}>
                 <div className="relative">
-                  <item.icon className={collapsed ? 'h-5 w-5' : 'h-5 w-5'} />
+                  <item.icon className={collapsed ? 'h-5 w-5' : 'h-5 w-5'} aria-hidden="true" />
                   {badgeCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-4 w-4 p-0 text-xs bg-destructive text-destructive-foreground flex items-center justify-center">
+                    <Badge 
+                      className="absolute -top-2 -right-2 h-4 w-4 p-0 text-xs bg-destructive text-destructive-foreground flex items-center justify-center"
+                      aria-label={`${badgeCount} ${item.badge === 'messages' ? 'unread messages' : 'new items'}`}
+                    >
                       {badgeCount > 9 ? '9+' : badgeCount}
                     </Badge>
                   )}
@@ -132,6 +136,7 @@ const DashboardSidebar: React.FC = () => {
                     <NavLink
                       to={item.href}
                       onClick={() => mobile && setSidebarOpen(false)}
+                      aria-label={`Navigate to ${item.name}${badgeCount > 0 ? ` (${badgeCount} ${item.badge === 'messages' ? 'unread messages' : 'new items'})` : ''}`}
                     >
                       {linkContent}
                     </NavLink>
@@ -153,6 +158,7 @@ const DashboardSidebar: React.FC = () => {
                 key={item.name}
                 to={item.href}
                 onClick={() => mobile && setSidebarOpen(false)}
+                aria-label={`Navigate to ${item.name}${badgeCount > 0 ? ` (${badgeCount} ${item.badge === 'messages' ? 'unread messages' : 'new items'})` : ''}`}
               >
                 {linkContent}
               </NavLink>
@@ -169,12 +175,13 @@ const DashboardSidebar: React.FC = () => {
             size="sm"
             onClick={() => setIsCollapsed(!isCollapsed)}
             className={`mb-4 ${collapsed ? 'w-12 h-8 p-0' : 'w-full justify-start'}`}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             ) : (
               <>
-                <ChevronLeft className="h-4 w-4 mr-2" />
+                <ChevronLeft className="h-4 w-4 mr-2" aria-hidden="true" />
                 Collapse
               </>
             )}
@@ -232,8 +239,9 @@ const DashboardSidebar: React.FC = () => {
           size="icon"
           className="fixed top-4 left-4 z-50 h-10 w-10"
           onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
         >
-          {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {sidebarOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
         </Button>
       </div>
 
@@ -247,8 +255,9 @@ const DashboardSidebar: React.FC = () => {
           duration: 0.15, 
           ease: "easeInOut" 
         }}
-        className="bg-card border-r border-border flex-shrink-0 lg:block hidden shadow-elev-1"
+        className="bg-card border-r border-border flex-shrink-0 lg:block hidden shadow-elev-1 motion-reduce:transition-none"
         style={{ width: isCollapsed ? 84 : 280 }}
+        aria-label="Main navigation sidebar"
       >
         <SidebarContent collapsed={isCollapsed} />
       </motion.aside>
