@@ -43,8 +43,8 @@ const BottomNavigation: React.FC = () => {
       transition={{ type: 'spring', damping: 20, stiffness: 100 }}
       className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg"
     >
-      {/* Main Navigation Row */}
-      <div className="grid grid-cols-5 px-2 py-3">
+      {/* Main Navigation Row - More Compact */}
+      <div className="grid grid-cols-5 px-1 py-1">
         {navigation.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -52,7 +52,7 @@ const BottomNavigation: React.FC = () => {
               key={item.name}
               to={item.href}
               className={`
-                flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200
+                flex flex-col items-center justify-center py-1 px-1 rounded-md transition-all duration-200
                 ${isActive 
                   ? 'text-primary' 
                   : 'text-muted-foreground hover:text-foreground'
@@ -60,24 +60,24 @@ const BottomNavigation: React.FC = () => {
               `}
             >
               <div className={`
-                p-2 rounded-lg transition-all duration-200
+                p-1.5 rounded-md transition-all duration-200
                 ${isActive 
                   ? 'bg-primary/10' 
                   : 'hover:bg-muted'
                 }
               `}>
-                <item.icon className="h-5 w-5" />
+                <item.icon className="h-4 w-4" />
               </div>
-              <span className="text-xs font-medium mt-1 truncate">{item.name}</span>
+              <span className="text-xs font-medium mt-0.5 truncate leading-tight">{item.name}</span>
             </NavLink>
           );
         })}
       </div>
       
-      {/* Secondary Navigation Row */}
-      <div className="border-t border-border bg-muted/30">
-        <div className="flex justify-center">
-          <div className="flex gap-1 px-4 py-2 max-w-full overflow-x-auto scrollbar-none">
+      {/* Secondary Navigation Row - Compact */}
+      <div className="border-t border-border bg-muted/20">
+        <div className="flex justify-center py-1">
+          <div className="flex gap-0.5 px-2 max-w-full overflow-x-auto scrollbar-none">
             {secondaryNavigation.map((item) => {
               const isActive = location.pathname === item.href;
               return (
@@ -85,14 +85,14 @@ const BottomNavigation: React.FC = () => {
                   key={item.name}
                   to={item.href}
                   className={`
-                    flex items-center gap-2 py-2 px-3 rounded-md transition-all duration-200 whitespace-nowrap flex-shrink-0 text-sm
+                    flex items-center gap-1.5 py-1.5 px-2.5 rounded-md transition-all duration-200 whitespace-nowrap flex-shrink-0 text-xs
                     ${isActive 
                       ? 'bg-primary text-primary-foreground shadow-sm' 
                       : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
                     }
                   `}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className="h-3.5 w-3.5" />
                   <span className="font-medium">{item.name}</span>
                 </NavLink>
               );
