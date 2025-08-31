@@ -4,18 +4,29 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { useNavigation } from '@/contexts/NavigationContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useTenantBranding } from '@/contexts/TenantBrandingContext';
 import { 
   Monitor, 
   Smartphone, 
   Sidebar, 
   Navigation2,
   Palette,
-  Layout
+  Layout,
+  Moon,
+  Sun,
+  Eye,
+  Contrast,
+  Paintbrush
 } from 'lucide-react';
 
 const InterfaceSettings: React.FC = () => {
   const { preference, setPreference } = useNavigation();
+  const { theme, contrast, setTheme, setContrast, toggleTheme, toggleContrast } = useTheme();
+  const { updateBranding } = useTenantBranding();
 
   const navigationOptions = [
     {
@@ -41,8 +52,15 @@ const InterfaceSettings: React.FC = () => {
     }
   ];
 
+  const handleColorChange = (colorType: 'primary' | 'accent', value: string) => {
+    updateBranding({ 
+      [colorType === 'primary' ? 'primaryColor' : 'accentColor']: value 
+    });
+  };
+
   return (
     <div className="space-y-6">
+      {/* Navigation Layout */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -107,20 +125,140 @@ const InterfaceSettings: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Theme & Appearance */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" />
-            Theme Preferences
+            Theme & Appearance
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          {/* Theme Selection */}
+          <div className="space-y-4">
+            <div>
+              <Label className="text-base font-medium">Color Theme</Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Choose between light and dark mode.
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <Button
+                variant={theme === 'light' ? 'default' : 'outline'}
+                onClick={() => setTheme('light')}
+                className="flex-1 flex items-center gap-2"
+              >
+                <Sun className="h-4 w-4" />
+                Light
+              </Button>
+              <Button
+                variant={theme === 'dark' ? 'default' : 'outline'}
+                onClick={() => setTheme('dark')}
+                className="flex-1 flex items-center gap-2"
+              >
+                <Moon className="h-4 w-4" />
+                Dark
+              </Button>
+            </div>
+          </div>
+
+          {/* Contrast Toggle */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-accent/10 rounded-lg">
+                <Contrast className="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <Label className="font-medium">High Contrast Mode</Label>
+                <p className="text-sm text-muted-foreground">
+                  Increase contrast for better accessibility
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={contrast === 'high'}
+              onCheckedChange={toggleContrast}
+            />
+          </div>
+
+          {/* Brand Colors */}
+          <div className="space-y-4">
+            <div>
+              <Label className="text-base font-medium">Brand Colors</Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Customize your brand colors to match your restaurant's identity.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="primary-color">Primary Color</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="primary-color"
+                    type="color"
+                    defaultValue="#1a365d"
+                    onChange={(e) => handleColorChange('primary', e.target.value)}
+                    className="w-16 h-10 p-1 border rounded"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="#1a365d"
+                    onChange={(e) => handleColorChange('primary', e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="accent-color">Accent Color</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="accent-color"
+                    type="color"
+                    defaultValue="#2d8a3e"
+                    onChange={(e) => handleColorChange('accent', e.target.value)}
+                    className="w-16 h-10 p-1 border rounded"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="#2d8a3e"
+                    onChange={(e) => handleColorChange('accent', e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Paintbrush className="h-4 w-4" />
+              <span>Brand colors update across your entire dashboard</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Accessibility */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Eye className="h-5 w-5" />
+            Accessibility
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="text-center py-8">
-            <Palette className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Theme Settings Coming Soon</h3>
+            <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Advanced Accessibility</h3>
             <p className="text-muted-foreground">
-              Dark mode, color themes, and visual customization options will be available here.
+              Motion preferences, screen reader optimizations, and keyboard navigation settings coming soon.
             </p>
+            <Badge variant="outline" className="mt-4">
+              WCAG 2.1 AA Compliant
+            </Badge>
           </div>
         </CardContent>
       </Card>

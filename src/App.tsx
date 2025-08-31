@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TenantBrandingProvider } from "@/contexts/TenantBrandingContext";
 import { NavigationProvider } from "@/contexts/NavigationContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import Index from "./pages/Index";
@@ -28,10 +29,11 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TenantBrandingProvider>
-        <NavigationProvider>
-          <TooltipProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <TenantBrandingProvider>
+          <NavigationProvider>
+            <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -67,6 +69,7 @@ const App = () => (
     </NavigationProvider>
   </TenantBrandingProvider>
 </AuthProvider>
+</ThemeProvider>
 </QueryClientProvider>
 );
 
