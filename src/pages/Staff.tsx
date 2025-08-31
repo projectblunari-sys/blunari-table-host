@@ -17,9 +17,9 @@ import { useTenant } from '@/hooks/useTenant';
 
 interface StaffMember {
   id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
   phone?: string;
   role: 'ADMIN' | 'SUPPORT' | 'OPS' | 'VIEWER' | 'SUPER_ADMIN';
   status: 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'SUSPENDED';
@@ -38,6 +38,7 @@ const Staff: React.FC = () => {
     last_name: '',
     email: '',
     phone: '',
+    employee_id: '',
     role: 'VIEWER' as const
   });
 
@@ -109,6 +110,7 @@ const Staff: React.FC = () => {
         last_name: '',
         email: '',
         phone: '',
+        employee_id: '',
         role: 'VIEWER'
       });
       toast.success('Staff member added successfully');
@@ -146,7 +148,8 @@ const Staff: React.FC = () => {
     return colors[role as keyof typeof colors] || 'bg-secondary/10 text-secondary';
   };
 
-  const getInitials = (firstName: string, lastName: string) => {
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName || !lastName) return 'SM';
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
@@ -247,6 +250,7 @@ const Staff: React.FC = () => {
                     <SelectItem value="OPS">Operations</SelectItem>
                     <SelectItem value="SUPPORT">Support</SelectItem>
                     <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -299,7 +303,9 @@ const Staff: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-h4 font-semibold text-text truncate">
-                          {staff.first_name} {staff.last_name}
+                          {staff.first_name && staff.last_name 
+                            ? `${staff.first_name} ${staff.last_name}`
+                            : staff.email || staff.employee_id}
                         </h3>
                         <Badge className={getRoleColor(staff.role)}>
                           {staff.role}
@@ -310,16 +316,21 @@ const Staff: React.FC = () => {
                       </div>
                       
                       <div className="flex items-center gap-4 text-body-sm text-text-muted">
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          <span className="truncate">{staff.email}</span>
-                        </div>
+                        {staff.email && (
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            <span className="truncate">{staff.email}</span>
+                          </div>
+                        )}
                         {staff.phone && (
                           <div className="flex items-center gap-1">
                             <Phone className="h-3 w-3" />
                             <span>{staff.phone}</span>
                           </div>
                         )}
+                        <div className="flex items-center gap-1 text-xs">
+                          <span>ID: {staff.employee_id}</span>
+                        </div>
                       </div>
                       
                       <div className="text-xs text-text-subtle mt-1">
