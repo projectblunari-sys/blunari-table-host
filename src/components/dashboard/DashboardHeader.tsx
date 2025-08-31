@@ -43,10 +43,10 @@ const DashboardHeader: React.FC = () => {
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         {/* Restaurant Info & Date */}
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-h2 font-bold bg-gradient-primary bg-clip-text text-transparent">
             {restaurantName}
           </h1>
-          <p className="text-muted-foreground flex items-center gap-2">
+          <p className="text-body-sm text-muted-foreground flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             {currentDate}
           </p>
@@ -61,8 +61,8 @@ const DashboardHeader: React.FC = () => {
                 <div className="p-2 bg-secondary/10 rounded-lg">
                   <TrendingUp className="h-5 w-5 text-secondary" />
                 </div>
-                <div className="text-sm">
-                  <div className="font-semibold text-foreground">87%</div>
+                <div className="text-body-sm">
+                  <div className="font-semibold text-foreground font-tabular">87%</div>
                   <div className="text-xs text-muted-foreground">Capacity</div>
                 </div>
               </div>
@@ -76,7 +76,7 @@ const DashboardHeader: React.FC = () => {
                 <div className={`p-2 rounded-lg ${isConnected ? 'bg-success/10' : 'bg-destructive/10'}`}>
                   <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-success animate-pulse-soft' : 'bg-destructive'}`}></div>
                 </div>
-                <div className="text-sm">
+                <div className="text-body-sm">
                   <div className="font-semibold text-foreground">
                     {isConnected ? 'Live' : 'Offline'}
                   </div>

@@ -62,7 +62,7 @@ const MetricsCard: React.FC<MetricsCardProps> = ({
   return (
     <Card className="relative overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-body-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
         <div className={`h-10 w-10 rounded-lg ${bgColor} flex items-center justify-center`}>
@@ -71,7 +71,7 @@ const MetricsCard: React.FC<MetricsCardProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          <div className="text-2xl font-bold text-foreground">
+          <div className="text-h3 font-bold text-foreground font-tabular">
             {formatValue(value)}
           </div>
           {subtitle && (
@@ -83,7 +83,7 @@ const MetricsCard: React.FC<MetricsCardProps> = ({
               className={`flex items-center gap-1 ${trendInfo.bgColor} ${trendInfo.color} border-0`}
             >
               <TrendIcon className="h-3 w-3" />
-              <span className="text-xs font-medium">{trendInfo.text}</span>
+              <span className="text-xs font-medium font-tabular">{trendInfo.text}</span>
             </Badge>
             <span className="text-xs text-muted-foreground">vs yesterday</span>
           </div>

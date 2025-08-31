@@ -44,7 +44,7 @@ const Index = () => {
           transition={{ delay: 0.3, duration: 0.5 }}
           className="text-center"
         >
-          <h1 className="text-2xl font-bold mb-2">Blunari Restaurant</h1>
+          <h1 className="text-h2 font-bold mb-2">Blunari Restaurant</h1>
           <p className="text-primary-foreground/80 flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
             Loading your experience...

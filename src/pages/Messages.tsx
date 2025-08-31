@@ -14,7 +14,7 @@ const Messages: React.FC = () => {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Messages</h1>
+          <h1 className="text-h1 font-bold text-foreground">Messages</h1>
           <p className="text-muted-foreground">Customer communications and notifications</p>
         </div>
         <Button>

@@ -94,7 +94,7 @@ const POSIntegration: React.FC = () => {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-foreground">POS Integrations</h1>
+          <h1 className="text-h1 font-bold text-foreground">POS Integrations</h1>
           <p className="text-muted-foreground">
             Connect your restaurant management system with popular POS platforms
           </p>

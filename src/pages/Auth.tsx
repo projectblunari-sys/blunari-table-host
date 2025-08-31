@@ -293,7 +293,7 @@ const Auth: React.FC = () => {
             alt="Blunari Logo" 
             className="h-16 mx-auto mb-4"
           />
-          <h1 className="text-2xl font-bold text-foreground">Restaurant Dashboard</h1>
+          <h1 className="text-h2 font-bold text-foreground">Restaurant Dashboard</h1>
           <p className="text-muted-foreground">Manage your restaurant operations</p>
         </div>
 

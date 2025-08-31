@@ -75,7 +75,7 @@ const Analytics: React.FC = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Analytics & ROI</h1>
+            <h1 className="text-h1 font-bold text-foreground">Analytics & ROI</h1>
             <p className="text-muted-foreground">Comprehensive business intelligence dashboard</p>
           </div>
         </div>

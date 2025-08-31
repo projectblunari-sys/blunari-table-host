@@ -18,6 +18,32 @@ const config: Config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+      },
+      fontSize: {
+        // Typography scale with exact line heights
+        'h1': ['30px', '36px'],
+        'h2': ['24px', '32px'], 
+        'h3': ['20px', '28px'],
+        'h4': ['18px', '26px'],
+        'body': ['16px', '24px'],
+        'body-sm': ['14px', '20px'],
+        'code': ['13px', '20px'],
+      },
+      spacing: {
+        // Professional spacing scale: 4/8/12/16/20/24/32/40/48/64
+        '1': '4px',
+        '2': '8px', 
+        '3': '12px',
+        '4': '16px',
+        '5': '20px',
+        '6': '24px',
+        '8': '32px',
+        '10': '40px',
+        '12': '48px',
+        '16': '64px',
+      },
       colors: {
         // Design Token Colors - Using CSS Variables
         brand: {

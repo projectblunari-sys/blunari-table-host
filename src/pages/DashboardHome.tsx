@@ -48,10 +48,10 @@ const DashboardHome: React.FC = () => {
         className="relative overflow-hidden bg-gradient-primary rounded-2xl p-6 text-primary-foreground shadow-strong"
       >
         <div className="relative z-10">
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className="text-h1 font-bold mb-2">
             Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'}!
           </h1>
-          <p className="text-primary-foreground/90 text-lg">
+          <p className="text-primary-foreground/90 text-body">
             Here's what's happening at {tenant?.name || 'your restaurant'} today.
           </p>
         </div>
