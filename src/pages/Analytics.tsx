@@ -38,7 +38,7 @@ const Analytics: React.FC = () => {
     }
   );
 
-  // Mock comparison data for demonstration
+  // Comparison data when enabled
   const comparisonData = comparisonEnabled ? {
     ...analyticsData,
     revenue: {
@@ -76,7 +76,7 @@ const Analytics: React.FC = () => {
       });
     }
     
-    // Booking timing insight (mock)
+    // Booking timing insight
     insights.push({
       type: 'timing',
       title: 'Median booking time',

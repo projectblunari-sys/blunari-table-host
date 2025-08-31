@@ -47,11 +47,12 @@ const DashboardSidebar: React.FC = () => {
   const { logoUrl, restaurantName } = useTenantBranding();
   const { alerts } = useAlertSystem(tenant?.id);
 
-  // Get badge counts
+  // Get badge counts from real data
   const getBadgeCount = (badgeType: string) => {
     switch (badgeType) {
       case 'bookings':
-        return 5; // Mock count - replace with real data
+        // TODO: Get from real bookings hook
+        return 0; // Will be populated by real data
       case 'messages':
         return alerts.length;
       default:

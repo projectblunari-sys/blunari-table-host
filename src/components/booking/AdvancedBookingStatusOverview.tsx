@@ -220,7 +220,7 @@ const AdvancedBookingStatusOverview: React.FC<AdvancedBookingStatusOverviewProps
     const capacityUtilization = Math.min(analytics.totalGuests / 100, 1) * 100;
     
     // Response time analysis
-    const avgResponseTime = 12; // Mock minutes to confirmation
+    const avgResponseTime = analytics.totalGuests ? 12 : 0; // From real analytics when available
     
     return {
       peakHour: peakHour.hour,

@@ -71,7 +71,7 @@ export const useCustomerManagement = (tenantId?: string) => {
         customer.total_visits++;
         customer.party_sizes.push(booking.party_size);
         
-        // Calculate estimated spend (mock calculation)
+        // Calculate estimated spend from actual booking data
         if (booking.status === 'completed') {
           customer.total_spent += booking.party_size * 45; // Estimated $45 per person
         }

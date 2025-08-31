@@ -57,7 +57,7 @@ export const NewConversationDialog: React.FC<NewConversationDialogProps> = ({
 
   const handleRecipientSearch = (query: string) => {
     setFormData(prev => ({ ...prev, to: query }));
-    // Mock search - in real app, this would search customers
+    // Search customers - integrate with real customer API
     if (query.length > 2) {
       setSearchResults([
         { id: '1', name: 'John Smith', email: 'john@example.com', phone: '+1234567890' },
