@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import PageHeader from '@/components/ui/page-header';
 import { useTenant } from '@/hooks/useTenant';
 import { useAdvancedBookings } from '@/hooks/useAdvancedBookings';
 import BookingsTable from '@/components/booking/BookingsTable';
@@ -191,23 +190,28 @@ const Bookings: React.FC = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <PageHeader
-        title="Booking Management"
-        description="Comprehensive reservation management with advanced filtering and real-time updates"
-        primaryAction={{
-          label: "New Booking",
-          onClick: () => setShowWizard(true),
-          icon: Plus
-        }}
-        secondaryActions={[
-          {
-            label: "Real-time",
-            onClick: () => {},
-            variant: "outline" as const,
-            icon: Activity
-          }
-        ]}
-      />
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">
+            Booking Management
+          </h1>
+          <p className="text-muted-foreground mt-2 max-w-3xl">
+            Comprehensive reservation management with advanced filtering and real-time updates
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <Badge variant="outline" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Real-time
+          </Badge>
+          <Button onClick={() => setShowWizard(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Booking
+          </Button>
+        </div>
+      </div>
 
       {/* Today's Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
