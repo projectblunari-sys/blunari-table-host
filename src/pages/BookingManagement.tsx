@@ -12,7 +12,8 @@ import { useAdvancedBookings } from '@/hooks/useAdvancedBookings';
 import BookingCard from '@/components/dashboard/BookingCard';
 import AdvancedBookingStatusOverview from '@/components/booking/AdvancedBookingStatusOverview';
 import SmartBookingWizard from '@/components/booking/SmartBookingWizard';
-import AdvancedFilters from '@/components/booking/AdvancedFilters';
+import EnhancedFilters from '@/components/booking/EnhancedFilters';
+import OptimizedBookingsTable from '@/components/booking/VirtualizedBookingsTable';
 import { 
   Plus, 
   CalendarIcon,
@@ -184,81 +185,73 @@ const BookingManagement: React.FC = () => {
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold text-foreground">Booking Management</h1>
-            <p className="text-lg text-muted-foreground">
+            <h1 className="text-h1 font-bold text-text">Booking Management</h1>
+            <p className="text-body text-text-muted">
               Comprehensive booking lifecycle management with smart features
             </p>
           </div>
           
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="flex items-center gap-2 px-3 py-1">
+            <Badge variant="outline" className="flex items-center gap-2 px-3 py-1 bg-surface-2 border-surface-3">
               <Activity className="h-4 w-4" />
               Real-time Updates
             </Badge>
-            <Button 
-              onClick={() => setShowWizard(true)}
-              size="lg"
-              className="shadow-md"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Smart Booking
-            </Button>
           </div>
         </div>
 
         {/* Today's Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="shadow-sm">
+          <Card className="bg-surface border-surface-2 shadow-elev-1">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Calendar className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-brand/10 rounded-lg">
+                  <Calendar className="w-5 h-5 text-brand" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Today's Bookings</p>
-                  <p className="text-2xl font-bold">{metrics.totalToday}</p>
+                  <p className="text-sm font-medium text-text-muted">Today's Bookings</p>
+                  <p className="text-h3 font-bold text-text font-tabular">{metrics.totalToday}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm">
+          <Card className="bg-surface border-surface-2 shadow-elev-1">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Clock className="w-5 h-5 text-orange-600" />
+                <div className="p-2 bg-warning/10 rounded-lg">
+                  <Clock className="w-5 h-5 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-bold">{metrics.pendingToday}</p>
+                  <p className="text-sm font-medium text-text-muted">Pending</p>
+                  <p className="text-h3 font-bold text-text font-tabular">{metrics.pendingToday}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm">
+          <Card className="bg-surface border-surface-2 shadow-elev-1">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckSquare className="w-5 h-5 text-green-600" />
+                <div className="p-2 bg-success/10 rounded-lg">
+                  <CheckSquare className="w-5 h-5 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Confirmed</p>
-                  <p className="text-2xl font-bold">{metrics.confirmedToday}</p>
+                  <p className="text-sm font-medium text-text-muted">Confirmed</p>
+                  <p className="text-h3 font-bold text-text font-tabular">{metrics.confirmedToday}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm">
+          <Card className="bg-surface border-surface-2 shadow-elev-1">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-600" />
+                <div className="p-2 bg-secondary/10 rounded-lg">
+                  <Users className="w-5 h-5 text-secondary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Guests</p>
-                  <p className="text-2xl font-bold">{metrics.totalGuests}</p>
+                  <p className="text-sm font-medium text-text-muted">Total Guests</p>
+                  <p className="text-h3 font-bold text-text font-tabular">{metrics.totalGuests}</p>
                 </div>
               </div>
             </CardContent>
@@ -266,17 +259,18 @@ const BookingManagement: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Advanced Filters */}
+      {/* Enhanced Filters */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <AdvancedFilters
+        <EnhancedFilters
           filters={filters}
           onFiltersChange={setFilters}
           totalBookings={bookings.length}
           onExportCSV={handleExportCSV}
+          onNewBooking={() => setShowWizard(true)}
         />
       </motion.div>
 
@@ -287,7 +281,7 @@ const BookingManagement: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Card className="shadow-md border-l-4 border-l-primary">
+          <Card className="bg-surface border-surface-2 shadow-elev-2 border-l-4 border-l-brand">
             <CardContent className="py-4">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -295,10 +289,10 @@ const BookingManagement: React.FC = () => {
                     checked={selectedBookings.length === currentBookings.length}
                     onCheckedChange={handleSelectAll}
                   />
-                  <span className="font-semibold text-lg">
+                  <span className="font-semibold text-lg text-text">
                     {selectedBookings.length} of {currentBookings.length} selected
                   </span>
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="bg-brand/10 text-brand border-brand/20">
                     Bulk Actions Available
                   </Badge>
                 </div>
@@ -390,18 +384,21 @@ const BookingManagement: React.FC = () => {
         />
       </motion.div>
 
-      {/* Bookings List */}
+      {/* Virtualized Bookings Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <BookingsList 
-          bookings={currentBookings} 
-          isLoading={isLoading}
+        <OptimizedBookingsTable
+          bookings={currentBookings}
           selectedBookings={selectedBookings}
           onSelectBooking={handleSelectBooking}
-          onUpdateBooking={updateBooking}
+          onSelectAll={handleSelectAll}
+          onBookingClick={(booking) => console.log('Booking clicked:', booking)}
+          onStatusUpdate={(id, status) => updateBooking({ id, updates: { status } })}
+          isLoading={isLoading}
+          height={600}
         />
       </motion.div>
 
