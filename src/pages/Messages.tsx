@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTenant } from '@/hooks/useTenant';
-import EmptyState from '@/components/ui/empty-state';
-import ErrorState from '@/components/ui/error-state';
+import { EmptyState, ErrorState } from '@/components/ui/state';
 import { SkeletonMessagesDashboard } from '@/components/ui/skeleton-dashboard';
 import { Conversation, Message, MessageTemplate } from '@/types/messages';
 import { Plus, MessageSquare } from 'lucide-react';
@@ -46,6 +45,7 @@ const Messages: React.FC = () => {
     return (
       <div className="p-6">
         <ErrorState
+          variant="server-error"
           title="Failed to load messages"
           description="We encountered an error while loading your messages. Please try again."
           error={error}
@@ -53,7 +53,6 @@ const Messages: React.FC = () => {
             label: "Retry",
             onClick: () => window.location.reload()
           }}
-          type="server"
         />
       </div>
     );
@@ -68,10 +67,9 @@ const Messages: React.FC = () => {
       className="h-[calc(100vh-12rem)] flex items-center justify-center p-6"
     >
       <EmptyState
-        icon={MessageSquare}
+        variant="feature-unavailable"
         title="Messages coming soon"
-        description="Customer messaging features will be available once the backend integration is complete. No mock data is displayed."
-        illustration="inbox"
+        description="Customer messaging features will be available once the backend integration is complete."
       />
     </motion.div>
   );

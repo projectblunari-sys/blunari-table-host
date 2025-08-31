@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTodaysBookings } from "@/hooks/useRealtimeBookings";
 import { useTenant } from "@/hooks/useTenant";
 import { SkeletonList } from "@/components/ui/skeleton-components";
-import EmptyState from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/state";
 import { Calendar, Users } from "lucide-react";
 
 const TodaysBookings = () => {
@@ -73,9 +73,7 @@ const TodaysBookings = () => {
         {bookings.length === 0 ? (
           <div className="p-6">
             <EmptyState
-              illustration="calendar"
-              title="No bookings today"
-              description="When customers make reservations for today, they'll appear here."
+              variant="no-bookings-date"
               action={{
                 label: 'View All Bookings',
                 onClick: () => window.location.href = '/dashboard/bookings',

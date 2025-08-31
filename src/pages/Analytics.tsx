@@ -13,8 +13,7 @@ import OperationalMetrics from '@/components/analytics/OperationalMetrics';
 import { AnalyticsTimePicker, type TimePeriod } from '@/components/analytics/AnalyticsTimePicker';
 import { AnalyticsInsights, type InsightData } from '@/components/analytics/AnalyticsInsights';
 import PageHeader from '@/components/ui/page-header';
-import EmptyState from '@/components/ui/empty-state';
-import ErrorState from '@/components/ui/error-state';
+import { EmptyState, ErrorState } from '@/components/ui/state';
 import { SkeletonAnalyticsDashboard } from '@/components/ui/skeleton-dashboard';
 import { SkeletonPage } from '@/components/ui/skeleton-components';
 import { PerformanceWrapper } from '@/components/ui/performance-wrapper';
@@ -162,7 +161,7 @@ const Analytics: React.FC = () => {
           description="Comprehensive business intelligence dashboard"
         />
         <ErrorState
-          type="general"
+          variant="general-error"
           title="Failed to load analytics data"
           description="We couldn't fetch your analytics data. Please check your connection and try again."
           error={error}
@@ -204,9 +203,7 @@ const Analytics: React.FC = () => {
           ]}
         />
         <EmptyState
-          illustration="chart"
-          title="No analytics data available"
-          description="Start taking bookings to see your analytics data. Once you have bookings, you'll see revenue trends, customer insights, and operational metrics here."
+          variant="no-analytics"
           action={{
             label: 'View Bookings',
             onClick: () => window.location.href = '/dashboard/bookings',

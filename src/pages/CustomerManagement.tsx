@@ -8,8 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTenant } from '@/hooks/useTenant';
 import { useCustomerManagement, Customer } from '@/hooks/useCustomerManagement';
 import PageHeader from '@/components/ui/page-header';
-import EmptyState from '@/components/ui/empty-state';
-import ErrorState from '@/components/ui/error-state';
+import { EmptyState } from '@/components/ui/state';
 import { SkeletonList, SkeletonMetricsCard } from '@/components/ui/skeleton-components';
 import { 
   Users, 
@@ -121,9 +120,7 @@ const CustomerManagement: React.FC = () => {
           }}
         />
         <EmptyState
-          illustration="users"
-          title="No customers yet"
-          description="Start building your customer database by adding your first customer or wait for bookings to automatically create customer profiles."
+          variant="no-customers"
           action={{
             label: 'Add First Customer',
             onClick: handleAddCustomer,

@@ -3,8 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/ui/page-header';
-import EmptyState from '@/components/ui/empty-state';
-import ErrorState from '@/components/ui/error-state';
+import { EmptyState, ErrorState } from '@/components/ui/state';
 import { SkeletonPage, SkeletonTable, SkeletonChart } from '@/components/ui/skeleton-components';
 import { Plus, RefreshCw, Download, Users, Search } from 'lucide-react';
 
@@ -81,9 +80,7 @@ const DemoPage: React.FC = () => {
           ]}
         />
         <ErrorState
-          type="general"
-          title="Something went wrong"
-          description="We encountered an error while loading your data. Please try again or contact support if the problem persists."
+          variant="general-error"
           action={{
             label: 'Try Again',
             onClick: handleRefresh,
@@ -125,9 +122,7 @@ const DemoPage: React.FC = () => {
           ]}
         />
         <EmptyState
-          illustration="search"
-          title="No items found"
-          description="Get started by creating your first item. Once you have items, they'll appear here and you can manage them easily."
+          variant="no-search-results"
           action={{
             label: 'Create Item',
             onClick: handleCreate,

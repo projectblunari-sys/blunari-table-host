@@ -9,7 +9,7 @@ import MetricsCard from '@/components/dashboard/MetricsCard';
 import PerformanceTrendsChart from '@/components/dashboard/PerformanceTrendsChart';
 import AlertSystem from '@/components/dashboard/AlertSystem';
 import { SkeletonMetricsCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton-components';
-import EmptyState from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/ui/state';
 import { 
   DollarSign, 
   Target,
@@ -154,9 +154,7 @@ const DashboardHome: React.FC = () => {
             ) : (
               <div className="h-96">
                 <EmptyState
-                  illustration="chart"
-                  title="No performance data yet"
-                  description="Performance trends will appear here once you have booking data over time."
+                  variant="no-analytics"
                   action={{
                     label: 'View Bookings',
                     onClick: () => window.location.href = '/dashboard/bookings',
@@ -193,14 +191,9 @@ const DashboardHome: React.FC = () => {
         ) : (
           <div className="max-w-4xl">
             <EmptyState
-              illustration="inbox"
+              variant="setup-required"
               title="All clear!"
               description="No alerts or notifications at the moment. Your restaurant operations are running smoothly."
-              action={{
-                label: 'View All Notifications',
-                onClick: () => console.log('View notifications'),
-                icon: TrendingUp
-              }}
             />
           </div>
         )}

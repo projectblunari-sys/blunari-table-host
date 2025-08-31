@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserPlus, Users } from 'lucide-react';
+import { EmptyState } from '@/components/ui/state';
 
 const Staff: React.FC = () => {
   return (
@@ -23,13 +24,14 @@ const Staff: React.FC = () => {
         </Button>
       </motion.div>
 
-      <Card>
-        <CardContent className="text-center py-16">
-          <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2">Staff Management Coming Soon</h3>
-          <p className="text-muted-foreground">Manage your restaurant team, roles, and schedules.</p>
-        </CardContent>
-      </Card>
+      <EmptyState
+        variant="no-staff"
+        action={{
+          label: "Add Staff Member",
+          onClick: () => console.log('Add staff member'),
+          icon: UserPlus
+        }}
+      />
     </div>
   );
 };
