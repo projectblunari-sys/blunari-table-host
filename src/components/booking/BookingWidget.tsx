@@ -312,12 +312,11 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
               <p className="text-lg text-muted-foreground">Reserve your table in just a few steps</p>
             </div>
 
-            {/* Progress Section */}
+            {/* Progress Section with Brand Gradient */}
             <Card className="max-w-2xl mx-auto shadow-md">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-primary" />
                     <BookingTimer startTime={state.start_time} />
                   </div>
                   <Badge variant="secondary" className="font-medium">
@@ -326,30 +325,43 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <Progress value={progressPercentage} className="h-2" />
+                {/* Brand Gradient Progress Bar */}
+                <div className="relative w-full h-3 bg-muted rounded-full overflow-hidden mb-4">
+                  <motion.div
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-brand to-brand-accent rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercentage}%` }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                </div>
                 
                 {/* Step indicators */}
-                <div className="flex justify-between mt-4">
+                <div className="flex justify-between">
                   {[1, 2, 3, 4].map((step) => (
                     <div 
                       key={step}
-                      className={`flex flex-col items-center text-xs ${
-                        step <= state.step ? 'text-primary' : 'text-muted-foreground'
+                      className={`flex flex-col items-center text-xs transition-colors duration-300 ${
+                        step <= state.step ? 'text-brand' : 'text-muted-foreground'
                       }`}
                     >
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${
-                        step < state.step 
-                          ? 'bg-primary text-primary-foreground' 
-                          : step === state.step 
-                            ? 'bg-primary/20 text-primary border-2 border-primary' 
-                            : 'bg-muted text-muted-foreground'
-                      }`}>
+                      <motion.div 
+                        className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 transition-all duration-300 ${
+                          step < state.step 
+                            ? 'bg-brand text-brand-foreground shadow-lg' 
+                            : step === state.step 
+                              ? 'bg-brand/20 text-brand border-2 border-brand shadow-md' 
+                              : 'bg-muted text-muted-foreground'
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
                         {step < state.step ? (
                           <CheckCircle className="w-3 h-3" />
                         ) : (
                           <span className="font-medium">{step}</span>
                         )}
-                      </div>
+                      </motion.div>
                       <span className="font-medium">{stepTitles[step as keyof typeof stepTitles]}</span>
                     </div>
                   ))}

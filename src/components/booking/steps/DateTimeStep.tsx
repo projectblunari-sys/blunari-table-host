@@ -192,42 +192,62 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Main slots */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {/* Main slots with compact cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {availability.slots.map((slot, index) => (
-                    <motion.div 
+                    <motion.button
                       key={index}
+                      onClick={() => handleSlotSelect(slot)}
+                      disabled={parentLoading}
+                      className="relative p-4 rounded-xl border-2 border-surface-3 hover:border-brand/50 bg-surface/50 hover:bg-surface transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed group"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05, duration: 0.3 }}
                     >
-                      <Button
-                        variant="outline"
-                        className="w-full h-auto p-4 flex flex-col items-center gap-2 hover:bg-accent/50 transition-colors"
-                        onClick={() => handleSlotSelect(slot)}
-                        disabled={parentLoading}
-                      >
-                        <div className="font-semibold text-base">
+                      {/* Time Display */}
+                      <div className="text-center mb-3">
+                        <div className="text-lg font-bold text-foreground group-hover:text-brand transition-colors">
                           {formatSlotTime(slot.time)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {slot.available_tables} table{slot.available_tables !== 1 ? 's' : ''}
+                          {slot.available_tables} available
                         </div>
-                        <div className="flex flex-wrap justify-center gap-1 mt-1">
-                          {slot.optimal && (
-                            <Badge variant="secondary" className="text-xs px-2 py-1">
-                              <TrendingUp className="w-3 h-3 mr-1" />
-                              Optimal
-                            </Badge>
-                          )}
-                          {slot.revenue_projection && (
-                            <Badge variant="outline" className="text-xs px-2 py-1">
-                              ${slot.revenue_projection}
-                            </Badge>
-                          )}
-                        </div>
-                      </Button>
-                    </motion.div>
+                      </div>
+
+                      {/* Badges - Only show if API provides these flags */}
+                      <div className="flex flex-wrap justify-center gap-1">
+                        {slot.optimal && (
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs px-2 py-0.5 bg-success/10 text-success border-success/20"
+                          >
+                            <TrendingUp className="w-2.5 h-2.5 mr-1" />
+                            Optimal
+                          </Badge>
+                        )}
+                        {slot.revenue_projection && (
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs px-2 py-0.5 bg-warning/10 text-warning border-warning/20"
+                          >
+                            💰 High Value
+                          </Badge>
+                        )}
+                        {slot.available_tables <= 2 && (
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs px-2 py-0.5 bg-destructive/10 text-destructive border-destructive/20"
+                          >
+                            ⚡ Limited
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Hover effect overlay */}
+                      <div className="absolute inset-0 rounded-xl bg-brand/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </motion.button>
                   ))}
                 </div>
 
