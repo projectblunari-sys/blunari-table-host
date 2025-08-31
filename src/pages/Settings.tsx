@@ -12,20 +12,24 @@ import {
   Bell, 
   Shield, 
   Save,
-  RefreshCw
+  RefreshCw,
+  Wrench,
+  Eye
 } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { useTenant } from '@/hooks/useTenant';
+import { useTenantBranding } from '@/contexts/TenantBrandingContext';
 import BrandingSettings from '@/components/settings/BrandingSettings';
 import OperationalSettings from '@/components/settings/OperationalSettings';
 import NotificationSettings from '@/components/settings/NotificationSettings';
 import SecuritySettings from '@/components/settings/SecuritySettings';
 import IntegrationSettings from '@/components/settings/IntegrationSettings';
 import InterfaceSettings from '@/components/settings/InterfaceSettings';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 
 const Settings: React.FC = () => {
   const { tenant } = useTenant();
+  const { logoUrl, restaurantName } = useTenantBranding();
   const { 
     settings, 
     isLoading, 
@@ -61,10 +65,7 @@ const Settings: React.FC = () => {
   }
 
   const handleQuickSave = () => {
-    toast({
-      title: "Settings Saved",
-      description: "All settings have been saved successfully.",
-    });
+    toast.success("Settings saved successfully");
   };
 
   return (
@@ -74,22 +75,74 @@ const Settings: React.FC = () => {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground">Configure your restaurant settings and preferences</p>
+      {/* Header with Live Preview */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-h1 font-bold text-text">Settings</h1>
+              <p className="text-body text-text-muted">Configure your restaurant settings and preferences</p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={() => window.location.reload()} size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <Button onClick={handleQuickSave} size="sm">
+                <Save className="h-4 w-4 mr-2" />
+                Quick Save
+              </Button>
+            </div>
+          </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => window.location.reload()} size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <Button onClick={handleQuickSave} size="sm">
-            <Save className="h-4 w-4 mr-2" />
-            Quick Save
-          </Button>
+        {/* Live Preview Card */}
+        <div className="lg:w-80">
+          <Card className="bg-gradient-to-br from-brand/5 to-accent/5 border-brand/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-h4">
+                <Eye className="h-5 w-5 text-brand" />
+                Live Preview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 bg-surface rounded-md border border-surface-2">
+                  <img 
+                    src={logoUrl} 
+                    alt="Restaurant Logo" 
+                    className="w-10 h-10 rounded-full object-cover bg-surface-2"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                  />
+                  <div>
+                    <div className="text-body-sm font-medium text-text">{restaurantName}</div>
+                    <div className="text-xs text-text-muted">Brand Preview</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="text-xs text-text-muted">Colors</div>
+                  <div className="flex gap-2">
+                    <div className="w-6 h-6 rounded-full bg-brand border border-surface-2"></div>
+                    <div className="w-6 h-6 rounded-full bg-accent border border-surface-2"></div>
+                    <div className="w-6 h-6 rounded-full bg-secondary border border-surface-2"></div>
+                  </div>
+                </div>
+                
+                {settings?.branding?.customDomain && (
+                  <div className="p-2 bg-success/10 rounded border border-success/20">
+                    <div className="text-xs text-success font-medium">
+                      {settings.branding.customDomain}
+                    </div>
+                    <div className="text-xs text-success/70">Custom Domain</div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -234,30 +287,48 @@ const Settings: React.FC = () => {
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="branding" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-6 bg-surface-2 p-1">
+          <TabsTrigger 
+            value="branding" 
+            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+          >
             <Palette className="h-4 w-4" />
             <span className="hidden sm:inline">Branding</span>
           </TabsTrigger>
-          <TabsTrigger value="operational" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="operational" 
+            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+          >
             <Clock className="h-4 w-4" />
             <span className="hidden sm:inline">Operations</span>
           </TabsTrigger>
-          <TabsTrigger value="interface" className="flex items-center gap-2">
-            <SettingsIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">Interface</span>
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="integrations" 
+            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+          >
             <Plug className="h-4 w-4" />
             <span className="hidden sm:inline">Integrations</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="notifications" 
+            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+          >
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="security" 
+            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+          >
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="advanced" 
+            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+          >
+            <Wrench className="h-4 w-4" />
+            <span className="hidden sm:inline">Advanced</span>
           </TabsTrigger>
         </TabsList>
 
@@ -275,10 +346,6 @@ const Settings: React.FC = () => {
             onUpdate={updateOperational}
             isUpdating={isUpdating}
           />
-        </TabsContent>
-
-        <TabsContent value="interface" className="space-y-6">
-          <InterfaceSettings />
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6">
@@ -304,21 +371,41 @@ const Settings: React.FC = () => {
             isUpdating={isUpdating}
           />
         </TabsContent>
+
+        <TabsContent value="advanced" className="space-y-6">
+          <Card className="bg-surface border-surface-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-h3">
+                <Wrench className="h-5 w-5 text-brand" />
+                Advanced Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Wrench className="h-12 w-12 text-text-muted mx-auto mb-4" />
+                <h3 className="text-h4 font-medium text-text mb-2">Coming Soon</h3>
+                <p className="text-body-sm text-text-muted">
+                  Advanced features like API keys, data exports, and logs will be available here.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Footer */}
-      <Card>
+      <Card className="bg-surface border-surface-2">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-foreground">Last Updated</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-body-sm font-medium text-text">Last Updated</div>
+              <div className="text-xs text-text-muted">
                 {new Date(settings.lastUpdated).toLocaleString()}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm font-medium text-foreground">Tenant</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-body-sm font-medium text-text">Tenant</div>
+              <div className="text-xs text-text-muted">
                 {tenant?.name || 'Restaurant'}
               </div>
             </div>
