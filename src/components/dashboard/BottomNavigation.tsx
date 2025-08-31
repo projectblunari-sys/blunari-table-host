@@ -38,7 +38,7 @@ const BottomNavigation: React.FC = () => {
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-      className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border"
     >
       <div className="grid grid-cols-5 gap-1 px-2 py-2">
         {navigation.slice(0, 5).map((item) => {

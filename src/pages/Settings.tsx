@@ -21,6 +21,7 @@ import OperationalSettings from '@/components/settings/OperationalSettings';
 import NotificationSettings from '@/components/settings/NotificationSettings';
 import SecuritySettings from '@/components/settings/SecuritySettings';
 import IntegrationSettings from '@/components/settings/IntegrationSettings';
+import InterfaceSettings from '@/components/settings/InterfaceSettings';
 import { toast } from '@/hooks/use-toast';
 
 const Settings: React.FC = () => {
@@ -233,7 +234,7 @@ const Settings: React.FC = () => {
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="branding" className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
             <span className="hidden sm:inline">Branding</span>
@@ -241,6 +242,10 @@ const Settings: React.FC = () => {
           <TabsTrigger value="operational" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             <span className="hidden sm:inline">Operations</span>
+          </TabsTrigger>
+          <TabsTrigger value="interface" className="flex items-center gap-2">
+            <SettingsIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">Interface</span>
           </TabsTrigger>
           <TabsTrigger value="integrations" className="flex items-center gap-2">
             <Plug className="h-4 w-4" />
@@ -270,6 +275,10 @@ const Settings: React.FC = () => {
             onUpdate={updateOperational}
             isUpdating={isUpdating}
           />
+        </TabsContent>
+
+        <TabsContent value="interface" className="space-y-6">
+          <InterfaceSettings />
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6">
