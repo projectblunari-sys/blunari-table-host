@@ -199,8 +199,8 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
                       key={index}
                       onClick={() => handleSlotSelect(slot)}
                       disabled={parentLoading}
-                      className="relative p-4 rounded-xl border-2 border-surface-3 hover:border-brand/50 bg-surface/50 hover:bg-surface transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed group"
-                      whileHover={{ scale: 1.02 }}
+                      className="relative p-4 rounded-xl border-2 border-surface-3 hover:border-brand/50 bg-surface/50 hover:bg-surface transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed group hover:shadow-lg hover:shadow-brand/10"
+                      whileHover={{ scale: 1.03, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -208,45 +208,88 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
                     >
                       {/* Time Display */}
                       <div className="text-center mb-3">
-                        <div className="text-lg font-bold text-foreground group-hover:text-brand transition-colors">
+                        <div className="text-lg font-bold text-text group-hover:text-brand transition-colors">
                           {formatSlotTime(slot.time)}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        
+                        {/* Enhanced Capacity Pill */}
+                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+                          slot.available_tables <= 2 
+                            ? 'bg-destructive/10 text-destructive' 
+                            : slot.available_tables <= 5
+                              ? 'bg-warning/10 text-warning'
+                              : 'bg-success/10 text-success'
+                        }`}>
+                          <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                            slot.available_tables <= 2 
+                              ? 'bg-destructive animate-pulse' 
+                              : slot.available_tables <= 5
+                                ? 'bg-warning'
+                                : 'bg-success'
+                          }`} />
                           {slot.available_tables} available
                         </div>
                       </div>
 
-                      {/* Badges - Only show if API provides these flags */}
-                      <div className="flex flex-wrap justify-center gap-1">
+                      {/* Enhanced Badges - Only show if API provides these flags */}
+                      <div className="flex flex-wrap justify-center gap-1 mb-2">
                         {slot.optimal && (
-                          <Badge 
-                            variant="secondary" 
-                            className="text-xs px-2 py-0.5 bg-success/10 text-success border-success/20"
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
                           >
-                            <TrendingUp className="w-2.5 h-2.5 mr-1" />
-                            Optimal
-                          </Badge>
+                            <Badge 
+                              variant="secondary" 
+                              className="text-xs px-2 py-0.5 bg-success/10 text-success border-success/20 shadow-sm"
+                            >
+                              <TrendingUp className="w-2.5 h-2.5 mr-1" />
+                              Optimal
+                            </Badge>
+                          </motion.div>
                         )}
                         {slot.revenue_projection && (
-                          <Badge 
-                            variant="outline" 
-                            className="text-xs px-2 py-0.5 bg-warning/10 text-warning border-warning/20"
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.3 }}
                           >
-                            💰 High Value
-                          </Badge>
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs px-2 py-0.5 bg-warning/10 text-warning border-warning/20 shadow-sm"
+                            >
+                              💰 ${slot.revenue_projection}
+                            </Badge>
+                          </motion.div>
                         )}
                         {slot.available_tables <= 2 && (
-                          <Badge 
-                            variant="outline" 
-                            className="text-xs px-2 py-0.5 bg-destructive/10 text-destructive border-destructive/20"
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.1 }}
                           >
-                            ⚡ Limited
-                          </Badge>
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs px-2 py-0.5 bg-destructive/10 text-destructive border-destructive/20 shadow-sm animate-pulse"
+                            >
+                              ⚡ Limited
+                            </Badge>
+                          </motion.div>
                         )}
                       </div>
 
-                      {/* Hover effect overlay */}
-                      <div className="absolute inset-0 rounded-xl bg-brand/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      {/* Enhanced hover effect overlay */}
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-brand/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                      
+                      {/* Subtle shine effect on hover */}
+                      <motion.div
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0"
+                        whileHover={{ 
+                          opacity: [0, 1, 0],
+                          x: ['-100%', '100%']
+                        }}
+                        transition={{ duration: 0.8 }}
+                      />
                     </motion.button>
                   ))}
                 </div>

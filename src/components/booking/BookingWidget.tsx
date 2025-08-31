@@ -298,12 +298,35 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
   return (
     <ErrorBoundary onError={onError}>
       <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="max-w-4xl mx-auto p-4 pt-8">
-          {/* Enhanced Header */}
+        {/* Sticky Progress Header for Mobile */}
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-surface-3 lg:hidden">
+          <div className="max-w-4xl mx-auto p-3">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <BookingTimer startTime={state.start_time} />
+              </div>
+              <Badge variant="secondary" className="text-xs">
+                Step {state.step}/4: {stepTitles[state.step as keyof typeof stepTitles]}
+              </Badge>
+            </div>
+            {/* Mobile Progress Bar */}
+            <div className="relative w-full h-2 bg-surface-2 rounded-full overflow-hidden mt-2">
+              <motion.div
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-brand via-accent to-brand rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercentage}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="max-w-4xl mx-auto p-4 pt-8 pb-safe-mobile">
+          {/* Enhanced Header - Hidden on Mobile when Sticky is Active */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
+            className="text-center mb-8 hidden lg:block"
           >
             <div className="mb-6">
               <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
@@ -325,53 +348,105 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                {/* Brand Gradient Progress Bar */}
-                <div className="relative w-full h-3 bg-muted rounded-full overflow-hidden mb-4">
+                {/* Enhanced Brand Gradient Progress Bar */}
+                <div className="relative w-full h-4 bg-surface-2 rounded-full overflow-hidden mb-6 shadow-inner">
                   <motion.div
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-brand to-brand-accent rounded-full"
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-brand via-accent to-brand rounded-full shadow-sm"
                     initial={{ width: 0 }}
                     animate={{ width: `${progressPercentage}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    transition={{ 
+                      duration: 0.6, 
+                      ease: "easeOut",
+                      type: "spring",
+                      stiffness: 100
+                    }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50"
+                    animate={{ x: ['-100%', '100%'] }}
+                    transition={{
+                      duration: 2,
+                      ease: "easeInOut",
+                      repeat: Infinity,
+                      repeatDelay: 3
+                    }}
+                  />
                 </div>
                 
-                {/* Step indicators */}
+                {/* Enhanced Step Indicators with Labels */}
                 <div className="flex justify-between">
                   {[1, 2, 3, 4].map((step) => (
-                    <div 
+                    <motion.div 
                       key={step}
-                      className={`flex flex-col items-center text-xs transition-colors duration-300 ${
-                        step <= state.step ? 'text-brand' : 'text-muted-foreground'
+                      className={`flex flex-col items-center text-xs transition-all duration-500 ${
+                        step <= state.step ? 'text-brand' : 'text-text-muted'
                       }`}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: step * 0.1 }}
                     >
                       <motion.div 
-                        className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 transition-all duration-300 ${
+                        className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 transition-all duration-500 ${
                           step < state.step 
-                            ? 'bg-brand text-brand-foreground shadow-lg' 
+                            ? 'bg-gradient-to-r from-brand to-accent text-white shadow-lg ring-4 ring-brand/20' 
                             : step === state.step 
-                              ? 'bg-brand/20 text-brand border-2 border-brand shadow-md' 
-                              : 'bg-muted text-muted-foreground'
+                              ? 'bg-gradient-to-r from-brand/20 to-accent/20 text-brand border-2 border-brand shadow-md ring-2 ring-brand/30 animate-pulse' 
+                              : 'bg-surface-2 text-text-muted border border-surface-3'
                         }`}
-                        whileHover={{ scale: 1.1 }}
+                        whileHover={{ scale: step <= state.step ? 1.1 : 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        animate={step === state.step ? { 
+                          boxShadow: ["0 0 0 0 rgba(var(--brand), 0.7)", "0 0 0 10px rgba(var(--brand), 0)"]
+                        } : {}}
+                        transition={{ 
+                          boxShadow: { duration: 1.5, repeat: Infinity }
+                        }}
                       >
                         {step < state.step ? (
-                          <CheckCircle className="w-3 h-3" />
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.2 }}
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </motion.div>
                         ) : (
-                          <span className="font-medium">{step}</span>
+                          <span className="font-bold text-sm">{step}</span>
                         )}
                       </motion.div>
-                      <span className="font-medium">{stepTitles[step as keyof typeof stepTitles]}</span>
-                    </div>
+                      <motion.span 
+                        className={`font-medium text-center leading-tight ${
+                          step <= state.step ? 'text-brand' : 'text-text-subtle'
+                        }`}
+                        animate={{ 
+                          scale: step === state.step ? [1, 1.05, 1] : 1,
+                          fontWeight: step === state.step ? 600 : 500
+                        }}
+                        transition={{ 
+                          scale: { duration: 2, repeat: Infinity }
+                        }}
+                      >
+                        {stepTitles[step as keyof typeof stepTitles]}
+                      </motion.span>
+                    </motion.div>
                   ))}
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Step Content */}
+          {/* Step Content - Mobile Optimized */}
           <div className="max-w-2xl mx-auto">
+            {/* Mobile Step Title */}
+            <div className="lg:hidden mb-6">
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h2 className="text-lg font-semibold text-center">
+                    {stepTitles[state.step as keyof typeof stepTitles]}
+                  </h2>
+                </CardContent>
+              </Card>
+            </div>
             <AnimatePresence mode="wait">
               <motion.div
                 key={state.step}
@@ -420,12 +495,12 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
             </AnimatePresence>
           </div>
 
-          {/* Footer */}
+          {/* Footer - Mobile Safe Area */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-center mt-12 pb-8"
+            className="text-center mt-12 pb-8 pb-safe-mobile"
           >
             <Separator className="mb-6" />
             <div className="text-sm text-muted-foreground space-y-2">

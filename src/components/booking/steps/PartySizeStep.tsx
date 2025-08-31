@@ -23,10 +23,10 @@ const PartySizeStep: React.FC<PartySizeStepProps> = ({
 
   const handleSizeSelect = (size: number) => {
     setSelectedSize(size);
-    // Auto-advance after brief delay for visual feedback
+    // Auto-advance with 250ms delay for visual feedback
     setTimeout(() => {
       onComplete({ party_size: size });
-    }, 300);
+    }, 250);
   };
 
   const getSizeIcon = (size: number) => {
@@ -62,45 +62,92 @@ const PartySizeStep: React.FC<PartySizeStepProps> = ({
                 onClick={() => handleSizeSelect(size)}
                 disabled={loading}
                 className={`
-                  relative aspect-square rounded-xl border-2 transition-all duration-300
-                  hover:scale-105 hover:shadow-lg
-                  focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2
-                  disabled:opacity-50 disabled:cursor-not-allowed
+                  relative aspect-square rounded-xl border-2 transition-all duration-300 shadow-sm
+                  hover:scale-[1.08] hover:shadow-lg hover:shadow-brand/20
+                  active:scale-[0.95] active:shadow-inner
+                  focus:outline-none focus:ring-4 focus:ring-brand/30 focus:ring-offset-2
+                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
                   ${selectedSize === size 
-                    ? 'border-brand bg-brand/10 text-brand shadow-lg scale-105' 
-                    : 'border-surface-3 hover:border-brand/50 hover:bg-surface/50'
+                    ? 'border-brand bg-gradient-to-br from-brand/10 to-accent/10 text-brand shadow-lg shadow-brand/20 scale-[1.05] ring-4 ring-brand/20' 
+                    : 'border-surface-3 bg-surface hover:border-brand/50 hover:bg-surface-2'
                   }
                 `}
-                whileHover={{ scale: selectedSize === size ? 1.05 : 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: size * 0.05, duration: 0.3 }}
+                whileHover={{ 
+                  scale: selectedSize === size ? 1.08 : 1.05,
+                  rotateY: 5
+                }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.8, rotateY: -10 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: selectedSize === size ? 1.05 : 1,
+                  rotateY: 0
+                }}
+                transition={{ 
+                  delay: size * 0.05, 
+                  duration: 0.4,
+                  type: "spring",
+                  stiffness: 200
+                }}
               >
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <div className="text-2xl mb-1">
+                  <motion.div 
+                    className="text-2xl mb-1"
+                    animate={{ 
+                      scale: selectedSize === size ? [1, 1.2, 1] : 1 
+                    }}
+                    transition={{ 
+                      duration: 0.6,
+                      ease: "easeInOut"
+                    }}
+                  >
                     {getSizeIcon(size)}
-                  </div>
-                  <div className={`text-2xl font-bold mb-1 ${
-                    selectedSize === size ? 'text-brand' : 'text-foreground'
+                  </motion.div>
+                  <div className={`text-2xl font-bold mb-1 transition-colors duration-300 ${
+                    selectedSize === size ? 'text-brand' : 'text-text'
                   }`}>
                     {size}
                   </div>
-                  <div className={`text-xs font-medium ${
-                    selectedSize === size ? 'text-brand' : 'text-muted-foreground'
+                  <div className={`text-xs font-medium transition-colors duration-300 ${
+                    selectedSize === size ? 'text-brand' : 'text-text-muted'
                   }`}>
                     {size === 1 ? 'guest' : 'guests'}
                   </div>
                 </div>
 
+                {/* Enhanced selected state effect */}
                 {selectedSize === size && (
-                  <motion.div
-                    className="absolute inset-0 rounded-xl border-2 border-brand"
-                    initial={{ scale: 1.2, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  />
+                  <>
+                    <motion.div
+                      className="absolute inset-0 rounded-xl border-2 border-brand bg-gradient-to-br from-brand/5 to-accent/5"
+                      initial={{ scale: 1.2, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    />
+                    <motion.div
+                      className="absolute inset-0 rounded-xl"
+                      initial={{ scale: 1 }}
+                      animate={{ 
+                        boxShadow: [
+                          "0 0 0 0 rgba(var(--brand), 0.3)",
+                          "0 0 0 8px rgba(var(--brand), 0)",
+                        ]
+                      }}
+                      transition={{ 
+                        duration: 1.5, 
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </>
                 )}
+
+                {/* Hover glow effect */}
+                <motion.div
+                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-brand/10 to-accent/10 opacity-0"
+                  whileHover={{ opacity: selectedSize === size ? 0 : 1 }}
+                  transition={{ duration: 0.3 }}
+                />
               </motion.button>
             ))}
           </div>

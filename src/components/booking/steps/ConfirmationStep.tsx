@@ -251,23 +251,70 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
             }}
           />
 
-          {/* Processing status */}
+          {/* Enhanced Processing Status with Live Stepper */}
           {processing && (
-            <div className="bg-muted p-4 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="font-medium">Processing your booking...</span>
+            <motion.div 
+              className="bg-surface-2 p-6 rounded-xl border border-surface-3 shadow-sm"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              {/* Status Stepper */}
+              <div className="flex items-center justify-between mb-4">
+                {['search', 'hold', 'confirm'].map((step, index) => (
+                  <div key={step} className="flex items-center">
+                    <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+                      currentStatus === step 
+                        ? 'bg-brand text-white' 
+                        : stepTimes[step] 
+                          ? 'bg-success text-white' 
+                          : 'bg-surface-3 text-text-muted'
+                    }`}>
+                      {stepTimes[step] ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : currentStatus === step ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        index + 1
+                      )}
+                    </div>
+                    {index < 2 && (
+                      <div className={`w-16 h-0.5 mx-2 ${
+                        stepTimes[['search', 'hold'][index]] 
+                          ? 'bg-success' 
+                          : 'bg-surface-3'
+                      }`} />
+                    )}
+                  </div>
+                ))}
               </div>
-              <div className="text-sm text-muted-foreground">
-                Current step: {currentStatus}
+              
+              {/* Current Status */}
+              <div className="flex items-center gap-3 mb-3">
+                <Loader2 className="w-5 h-5 animate-spin text-brand" />
+                <span className="font-medium text-text">
+                  {currentStatus === 'search' && 'Searching for availability...'}
+                  {currentStatus === 'hold' && 'Holding your table...'}
+                  {currentStatus === 'confirm' && 'Confirming reservation...'}
+                  {currentStatus === 'completed' && 'Reservation confirmed!'}
+                </span>
               </div>
-              {Object.entries(stepTimes).map(([step, duration]) => (
-                <div key={step} className="text-xs flex justify-between">
-                  <span>{step}:</span>
-                  <span>{duration}ms</span>
-                </div>
-              ))}
-            </div>
+              
+              {/* Live Step Times */}
+              <div className="grid grid-cols-3 gap-4 text-xs">
+                {['Search', 'Hold', 'Confirm'].map((label, index) => {
+                  const stepKey = ['search', 'hold', 'confirm'][index];
+                  const time = stepTimes[stepKey];
+                  return (
+                    <div key={label} className="text-center">
+                      <div className="text-text-muted">{label}</div>
+                      <div className="font-mono font-medium">
+                        {time ? `${time}ms` : currentStatus === stepKey ? '...' : '-'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
           )}
 
           {/* Confirm button */}
