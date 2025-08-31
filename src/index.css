@@ -249,4 +249,17 @@
   [data-contrast="high"] .focus-ring {
     @apply focus:ring-4 focus:ring-offset-4;
   }
+
+  /* Form validation shake animation - respects reduced motion */
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-shake {
+      animation: shake 0.5s ease-in-out;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-shake {
+      animation: none;
+    }
+  }
 }
