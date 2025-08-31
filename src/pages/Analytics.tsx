@@ -12,6 +12,10 @@ import ROIMetricsCard from '@/components/analytics/ROIMetricsCard';
 import RevenueChart from '@/components/analytics/RevenueChart';
 import BookingPatternsChart from '@/components/analytics/BookingPatternsChart';
 import OperationalMetrics from '@/components/analytics/OperationalMetrics';
+import PageHeader from '@/components/ui/page-header';
+import EmptyState from '@/components/ui/empty-state';
+import ErrorState from '@/components/ui/error-state';
+import { SkeletonPage, SkeletonChart, SkeletonMetricsCard } from '@/components/ui/skeleton-components';
 import { toast } from '@/hooks/use-toast';
 
 const Analytics: React.FC = () => {
@@ -70,34 +74,101 @@ const Analytics: React.FC = () => {
     });
   };
 
-  if (isLoading || !analyticsData) {
+  // Add error state for failed data fetch
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSetupAnalytics = () => {
+    console.log('Setting up analytics...');
+  };
+
+  // Loading state
+  if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-h1 font-bold text-foreground">Analytics & ROI</h1>
-            <p className="text-muted-foreground">Comprehensive business intelligence dashboard</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-20 bg-muted rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {[...Array(2)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-80 bg-muted rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-6"
+      >
+        <PageHeader
+          title="Analytics & ROI"
+          description="Comprehensive business intelligence dashboard"
+        />
+        <SkeletonPage />
+      </motion.div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-6"
+      >
+        <PageHeader
+          title="Analytics & ROI"
+          description="Comprehensive business intelligence dashboard"
+        />
+        <ErrorState
+          type="general"
+          title="Failed to load analytics data"
+          description="We couldn't fetch your analytics data. Please check your connection and try again."
+          error={error}
+          action={{
+            label: 'Retry',
+            onClick: handleRefresh,
+            icon: RefreshCw
+          }}
+          showDetails={true}
+        />
+      </motion.div>
+    );
+  }
+
+  // Empty state - no data available
+  if (!analyticsData || !analyticsData.revenue.totalRevenue) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-6"
+      >
+        <PageHeader
+          title="Analytics & ROI"
+          description="Comprehensive business intelligence dashboard"
+          primaryAction={{
+            label: 'Setup Analytics',
+            onClick: handleSetupAnalytics,
+            icon: BarChart3
+          }}
+          secondaryActions={[
+            {
+              label: 'Refresh',
+              onClick: handleRefresh,
+              icon: RefreshCw,
+              variant: 'outline'
+            }
+          ]}
+        />
+        <EmptyState
+          illustration="chart"
+          title="No analytics data available"
+          description="Start taking bookings to see your analytics data. Once you have bookings, you'll see revenue trends, customer insights, and operational metrics here."
+          action={{
+            label: 'View Bookings',
+            onClick: () => window.location.href = '/dashboard/bookings',
+            icon: Users
+          }}
+          secondaryAction={{
+            label: 'Setup Integration',
+            onClick: handleSetupAnalytics
+          }}
+        />
+      </motion.div>
     );
   }
 
@@ -108,30 +179,30 @@ const Analytics: React.FC = () => {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Analytics & ROI</h1>
-          <p className="text-muted-foreground">Comprehensive business intelligence dashboard</p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 border rounded-md px-3 py-2">
-            <CalendarIcon className="h-4 w-4" />
-            <span className="text-sm">
-              {dateRange?.from ? format(dateRange.from, 'MMM dd') : 'Start'} - {dateRange?.to ? format(dateRange.to, 'MMM dd, yyyy') : 'End'}
-            </span>
-          </div>
-          <Button variant="outline" onClick={handleRefresh} size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <Button onClick={handleExport} size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Analytics & ROI"
+        description="Comprehensive business intelligence dashboard"
+        primaryAction={{
+          label: 'Export Report',
+          onClick: handleExport,
+          icon: Download
+        }}
+        secondaryActions={[
+          {
+            label: 'Refresh',
+            onClick: handleRefresh,
+            icon: RefreshCw,
+            variant: 'outline'
+          }
+        ]}
+        tabs={[
+          { value: 'overview', label: 'Overview' },
+          { value: 'revenue', label: 'Revenue' },
+          { value: 'customers', label: 'Customers' },
+          { value: 'operational', label: 'Operations' }
+        ]}
+        activeTab="overview"
+      />
 
       {/* ROI Metrics */}
       <ROIMetricsCard metrics={analyticsData.roi} />

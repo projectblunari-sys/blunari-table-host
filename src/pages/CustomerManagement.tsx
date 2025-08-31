@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useTenant } from '@/hooks/useTenant';
 import { useCustomerManagement, Customer } from '@/hooks/useCustomerManagement';
+import PageHeader from '@/components/ui/page-header';
+import EmptyState from '@/components/ui/empty-state';
+import ErrorState from '@/components/ui/error-state';
+import { SkeletonList, SkeletonMetricsCard } from '@/components/ui/skeleton-components';
 import { 
   Users, 
   Search, 
@@ -18,7 +21,9 @@ import {
   Star,
   MapPin,
   Gift,
-  AlertTriangle
+  AlertTriangle,
+  Plus,
+  UserPlus
 } from 'lucide-react';
 
 const CustomerManagement: React.FC = () => {
@@ -66,27 +71,105 @@ const CustomerManagement: React.FC = () => {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
+  const handleAddCustomer = () => {
+    console.log('Adding new customer...');
+  };
+
+  const handleExportCustomers = () => {
+    console.log('Exporting customer list...');
+  };
+
+  // Loading state
+  if (isLoading && customers.length === 0) {
+    return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        transition={{ duration: 0.3 }}
+        className="space-y-6"
       >
-        <div>
-          <h1 className="text-h1 font-bold text-foreground">Customer Management</h1>
-          <p className="text-muted-foreground">
-            Manage customer relationships and track dining preferences
-          </p>
+        <PageHeader
+          title="Customer Management"
+          description="Manage customer relationships and track dining preferences"
+        />
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <SkeletonMetricsCard key={i} />
+          ))}
         </div>
-        
-        <Button>
-          <Users className="h-4 w-4 mr-2" />
-          Add Customer
-        </Button>
+        <SkeletonList items={8} />
       </motion.div>
+    );
+  }
+
+  // Empty state
+  if (!isLoading && customers.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-6"
+      >
+        <PageHeader
+          title="Customer Management"
+          description="Manage customer relationships and track dining preferences"
+          primaryAction={{
+            label: 'Add Customer',
+            onClick: handleAddCustomer,
+            icon: UserPlus
+          }}
+        />
+        <EmptyState
+          illustration="users"
+          title="No customers yet"
+          description="Start building your customer database by adding your first customer or wait for bookings to automatically create customer profiles."
+          action={{
+            label: 'Add First Customer',
+            onClick: handleAddCustomer,
+            icon: UserPlus
+          }}
+          secondaryAction={{
+            label: 'View Bookings',
+            onClick: () => window.location.href = '/dashboard/bookings'
+          }}
+        />
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
+      <PageHeader
+        title="Customer Management"
+        description="Manage customer relationships and track dining preferences"
+        primaryAction={{
+          label: 'Add Customer',
+          onClick: handleAddCustomer,
+          icon: UserPlus
+        }}
+        secondaryActions={[
+          {
+            label: 'Export',
+            onClick: handleExportCustomers,
+            variant: 'outline'
+          }
+        ]}
+        tabs={[
+          { value: 'all', label: `All (${customerStats.total})` },
+          { value: 'vip', label: `VIP (${customerStats.vip})` },
+          { value: 'regular', label: `Regular (${customerStats.regular})` },
+          { value: 'new', label: `New (${customerStats.new})` },
+          { value: 'inactive', label: `Inactive (${customerStats.inactive})` }
+        ]}
+        activeTab={selectedCustomerType}
+        onTabChange={setSelectedCustomerType}
+      />
 
       {/* Customer Statistics */}
       {isLoading ? (
@@ -97,11 +180,7 @@ const CustomerManagement: React.FC = () => {
           className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
         >
           {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="pt-4">
-                <Skeleton className="h-16 w-full" />
-              </CardContent>
-            </Card>
+            <SkeletonMetricsCard key={i} />
           ))}
         </motion.div>
       ) : (
@@ -213,11 +292,7 @@ const CustomerManagement: React.FC = () => {
 
           <TabsContent value={selectedCustomerType} className="mt-6">
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <Skeleton key={i} className="h-64 w-full" />
-                ))}
-              </div>
+              <SkeletonList items={6} className="mt-6" />
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -249,7 +324,7 @@ const CustomerManagement: React.FC = () => {
           </TabsContent>
         </Tabs>
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
 

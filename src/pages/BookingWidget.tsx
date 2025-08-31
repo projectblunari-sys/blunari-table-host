@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTenant } from '@/hooks/useTenant';
 import BookingWidget from '@/components/booking/BookingWidget';
+import PageHeader from '@/components/ui/page-header';
 import { 
   Code, 
   Eye, 
@@ -19,7 +20,8 @@ import {
   Globe,
   Smartphone,
   Monitor,
-  Tablet
+  Tablet,
+  Download
 } from 'lucide-react';
 
 const BookingWidgetPage: React.FC = () => {
@@ -47,37 +49,55 @@ const BookingWidgetPage: React.FC = () => {
     }
   };
 
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(embedCode);
+    console.log('Embed code copied!');
+  };
+
+  const handleOpenPreview = () => {
+    window.open(`/booking/${tenant?.slug}`, '_blank');
+  };
+
+  const handleDownloadGuide = () => {
+    console.log('Downloading integration guide...');
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-h1 font-bold text-foreground">Booking Widget</h1>
-          <p className="text-muted-foreground">
-            Embed a booking widget on your website to accept reservations
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            Live
-          </Badge>
-          <Button variant="outline">
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Open Preview
-          </Button>
-          <Button>
-            <Copy className="h-4 w-4 mr-2" />
-            Copy Code
-          </Button>
-        </div>
-      </motion.div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
+      <PageHeader
+        title="Booking Widget"
+        description="Embed a booking widget on your website to accept reservations directly from your customers."
+        primaryAction={{
+          label: 'Copy Embed Code',
+          onClick: handleCopyCode,
+          icon: Copy
+        }}
+        secondaryActions={[
+          {
+            label: 'Open Preview',
+            onClick: handleOpenPreview,
+            icon: ExternalLink,
+            variant: 'outline'
+          },
+          {
+            label: 'Download Guide',
+            onClick: handleDownloadGuide,
+            icon: Download,
+            variant: 'ghost'
+          }
+        ]}
+        tabs={[
+          { value: 'widget', label: 'Widget Setup' },
+          { value: 'analytics', label: 'Analytics' },
+          { value: 'integrations', label: 'Integrations' }
+        ]}
+        activeTab="widget"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Configuration Panel */}
@@ -347,7 +367,7 @@ const BookingWidgetPage: React.FC = () => {
           </Card>
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
