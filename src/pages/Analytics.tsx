@@ -2,10 +2,13 @@ import React, { useState, memo, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon, Download, RefreshCw, TrendingUp, BarChart3, Users, Target } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { CalendarIcon, Download, RefreshCw, TrendingUp, BarChart3, Users, Target, Info } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTenant } from '@/hooks/useTenant';
+import { useIsMobile } from '@/hooks/use-mobile';
 import ROIMetricsCard from '@/components/analytics/ROIMetricsCard';
 import RevenueChart from '@/components/analytics/RevenueChart';
 import BookingPatternsChart from '@/components/analytics/BookingPatternsChart';
@@ -14,13 +17,13 @@ import { AnalyticsTimePicker, type TimePeriod } from '@/components/analytics/Ana
 import { AnalyticsInsights, type InsightData } from '@/components/analytics/AnalyticsInsights';
 import PageHeader from '@/components/ui/page-header';
 import { EmptyState, ErrorState } from '@/components/ui/state';
-import { SkeletonAnalyticsDashboard } from '@/components/ui/skeleton-dashboard';
-import { SkeletonPage } from '@/components/ui/skeleton-components';
+import { AnalyticsPageSkeleton } from '@/components/ui/analytics-skeleton';
 import { PerformanceWrapper } from '@/components/ui/performance-wrapper';
 import { toast } from '@/lib/toast';
 
 const Analytics: React.FC = () => {
   const { tenant } = useTenant();
+  const isMobile = useIsMobile();
   const [activePeriod, setActivePeriod] = useState<TimePeriod>('30d');
   const [comparisonEnabled, setComparisonEnabled] = useState(false);
   const [timeRange, setTimeRange] = useState({
@@ -144,7 +147,7 @@ const Analytics: React.FC = () => {
 
   // Show skeleton loading state
   if (isLoading) {
-    return <SkeletonAnalyticsDashboard />;
+    return <AnalyticsPageSkeleton />;
   }
 
   // Error state
@@ -175,6 +178,22 @@ const Analytics: React.FC = () => {
       </motion.div>
     );
   }
+
+  // Helper function to show contextual messages for zero values
+  const getContextualMessage = () => {
+    if (!analyticsData?.revenue.totalRevenue) {
+      return "No bookings found for the selected date range. Try selecting a different period or check if your booking data is properly configured.";
+    }
+    if (analyticsData.revenue.totalCovers === 0) {
+      return "No customer covers recorded for this period.";
+    }
+    if (analyticsData.operational.noshowAnalysis.rate === 0) {
+      return "Excellent! No no-shows recorded for this period.";
+    }
+    return null;
+  };
+
+  const contextualMessage = getContextualMessage();
 
   // Empty state - no data available
   if (!analyticsData || !analyticsData.revenue.totalRevenue) {
@@ -218,6 +237,31 @@ const Analytics: React.FC = () => {
     );
   }
 
+  const renderInsightsPanel = () => {
+    if (isMobile) {
+      return (
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="insights" className="border rounded-lg px-4">
+            <AccordionTrigger className="text-left">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                <span className="font-medium">Analytics Insights</span>
+                <Badge variant="secondary" className="ml-2">
+                  {insights.length}
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <AnalyticsInsights insights={insights} />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      );
+    }
+
+    return <AnalyticsInsights insights={insights} />;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -225,9 +269,23 @@ const Analytics: React.FC = () => {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
+      {/* Contextual Helper Message */}
+      {contextualMessage && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-info/10 border border-info/20 rounded-lg p-4"
+        >
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-info mt-0.5 flex-shrink-0" />
+            <p className="text-body-sm text-text">{contextualMessage}</p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Time Picker and Insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
+        <div className={isMobile ? 'col-span-1' : 'lg:col-span-2'}>
           <AnalyticsTimePicker
             activePeriod={activePeriod}
             onPeriodChange={handlePeriodChange}
@@ -237,8 +295,8 @@ const Analytics: React.FC = () => {
             onComparisonToggle={setComparisonEnabled}
           />
         </div>
-        <div>
-          <AnalyticsInsights insights={insights} />
+        <div className={isMobile ? 'col-span-1' : ''}>
+          {renderInsightsPanel()}
         </div>
       </div>
 

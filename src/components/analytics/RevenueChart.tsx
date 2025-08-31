@@ -228,6 +228,20 @@ const RevenueChart: React.FC<RevenueChartProps> = ({
             </AreaChart>
           </ResponsiveContainer>
         </div>
+        
+        {/* Legend positioned below chart, aligned left */}
+        <div className="flex justify-start gap-6 mt-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-brand rounded-full" />
+            <span className="text-text-muted">Revenue</span>
+          </div>
+          {showComparison && (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-text-muted rounded-full" />
+              <span className="text-text-muted">Previous Period</span>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

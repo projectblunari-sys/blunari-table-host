@@ -295,6 +295,39 @@ const BookingPatternsChart: React.FC<BookingPatternsChartProps> = ({ data }) => 
       
       <CardContent className="pt-0">
         {renderChart()}
+        
+        {/* Legend positioned below chart, aligned left */}
+        <div className="flex justify-start gap-6 mt-4 text-sm">
+          {activeChart === 'hours' && (
+            <>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-brand rounded-full" />
+                <span className="text-text-muted">Bookings</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-accent rounded-full" />
+                <span className="text-text-muted">Utilization %</span>
+              </div>
+            </>
+          )}
+          {activeChart === 'days' && (
+            <>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-brand rounded-full" />
+                <span className="text-text-muted">Bookings</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-accent rounded-full" />
+                <span className="text-text-muted">Revenue</span>
+              </div>
+            </>
+          )}
+          {activeChart === 'sources' && (
+            <div className="flex items-center gap-2">
+              <span className="text-text-muted">Distribution by booking source</span>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
