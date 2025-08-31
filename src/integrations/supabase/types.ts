@@ -1400,14 +1400,18 @@ export type Database = {
         Row: {
           created_at: string
           department_id: string | null
+          email: string | null
           employee_id: string
+          first_name: string | null
           hire_date: string | null
           id: string
           last_activity: string | null
           last_login: string | null
+          last_name: string | null
           manager_id: string | null
           metadata: Json
           permissions: Json
+          phone: string | null
           role: Database["public"]["Enums"]["employee_role"]
           status: Database["public"]["Enums"]["employee_status"]
           updated_at: string
@@ -1416,14 +1420,18 @@ export type Database = {
         Insert: {
           created_at?: string
           department_id?: string | null
+          email?: string | null
           employee_id: string
+          first_name?: string | null
           hire_date?: string | null
           id?: string
           last_activity?: string | null
           last_login?: string | null
+          last_name?: string | null
           manager_id?: string | null
           metadata?: Json
           permissions?: Json
+          phone?: string | null
           role?: Database["public"]["Enums"]["employee_role"]
           status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string
@@ -1432,14 +1440,18 @@ export type Database = {
         Update: {
           created_at?: string
           department_id?: string | null
+          email?: string | null
           employee_id?: string
+          first_name?: string | null
           hire_date?: string | null
           id?: string
           last_activity?: string | null
           last_login?: string | null
+          last_name?: string | null
           manager_id?: string | null
           metadata?: Json
           permissions?: Json
+          phone?: string | null
           role?: Database["public"]["Enums"]["employee_role"]
           status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string
@@ -1856,6 +1868,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      operation_rate_limits: {
+        Row: {
+          attempts_count: number
+          blocked_until: string | null
+          created_at: string
+          id: string
+          operation_type: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          attempts_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          operation_type: string
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          attempts_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          operation_type?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
       }
       party_size_configs: {
         Row: {
@@ -4193,7 +4235,9 @@ export type Database = {
     Views: {
       tenant_public_info: {
         Row: {
+          cuisine_type_id: string | null
           currency: string | null
+          description: string | null
           id: string | null
           name: string | null
           slug: string | null
@@ -4201,7 +4245,9 @@ export type Database = {
           timezone: string | null
         }
         Insert: {
+          cuisine_type_id?: string | null
           currency?: string | null
+          description?: string | null
           id?: string | null
           name?: string | null
           slug?: string | null
@@ -4209,14 +4255,24 @@ export type Database = {
           timezone?: string | null
         }
         Update: {
+          cuisine_type_id?: string | null
           currency?: string | null
+          description?: string | null
           id?: string | null
           name?: string | null
           slug?: string | null
           status?: string | null
           timezone?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tenants_cuisine_type_id_fkey"
+            columns: ["cuisine_type_id"]
+            isOneToOne: false
+            referencedRelation: "cuisine_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -4314,9 +4370,27 @@ export type Database = {
         }
         Returns: string
       }
+      decrypt_sensitive_data: {
+        Args: { encrypted_data: string; encryption_key?: string }
+        Returns: string
+      }
       delete_tenant_complete: {
         Args: { p_tenant_id: string }
         Returns: boolean
+      }
+      encrypt_sensitive_data: {
+        Args: { data: string; encryption_key?: string }
+        Returns: string
+      }
+      enhanced_security_audit: {
+        Args: {
+          operation_type: string
+          resource_id?: string
+          resource_type?: string
+          risk_level?: string
+          sensitive_data_accessed?: boolean
+        }
+        Returns: undefined
       }
       generate_ticket_number: {
         Args: Record<PropertyKey, never>
@@ -4498,6 +4572,10 @@ export type Database = {
         }
         Returns: string
       }
+      sanitize_html_input: {
+        Args: { input_text: string }
+        Returns: string
+      }
       strict_tenant_access_check: {
         Args: { target_tenant_id: string }
         Returns: boolean
@@ -4540,6 +4618,10 @@ export type Database = {
           assigner_role: Database["public"]["Enums"]["employee_role"]
           target_role: Database["public"]["Enums"]["employee_role"]
         }
+        Returns: boolean
+      }
+      validate_sensitive_operation: {
+        Args: { operation_type: string; resource_id?: string }
         Returns: boolean
       }
       validate_tenant_access: {

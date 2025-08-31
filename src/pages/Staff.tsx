@@ -21,8 +21,10 @@ interface StaffMember {
   last_name: string;
   email: string;
   phone?: string;
-  role: 'ADMIN' | 'SUPPORT' | 'OPS' | 'VIEWER';
-  status: 'ACTIVE' | 'INACTIVE';
+  role: 'ADMIN' | 'SUPPORT' | 'OPS' | 'VIEWER' | 'SUPER_ADMIN';
+  status: 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'SUSPENDED';
+  employee_id: string;
+  user_id: string;
   created_at: string;
 }
 
@@ -58,6 +60,8 @@ const Staff: React.FC = () => {
           phone,
           role,
           status,
+          employee_id,
+          user_id,
           created_at
         `)
         .order('created_at', { ascending: false });
@@ -76,6 +80,9 @@ const Staff: React.FC = () => {
     e.preventDefault();
     
     try {
+      // Generate a unique employee_id
+      const employee_id = `EMP-${Date.now()}`;
+      
       const { data, error } = await supabase
         .from('employees')
         .insert([
@@ -85,7 +92,9 @@ const Staff: React.FC = () => {
             email: formData.email,
             phone: formData.phone || null,
             role: formData.role,
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            employee_id: employee_id,
+            user_id: '00000000-0000-0000-0000-000000000000' // Placeholder user_id
           }
         ])
         .select()
@@ -128,6 +137,7 @@ const Staff: React.FC = () => {
 
   const getRoleColor = (role: string) => {
     const colors = {
+      SUPER_ADMIN: 'bg-destructive/10 text-destructive',
       ADMIN: 'bg-destructive/10 text-destructive',
       SUPPORT: 'bg-warning/10 text-warning',
       OPS: 'bg-success/10 text-success',
