@@ -14,7 +14,8 @@ import {
   Save,
   RefreshCw,
   Wrench,
-  Eye
+  Eye,
+  Monitor
 } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { useTenant } from '@/hooks/useTenant';
@@ -268,6 +269,27 @@ const Settings: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
+          <Card className="cursor-pointer hover:shadow-medium transition-shadow" onClick={() => setActiveTab('interface')}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-brand/10 rounded-full flex items-center justify-center">
+                  <Monitor className="h-5 w-5 text-brand" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">Interface</div>
+                  <div className="text-sm text-muted-foreground">Theme, navigation, accessibility</div>
+                </div>
+                <Badge variant="default">Customizable</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
           <Card className="cursor-pointer hover:shadow-medium transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -287,7 +309,7 @@ const Settings: React.FC = () => {
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 bg-surface-2 p-1">
+        <TabsList className="grid w-full grid-cols-7 bg-surface-2 p-1">
           <TabsTrigger 
             value="branding" 
             className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
@@ -322,6 +344,13 @@ const Settings: React.FC = () => {
           >
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="interface" 
+            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+          >
+            <Monitor className="h-4 w-4" />
+            <span className="hidden sm:inline">Interface</span>
           </TabsTrigger>
           <TabsTrigger 
             value="advanced" 
@@ -370,6 +399,10 @@ const Settings: React.FC = () => {
             onUpdate={updateSecurity}
             isUpdating={isUpdating}
           />
+        </TabsContent>
+
+        <TabsContent value="interface" className="space-y-6">
+          <InterfaceSettings />
         </TabsContent>
 
         <TabsContent value="advanced" className="space-y-6">
