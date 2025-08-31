@@ -1,9 +1,10 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import DashboardHeader from './DashboardHeader';
 import DashboardSidebar from './DashboardSidebar';
 import BottomNavigation from './BottomNavigation';
+import BreadcrumbHeader from './BreadcrumbHeader';
+import GlobalStatusStrip from './GlobalStatusStrip';
 import { useNavigation } from '@/contexts/NavigationContext';
 
 const DashboardLayout: React.FC = () => {
@@ -11,20 +12,28 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Global Status Strip */}
+      <GlobalStatusStrip />
+      
       <div className="flex min-h-screen">
         {/* Sidebar - Show based on user preference */}
         {actualLayout === 'sidebar' && <DashboardSidebar />}
         
         <div className="flex-1 flex flex-col overflow-hidden">
-          <DashboardHeader />
-          <main className={`flex-1 overflow-y-auto bg-muted/30 p-4 ${
+          {/* Breadcrumb Header */}
+          <BreadcrumbHeader />
+          
+          <main className={`flex-1 overflow-y-auto bg-surface-2/50 p-6 ${
             actualLayout === 'bottom' ? 'pb-safe-mobile' : ''
           }`}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="max-w-7xl mx-auto"
+              transition={{ 
+                duration: 0.3,
+                ease: "easeOut"
+              }}
+              className="max-w-7xl mx-auto page-padding"
             >
               <Outlet />
             </motion.div>
