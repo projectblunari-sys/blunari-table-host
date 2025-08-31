@@ -9,14 +9,17 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import DashboardHome from "./pages/DashboardHome";
-import BookingManagement from "./pages/BookingManagement";
-import TableManagement from "./pages/TableManagement";
-import CustomerManagement from "./pages/CustomerManagement";
+import Dashboard from "./pages/Dashboard";
+import Bookings from "./pages/Bookings";
+import Tables from "./pages/Tables";
+import Customers from "./pages/Customers";
+import BookingWidget from "./pages/BookingWidget";
+import POSIntegration from "./pages/POSIntegration";
+import Waitlist from "./pages/Waitlist";
+import Staff from "./pages/Staff";
+import Messages from "./pages/Messages";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
-import WidgetPreview from "./pages/WidgetPreview";
-import POSIntegrations from "./pages/POSIntegrations";
 import NotFound from "./pages/NotFound";
 import BookingPage from "./pages/BookingPage";
 
@@ -42,15 +45,15 @@ const App = () => (
                 <DashboardLayout />
               </ProtectedRoute>
             }>
-              <Route index element={<DashboardHome />} />
-              <Route path="bookings" element={<BookingManagement />} />
-              <Route path="tables" element={<TableManagement />} />
-              <Route path="customers" element={<CustomerManagement />} />
-              <Route path="widget-preview" element={<WidgetPreview />} />
-              <Route path="pos-integrations" element={<POSIntegrations />} />
-              <Route path="waitlist" element={<div>Waitlist - Coming Soon</div>} />
-              <Route path="staff" element={<div>Staff Management - Coming Soon</div>} />
-              <Route path="messages" element={<div>Messages - Coming Soon</div>} />
+              <Route index element={<Dashboard />} />
+              <Route path="bookings" element={<Bookings />} />
+              <Route path="tables" element={<Tables />} />
+              <Route path="customers" element={<Customers />} />
+              <Route path="widget-preview" element={<BookingWidget />} />
+              <Route path="pos-integrations" element={<POSIntegration />} />
+              <Route path="waitlist" element={<Waitlist />} />
+              <Route path="staff" element={<Staff />} />
+              <Route path="messages" element={<Messages />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="settings" element={<Settings />} />
             </Route>
