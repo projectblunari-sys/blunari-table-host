@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTenant } from '@/hooks/useTenant';
 import { useTableManagement, Table } from '@/hooks/useTableManagement';
 import { FloorPlan3DManager } from '@/components/tables/FloorPlan3D';
@@ -22,13 +23,24 @@ import {
   Utensils,
   Coffee,
   Move3D,
-  LayoutGrid
+  LayoutGrid,
+  AlertTriangle,
+  CheckCircle2,
+  Target,
+  Wrench,
+  TrendingUp,
+  Monitor,
+  Info,
+  MousePointer,
+  RotateCcw,
+  ZoomIn
 } from 'lucide-react';
 
 const Tables: React.FC = () => {
   const { tenant } = useTenant();
-  const [viewMode, setViewMode] = useState<'grid' | 'floor' | '3d'>('floor');
+  const [viewMode, setViewMode] = useState<'3d'>('3d');
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
+  const [isCalibrated, setIsCalibrated] = useState(false);
 
   // Fetch real table data from database
   const { tables, isLoading, updateTable } = useTableManagement(tenant?.id);
@@ -74,48 +86,64 @@ const Tables: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Table Management</h1>
-          <p className="text-muted-foreground">
-            Manage your restaurant floor plan and table status
+        <div className="min-w-0 flex-1">
+          <h1 className="text-h1 font-bold text-foreground tracking-tight">
+            Floor Plan Manager
+          </h1>
+          <p className="text-body text-muted-foreground mt-2 max-w-3xl">
+            Visual table management with intelligent positioning and real-time status tracking
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 flex-shrink-0">
           <Button
-            variant={viewMode === 'floor' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('floor')}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Floor Plan
-          </Button>
-          <Button
-            variant={viewMode === '3d' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setViewMode('3d')}
+            className="transition-brand"
           >
             <Move3D className="h-4 w-4 mr-2" />
-            3D View
+            3D Manager
           </Button>
-          <Button
-            variant={viewMode === 'grid' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('grid')}
-          >
-            <LayoutGrid className="h-4 w-4 mr-2" />
-            Grid View
-          </Button>
-          <Button>
+          <Button className="transition-brand shadow-elev-1">
             <Plus className="h-4 w-4 mr-2" />
             Add Table
           </Button>
         </div>
       </motion.div>
 
-      {/* Table Statistics */}
+      {/* Calibration Banner */}
+      {!isCalibrated && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Alert className="border-warning/20 bg-warning/5">
+            <AlertTriangle className="h-4 w-4 text-warning" />
+            <AlertDescription className="flex items-center justify-between w-full">
+              <div>
+                <strong>Floor plan calibration required</strong>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Upload and analyze your floor plan to enable accurate table detection and positioning.
+                </p>
+              </div>
+              <Button 
+                size="sm" 
+                onClick={() => setIsCalibrated(true)}
+                className="ml-4 flex-shrink-0"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                Calibrate Now
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </motion.div>
+      )}
+
+      {/* KPI Section */}
       {isLoading ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -124,9 +152,9 @@ const Tables: React.FC = () => {
           className="grid grid-cols-2 md:grid-cols-5 gap-4"
         >
           {[...Array(5)].map((_, i) => (
-            <Card key={i}>
+            <Card key={i} className="hover-scale">
               <CardContent className="pt-4">
-                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-20 w-full" />
               </CardContent>
             </Card>
           ))}
@@ -138,89 +166,150 @@ const Tables: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="grid grid-cols-2 md:grid-cols-5 gap-4"
         >
-          <Card>
+          <Card className="bg-gradient-subtle border-surface-3 hover-scale">
             <CardContent className="pt-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{tableStats.total}</div>
-                <div className="text-sm text-muted-foreground">Total Tables</div>
+              <div className="flex items-center justify-between mb-2">
+                <Grid3X3 className="h-5 w-5 text-muted-foreground" />
+                <TrendingUp className="h-4 w-4 text-success" />
               </div>
+              <div className="text-2xl font-bold text-foreground">{tableStats.total}</div>
+              <div className="text-body-sm text-muted-foreground">Total Tables</div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="bg-gradient-subtle border-surface-3 hover-scale">
             <CardContent className="pt-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-success">{tableStats.available}</div>
-                <div className="text-sm text-muted-foreground">Available</div>
+              <div className="flex items-center justify-between mb-2">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+                <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
               </div>
+              <div className="text-2xl font-bold text-success">{tableStats.available}</div>
+              <div className="text-body-sm text-muted-foreground">Available</div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="bg-gradient-subtle border-surface-3 hover-scale">
             <CardContent className="pt-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-destructive">{tableStats.occupied}</div>
-                <div className="text-sm text-muted-foreground">Occupied</div>
+              <div className="flex items-center justify-between mb-2">
+                <Users className="h-5 w-5 text-destructive" />
+                <div className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
               </div>
+              <div className="text-2xl font-bold text-destructive">{tableStats.occupied}</div>
+              <div className="text-body-sm text-muted-foreground">Occupied</div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="bg-gradient-subtle border-surface-3 hover-scale">
             <CardContent className="pt-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-warning">{tableStats.reserved}</div>
-                <div className="text-sm text-muted-foreground">Reserved</div>
+              <div className="flex items-center justify-between mb-2">
+                <Clock className="h-5 w-5 text-warning" />
+                <div className="w-2 h-2 bg-warning rounded-full animate-pulse" />
               </div>
+              <div className="text-2xl font-bold text-warning">{tableStats.reserved}</div>
+              <div className="text-body-sm text-muted-foreground">Reserved</div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="bg-gradient-subtle border-surface-3 hover-scale">
             <CardContent className="pt-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-muted-foreground">{tableStats.maintenance}</div>
-                <div className="text-sm text-muted-foreground">Maintenance</div>
+              <div className="flex items-center justify-between mb-2">
+                <Wrench className="h-5 w-5 text-muted-foreground" />
+                <AlertTriangle className="h-4 w-4 text-warning" />
               </div>
+              <div className="text-2xl font-bold text-muted-foreground">{tableStats.maintenance}</div>
+              <div className="text-body-sm text-muted-foreground">Maintenance</div>
             </CardContent>
           </Card>
         </motion.div>
       )}
 
-      {/* Table View */}
+      {/* 3D Floor Plan Manager */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
+        className="space-y-6"
       >
-        {viewMode === 'floor' ? (
-          <FloorPlanView 
-            tables={tables}
-            selectedTable={selectedTable}
-            onSelectTable={setSelectedTable}
-            getStatusColor={getStatusColor}
-            getTableIcon={getTableIcon}
-          />
-        ) : viewMode === '3d' ? (
-          <div className="space-y-6">
-            <FloorPlanManager />
-            <FloorPlanViewer3D />
-            <details className="mt-4">
-              <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
-                View 2D Preview (Fallback)
-              </summary>
-              <div className="mt-2">
-                <FloorPlanViewer2D />
+        <FloorPlanManager />
+        
+        {/* Enhanced 3D Viewer */}
+        <Card className="overflow-hidden border-surface-3 bg-gradient-subtle">
+          <CardHeader className="bg-surface-2/50 border-b border-surface-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-brand/10">
+                  <Move3D className="h-5 w-5 text-brand" />
+                </div>
+                Interactive 3D Preview
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-surface text-muted-foreground">
+                  {tables.length} Tables
+                </Badge>
+                <Badge variant="outline" className="bg-surface text-muted-foreground">
+                  Real-time
+                </Badge>
               </div>
-            </details>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 relative">
+            <FloorPlanViewer3D />
+            
+            {/* Control Hints Overlay */}
+            <div className="absolute top-4 left-4 bg-surface/90 backdrop-blur-sm rounded-lg border border-surface-3 p-3 shadow-elev-1">
+              <h4 className="font-medium text-body-sm mb-2 text-foreground">Controls</h4>
+              <div className="space-y-1 text-body-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <MousePointer className="h-3 w-3" />
+                  <span>Drag to rotate</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ZoomIn className="h-3 w-3" />
+                  <span>Scroll to zoom</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RotateCcw className="h-3 w-3" />
+                  <span>Double-click to reset</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Entity Information Panel */}
+            <div className="absolute bottom-4 right-4 bg-surface/90 backdrop-blur-sm rounded-lg border border-surface-3 p-3 shadow-elev-1 max-w-xs">
+              <h4 className="font-medium text-body-sm mb-3 text-foreground">Table Status</h4>
+              <div className="grid grid-cols-2 gap-3">
+                {tables.slice(0, 4).map((table) => (
+                  <TableChip key={table.id} table={table} />
+                ))}
+              </div>
+              {tables.length > 4 && (
+                <div className="mt-2 text-body-xs text-muted-foreground text-center">
+                  +{tables.length - 4} more tables
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 2D Preview */}
+        <details className="group">
+          <summary className="cursor-pointer list-none">
+            <Card className="hover-scale transition-brand">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Monitor className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">2D Floor Plan Preview</span>
+                  </div>
+                  <Badge variant="outline">Optional</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </summary>
+          <div className="mt-4 animate-fade-in">
+            <FloorPlanViewer2D />
           </div>
-        ) : (
-          <GridView 
-            tables={tables}
-            selectedTable={selectedTable}
-            onSelectTable={setSelectedTable}
-            getStatusColor={getStatusColor}
-            getTableIcon={getTableIcon}
-          />
-        )}
+        </details>
       </motion.div>
     </div>
   );
@@ -450,6 +539,55 @@ const SelectedTableInfo: React.FC<{
         </div>
       </CardContent>
     </Card>
+  );
+};
+
+// Table Chip Component for Entity Display
+const TableChip: React.FC<{ table: Table }> = ({ table }) => {
+  const getStatusColor = (status: Table['status']) => {
+    switch (status) {
+      case 'available':
+        return 'bg-success/10 text-success border-success/20';
+      case 'occupied':
+        return 'bg-destructive/10 text-destructive border-destructive/20';
+      case 'reserved':
+        return 'bg-warning/10 text-warning border-warning/20';
+      case 'maintenance':
+        return 'bg-muted/10 text-muted-foreground border-muted/20';
+      default:
+        return 'bg-muted/10 text-muted-foreground border-muted/20';
+    }
+  };
+
+  const getTableIcon = (tableType: Table['table_type']) => {
+    switch (tableType) {
+      case 'bar':
+        return Coffee;
+      case 'booth':
+        return Utensils;
+      default:
+        return Grid3X3;
+    }
+  };
+
+  const TableIcon = getTableIcon(table.table_type);
+
+  return (
+    <div className={`p-2 rounded-lg border transition-brand hover-scale ${getStatusColor(table.status)}`}>
+      <div className="flex items-center gap-2 mb-1">
+        <TableIcon className="h-3 w-3" />
+        <span className="font-medium text-body-xs">{table.name}</span>
+      </div>
+      <div className="flex items-center justify-between text-body-xs">
+        <span>{table.capacity} seats</span>
+        <div className={`w-2 h-2 rounded-full ${
+          table.status === 'available' ? 'bg-success' :
+          table.status === 'occupied' ? 'bg-destructive' :
+          table.status === 'reserved' ? 'bg-warning' :
+          'bg-muted-foreground'
+        }`} />
+      </div>
+    </div>
   );
 };
 

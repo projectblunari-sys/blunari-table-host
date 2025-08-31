@@ -97,14 +97,13 @@ function RoundTable({ x, y, r, rotation, label, seats, confidence }: {
           />
         </mesh>
         
-        {/* Table top with wood grain */}
+        {/* Table top with matte finish */}
         <mesh position={[0, 0.35, 0]}>
           <cylinderGeometry args={[r, r, 0.05, 32]} />
           <meshStandardMaterial 
             color={topColor} 
-            roughness={0.3} 
-            metalness={0.1}
-            envMapIntensity={0.5}
+            roughness={0.9} 
+            metalness={0.0}
           />
         </mesh>
         
@@ -232,14 +231,13 @@ function RectTable({ x, y, w, h, rotation, label, seats, confidence }: {
           <meshStandardMaterial color={tableColor} roughness={0.6} metalness={0.2} />
         </mesh>
         
-        {/* Table top */}
+        {/* Table top with matte finish */}
         <mesh position={[0, 0.35, 0]}>
           <boxGeometry args={[w, 0.05, h]} />
           <meshStandardMaterial 
             color={topColor} 
-            roughness={0.3} 
-            metalness={0.1}
-            envMapIntensity={0.5}
+            roughness={0.9} 
+            metalness={0.0}
           />
         </mesh>
         
@@ -312,40 +310,57 @@ function RectTable({ x, y, w, h, rotation, label, seats, confidence }: {
   );
 }
 
-// Enhanced floor surface with restaurant ambiance
+// Enhanced floor surface with neutral grid and brand accent lines
 function RestaurantFloor() {
   return (
     <group>
-      {/* Main floor with marble-like texture */}
+      {/* Neutral floor plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
-        <planeGeometry args={[12, 12]} />
+        <planeGeometry args={[20, 20]} />
         <meshStandardMaterial 
-          color="#F5F5DC" 
-          roughness={0.8} 
-          metalness={0.1}
-          envMapIntensity={0.3}
+          color="hsl(var(--surface-2))" 
+          roughness={0.9} 
+          metalness={0.0}
+          transparent
+          opacity={0.8}
         />
       </mesh>
       
-      {/* Subtle pattern overlay */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-        <planeGeometry args={[10, 10]} />
-        <meshStandardMaterial 
-          color="#F0F8FF" 
-          transparent 
-          opacity={0.3}
-          roughness={0.9}
-        />
-      </mesh>
+      {/* Brand accent grid lines every 5 units */}
+      {Array.from({ length: 9 }, (_, i) => {
+        const position = (i - 4) * 5;
+        return (
+          <group key={i}>
+            {/* Vertical lines */}
+            <mesh position={[position, 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[0.05, 20]} />
+              <meshBasicMaterial 
+                color="hsl(var(--brand))" 
+                transparent 
+                opacity={0.3} 
+              />
+            </mesh>
+            {/* Horizontal lines */}
+            <mesh position={[0, 0.005, position]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[20, 0.05]} />
+              <meshBasicMaterial 
+                color="hsl(var(--brand))" 
+                transparent 
+                opacity={0.3} 
+              />
+            </mesh>
+          </group>
+        );
+      })}
       
-      {/* Contact shadows for realism */}
+      {/* Soft contact shadows */}
       <ContactShadows 
-        opacity={0.4} 
+        opacity={0.2} 
         scale={15} 
-        blur={2} 
-        far={8} 
-        resolution={512} 
-        color="#000000"
+        blur={3} 
+        far={6} 
+        resolution={256} 
+        color="hsl(var(--muted-foreground))"
         smooth
       />
     </group>
@@ -496,8 +511,8 @@ export default function FloorPlanViewer3D() {
             performance={{ min: 0.2 }}
           >
             <Suspense fallback={<SceneLoader />}>
-              {/* Enhanced Lighting Setup */}
-              <ambientLight intensity={0.3} color="#FFF8DC" />
+              {/* Enhanced Lighting Setup - Ambient ~0.6 */}
+              <ambientLight intensity={0.6} color="hsl(var(--background))" />
               <directionalLight 
                 position={[10, 10, 5]} 
                 intensity={1} 
