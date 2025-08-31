@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import BookingPage from "./pages/BookingPage";
 import { Suspense, lazy } from "react";
 import { SkeletonPage } from "@/components/ui/skeleton-components";
+import { DesignQAProvider } from "@/components/dev/DesignQAProvider";
 
 // Code splitting for heavy pages
 const Analytics = lazy(() => import("./pages/Analytics"));
@@ -38,9 +39,10 @@ const App = () => (
         <TenantBrandingProvider>
           <NavigationProvider>
             <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+              <DesignQAProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -75,14 +77,15 @@ const App = () => (
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </NavigationProvider>
-  </TenantBrandingProvider>
-</AuthProvider>
-</ThemeProvider>
-</QueryClientProvider>
+                  </Routes>
+                </BrowserRouter>
+              </DesignQAProvider>
+            </TooltipProvider>
+          </NavigationProvider>
+        </TenantBrandingProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
 );
 
 export default App;
