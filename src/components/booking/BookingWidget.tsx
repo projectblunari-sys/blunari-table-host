@@ -312,7 +312,7 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
             {/* Mobile Progress Bar */}
             <div className="relative w-full h-2 bg-surface-2 rounded-full overflow-hidden mt-2">
               <motion.div
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-brand via-accent to-brand rounded-full"
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-brand to-accent rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercentage}%` }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
@@ -390,7 +390,7 @@ const BookingWidget: React.FC<BookingWidgetProps> = ({ slug, onError }) => {
                           step < state.step 
                             ? 'bg-gradient-to-r from-brand to-accent text-white shadow-lg ring-4 ring-brand/20' 
                             : step === state.step 
-                              ? 'bg-gradient-to-r from-brand/20 to-accent/20 text-brand border-2 border-brand shadow-md ring-2 ring-brand/30 animate-pulse' 
+                              ? 'bg-gradient-to-r from-brand/20 to-accent/20 text-brand border-2 border-brand shadow-md ring-2 ring-brand/30 animate-pulse'
                               : 'bg-surface-2 text-text-muted border border-surface-3'
                         }`}
                         whileHover={{ scale: step <= state.step ? 1.1 : 1.05 }}

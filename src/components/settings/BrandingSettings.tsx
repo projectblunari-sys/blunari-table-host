@@ -27,15 +27,19 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ settings, onUpdate,
   // Watch form changes for live preview updates
   const watchedValues = form.watch();
 
+  // Update live preview with debounced effect to prevent infinite loops
   useEffect(() => {
-    // Update live preview immediately when form values change
-    updateBranding({
-      logoUrl: watchedValues.logoUrl,
-      restaurantName: watchedValues.restaurantName,
-      primaryColor: watchedValues.primaryColor,
-      accentColor: watchedValues.accentColor,
-    });
-  }, [watchedValues.logoUrl, watchedValues.restaurantName, watchedValues.primaryColor, watchedValues.accentColor, updateBranding]);
+    const timeoutId = setTimeout(() => {
+      updateBranding({
+        logoUrl: watchedValues.logoUrl,
+        restaurantName: watchedValues.restaurantName,
+        primaryColor: watchedValues.primaryColor,
+        accentColor: watchedValues.accentColor,
+      });
+    }, 100); // 100ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [watchedValues.logoUrl, watchedValues.restaurantName, watchedValues.primaryColor, watchedValues.accentColor]);
 
   const onSubmit = (data: BrandingSettingsType) => {
     onUpdate(data);

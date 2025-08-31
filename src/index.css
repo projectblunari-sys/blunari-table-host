@@ -55,9 +55,10 @@
   }
 
   /* === DARK MODE THEME === */
+  .dark,
   [data-theme="dark"] {
     /* Brand Colors - Adjusted for dark mode */
-    --brand: 215 84% 35%;
+    --brand: 215 84% 45%;
     --brand-foreground: 0 0% 98%;
     
     /* Surface System - Dark backgrounds */
@@ -71,26 +72,26 @@
     --text-subtle: 215 15% 50%;
     
     /* Semantic Colors - Adjusted for dark mode */
-    --success: 142 76% 45%;
+    --success: 142 76% 55%;
     --success-foreground: 0 0% 98%;
-    --warning: 38 92% 60%;
-    --warning-foreground: 0 0% 98%;
-    --danger: 0 84% 65%;
+    --warning: 38 92% 70%;
+    --warning-foreground: 215 25% 12%;
+    --danger: 0 84% 70%;
     --danger-foreground: 0 0% 98%;
     
     /* Secondary & Accent - Dark mode variants */
-    --secondary: 42 87% 65%;
+    --secondary: 42 87% 70%;
     --secondary-foreground: 215 25% 12%;
-    --accent: 142 76% 45%;
+    --accent: 142 76% 55%;
     --accent-foreground: 0 0% 98%;
     
     /* Interactive Elements */
-    --ring: 215 84% 35%;
+    --ring: 215 84% 45%;
     
     /* Shadow System - Darker shadows */
-    --shadow-elev-1: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-    --shadow-elev-2: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-elev-3: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-elev-1: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+    --shadow-elev-2: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --shadow-elev-3: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
   }
 
   /* === HIGH CONTRAST MODE === */
@@ -110,18 +111,19 @@
     --ring: 0 0% 0%;
   }
 
+  .dark[data-contrast="high"],
   [data-theme="dark"][data-contrast="high"] {
     /* Dark high contrast */
     --text: 0 0% 100%;
-    --text-muted: 0 0% 80%;
+    --text-muted: 0 0% 85%;
     --surface: 0 0% 0%;
-    --surface-2: 0 0% 8%;
-    --surface-3: 0 0% 15%;
+    --surface-2: 0 0% 5%;
+    --surface-3: 0 0% 10%;
     
     /* High contrast dark semantic colors */
-    --success: 120 100% 60%;
-    --warning: 45 100% 70%;
-    --danger: 0 100% 70%;
+    --success: 120 100% 70%;
+    --warning: 45 100% 80%;
+    --danger: 0 100% 80%;
     
     /* Stronger contrast in dark mode */
     --ring: 0 0% 100%;

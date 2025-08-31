@@ -6,6 +6,7 @@ import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeBookings } from '@/hooks/useRealtimeBookings';
 import { useTenantBranding } from '@/contexts/TenantBrandingContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { 
   Bell, 
   Settings, 
@@ -14,7 +15,9 @@ import {
   Wifi,
   WifiOff,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Moon,
+  Sun
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -26,6 +29,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const DashboardHeader: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
   const { tenant } = useTenant();
   const { user, signOut } = useAuth();
   const { isConnected } = useRealtimeBookings(tenant?.id);
@@ -108,6 +112,21 @@ const DashboardHeader: React.FC = () => {
               </>
             )}
           </Badge>
+
+          {/* Dark mode toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleTheme}
+            className="w-9 h-9 p-0 group hover:bg-primary/5 hover:border-primary/20 transition-all duration-300"
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          >
+            {theme === 'light' ? (
+              <Moon className="h-4 w-4 group-hover:text-primary transition-colors duration-300" />
+            ) : (
+              <Sun className="h-4 w-4 group-hover:text-primary transition-colors duration-300" />
+            )}
+          </Button>
 
           <Button 
             variant="outline" 
