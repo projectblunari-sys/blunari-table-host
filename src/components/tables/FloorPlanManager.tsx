@@ -281,7 +281,7 @@ export default function FloorPlanManager() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20" />
         <CardHeader className="relative">
           <CardTitle className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-brand to-accent text-brand-foreground">
               <Camera className="w-5 h-5" />
             </div>
             <div>
@@ -305,8 +305,8 @@ export default function FloorPlanManager() {
               ${dragActive 
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20 scale-[1.02]' 
                 : uploadedImage 
-                  ? 'border-green-300 bg-green-50 dark:bg-green-950/20'
-                  : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800/50'
+                  ? 'border-success bg-success/10'
+                  : 'border-surface-3 hover:border-surface-3 hover:bg-surface-2'
               }
             `}
             onDragEnter={handleDrag}

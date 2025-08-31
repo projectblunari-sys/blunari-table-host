@@ -104,8 +104,8 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
                   achievement.type === 'gold' 
                     ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-yellow-900' 
                     : achievement.type === 'silver'
-                      ? 'bg-gradient-to-r from-gray-300 to-gray-500 text-gray-800'
-                      : 'bg-gradient-to-r from-amber-600 to-amber-800 text-amber-100'
+                      ? 'bg-gradient-to-r from-surface-2 to-surface-3 text-text-muted'
+                      : 'bg-gradient-to-r from-warning to-warning text-warning-foreground'
                 }`}
               >
                 <achievement.icon className="w-3 h-3 mr-1" />

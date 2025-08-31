@@ -355,7 +355,7 @@ const AdvancedBookingStatusOverview: React.FC<AdvancedBookingStatusOverviewProps
               {status !== 'all' && (
                 <Progress 
                   value={percentage} 
-                  className="h-1 bg-white/20" 
+                  className="h-1 bg-white/30" 
                 />
               )}
             </div>

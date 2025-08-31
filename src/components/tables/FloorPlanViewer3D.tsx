@@ -146,11 +146,11 @@ function RoundTable({ x, y, r, rotation, label, seats, confidence }: {
         {/* Floating label with glass effect */}
         {label && (
           <Html position={[0, 0.8, 0]} center>
-            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg border border-white/20 animate-fade-in">
-              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+            <div className="bg-surface/90 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg border border-surface-3/20 animate-fade-in">
+              <div className="text-sm font-semibold text-text">
                 {label}
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+              <div className="text-xs text-text-muted flex items-center gap-1">
                 <Users className="w-3 h-3" />
                 {seats} seats
                 {confidence && (
@@ -288,11 +288,11 @@ function RectTable({ x, y, w, h, rotation, label, seats, confidence }: {
         {/* Floating label */}
         {label && (
           <Html position={[0, 0.8, 0]} center>
-            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg border border-white/20 animate-fade-in">
-              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+            <div className="bg-surface/90 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg border border-surface-3/20 animate-fade-in">
+              <div className="text-sm font-semibold text-text">
                 {label}
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+              <div className="text-xs text-text-muted flex items-center gap-1">
                 <Users className="w-3 h-3" />
                 {seats} seats
                 {confidence && (
@@ -411,7 +411,7 @@ export default function FloorPlanViewer3D() {
       <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-900">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-brand to-accent text-brand-foreground">
               <Move3D className="w-5 h-5" />
             </div>
             <div>
@@ -612,8 +612,8 @@ export default function FloorPlanViewer3D() {
           
           {/* Overlay UI for empty state */}
           {tables.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-              <div className="text-center text-white bg-black/60 p-8 rounded-2xl backdrop-blur-sm border border-white/20 animate-fade-in">
+            <div className="absolute inset-0 flex items-center justify-center bg-surface/20 backdrop-blur-sm">
+              <div className="text-center text-text bg-surface/80 p-8 rounded-2xl backdrop-blur-sm border border-surface-3/30 animate-fade-in">
                 <Move3D className="w-16 h-16 mx-auto mb-4 opacity-70" />
                 <h3 className="text-xl font-semibold mb-2">No Tables to Display</h3>
                 <p className="text-sm opacity-90 max-w-md">
