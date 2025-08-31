@@ -11,14 +11,18 @@ interface NavigationContextType {
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
 
 export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [preference, setPreferenceState] = useState<NavigationPreference>('auto');
-  const [actualLayout, setActualLayout] = useState<'sidebar' | 'bottom'>('sidebar');
+  const [preference, setPreferenceState] = useState<NavigationPreference>('bottom');
+  const [actualLayout, setActualLayout] = useState<'sidebar' | 'bottom'>('bottom');
 
   // Load preference from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('navigation-preference');
     if (saved && ['sidebar', 'bottom', 'auto'].includes(saved)) {
       setPreferenceState(saved as NavigationPreference);
+    } else {
+      // Set default to bottom if no preference saved
+      setPreferenceState('bottom');
+      localStorage.setItem('navigation-preference', 'bottom');
     }
   }, []);
 

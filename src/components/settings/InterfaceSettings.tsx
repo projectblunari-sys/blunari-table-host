@@ -19,25 +19,25 @@ const InterfaceSettings: React.FC = () => {
 
   const navigationOptions = [
     {
+      value: 'bottom',
+      label: 'Bottom Navigation',
+      description: 'Modern bottom navigation on all devices',
+      icon: Smartphone,
+      badge: 'Default'
+    },
+    {
       value: 'auto',
       label: 'Auto (Responsive)',
       description: 'Sidebar on desktop, bottom navigation on mobile',
       icon: Monitor,
-      badge: 'Recommended'
-    },
-    {
-      value: 'sidebar',
-      label: 'Always Sidebar',
-      description: 'Sidebar navigation on all devices',
-      icon: Sidebar,
       badge: null
     },
     {
-      value: 'bottom',
-      label: 'Always Bottom Navigation',
-      description: 'Bottom navigation on all devices',
-      icon: Smartphone,
-      badge: 'Mobile-first'
+      value: 'sidebar',
+      label: 'Sidebar',
+      description: 'Traditional sidebar navigation on all devices',
+      icon: Sidebar,
+      badge: null
     }
   ];
 
