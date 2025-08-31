@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import StaffInvitation from "./pages/StaffInvitation";
 import Dashboard from "./pages/Dashboard";
 import Bookings from "./pages/Bookings";
 import Customers from "./pages/Customers";
@@ -46,6 +47,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/staff-invitation" element={<StaffInvitation />} />
             
             {/* Public booking widget routes */}
             <Route path="/book/:slug" element={<BookingPage />} />

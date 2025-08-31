@@ -1405,6 +1405,8 @@ export type Database = {
           first_name: string | null
           hire_date: string | null
           id: string
+          invitation_sent: boolean | null
+          invited_at: string | null
           last_activity: string | null
           last_login: string | null
           last_name: string | null
@@ -1425,6 +1427,8 @@ export type Database = {
           first_name?: string | null
           hire_date?: string | null
           id?: string
+          invitation_sent?: boolean | null
+          invited_at?: string | null
           last_activity?: string | null
           last_login?: string | null
           last_name?: string | null
@@ -1445,6 +1449,8 @@ export type Database = {
           first_name?: string | null
           hire_date?: string | null
           id?: string
+          invitation_sent?: boolean | null
+          invited_at?: string | null
           last_activity?: string | null
           last_login?: string | null
           last_name?: string | null
@@ -3290,6 +3296,51 @@ export type Database = {
           },
         ]
       }
+      staff_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          employee_id: string
+          expires_at: string
+          id: string
+          invitation_token: string
+          invited_at: string
+          invited_by: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          employee_id: string
+          expires_at?: string
+          id?: string
+          invitation_token: string
+          invited_at?: string
+          invited_by?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          employee_id?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_at?: string
+          invited_by?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           billing_cycle: string | null
@@ -4370,6 +4421,10 @@ export type Database = {
         }
         Returns: string
       }
+      create_staff_invitation: {
+        Args: { p_email: string; p_employee_id: string }
+        Returns: string
+      }
       decrypt_sensitive_data: {
         Args: { encrypted_data: string; encryption_key?: string }
         Returns: string
@@ -4391,6 +4446,10 @@ export type Database = {
           sensitive_data_accessed?: boolean
         }
         Returns: undefined
+      }
+      generate_invitation_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       generate_ticket_number: {
         Args: Record<PropertyKey, never>

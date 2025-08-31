@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, Users, Mail, Phone, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { UserPlus, Users, Mail, Phone, Edit, Trash2, MoreVertical, Loader2 } from 'lucide-react';
 import { EmptyState } from '@/components/ui/state';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from '@/lib/toast';
@@ -26,6 +26,8 @@ interface StaffMember {
   employee_id: string;
   user_id: string;
   created_at: string;
+  invitation_sent?: boolean;
+  invited_at?: string;
 }
 
 const Staff: React.FC = () => {
@@ -41,6 +43,7 @@ const Staff: React.FC = () => {
     employee_id: '',
     role: 'VIEWER' as const
   });
+  const [sendingInvitation, setSendingInvitation] = useState<string | null>(null);
 
   useEffect(() => {
     if (tenant?.id) {
@@ -63,7 +66,9 @@ const Staff: React.FC = () => {
           status,
           employee_id,
           user_id,
-          created_at
+          created_at,
+          invitation_sent,
+          invited_at
         `)
         .order('created_at', { ascending: false });
 
@@ -93,9 +98,10 @@ const Staff: React.FC = () => {
             email: formData.email,
             phone: formData.phone || null,
             role: formData.role,
-            status: 'ACTIVE',
+            status: 'PENDING',
             employee_id: employee_id,
-            user_id: '00000000-0000-0000-0000-000000000000' // Placeholder user_id
+            user_id: '00000000-0000-0000-0000-000000000000', // Placeholder user_id
+            invitation_sent: false
           }
         ])
         .select()
@@ -117,6 +123,39 @@ const Staff: React.FC = () => {
     } catch (error) {
       console.error('Error adding staff member:', error);
       toast.error('Failed to add staff member');
+    }
+  };
+
+  const handleSendInvitation = async (employeeId: string, email: string) => {
+    try {
+      setSendingInvitation(employeeId);
+      
+      const { error } = await supabase.functions.invoke('send-staff-invitation', {
+        body: {
+          employeeId,
+          email
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Update the UI to show invitation was sent
+      setStaffMembers(prev => 
+        prev.map(staff => 
+          staff.employee_id === employeeId 
+            ? { ...staff, invitation_sent: true, invited_at: new Date().toISOString() }
+            : staff
+        )
+      );
+
+      toast.success('Invitation sent successfully');
+    } catch (error: any) {
+      console.error('Error sending invitation:', error);
+      toast.error(`Failed to send invitation: ${error.message}`);
+    } finally {
+      setSendingInvitation(null);
     }
   };
 
@@ -344,7 +383,21 @@ const Staff: React.FC = () => {
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
+                       <DropdownMenuContent align="end" className="w-40">
+                        {staff.status === 'PENDING' && !staff.invitation_sent && staff.email && (
+                          <DropdownMenuItem 
+                            onClick={() => handleSendInvitation(staff.employee_id, staff.email || '')}
+                            disabled={sendingInvitation === staff.employee_id}
+                          >
+                            {sendingInvitation === staff.employee_id ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Mail className="h-4 w-4 mr-2" />
+                            )}
+                            {sendingInvitation === staff.employee_id ? 'Sending...' : 'Send Invitation'}
+                          </DropdownMenuItem>
+                        )}
+                        
                         <DropdownMenuItem>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
