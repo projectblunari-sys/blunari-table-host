@@ -4,7 +4,9 @@ import BookingCard from "./BookingCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTodaysBookings } from "@/hooks/useRealtimeBookings";
 import { useTenant } from "@/hooks/useTenant";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonList } from "@/components/ui/skeleton-components";
+import EmptyState from "@/components/ui/empty-state";
+import { Calendar, Users } from "lucide-react";
 
 const TodaysBookings = () => {
   const { tenant } = useTenant();
@@ -23,66 +25,85 @@ const TodaysBookings = () => {
 
   if (isLoading) {
     return (
-      <Card className="shadow-soft">
+      <Card className="shadow-elev-1 h-full">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Today's Bookings</CardTitle>
+          <CardTitle className="text-h4 font-semibold flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Today's Bookings
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full" />
-            ))}
-          </div>
+          <SkeletonList items={5} showAvatar={false} />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="shadow-soft">
+    <Card className="shadow-elev-1 h-full">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Today's Bookings</CardTitle>
-          <div className="flex gap-2">
-            <Badge variant="outline" className="bg-primary/10 text-primary">
-              {stats.total} Total
-            </Badge>
-            <Badge variant="outline" className="bg-success/10 text-success">
-              {stats.seated} Seated
-            </Badge>
+          <CardTitle className="text-h4 font-semibold flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Today's Bookings
+          </CardTitle>
+          <Badge variant="outline" className="font-tabular">
+            {stats.total} total
+          </Badge>
+        </div>
+        
+        {/* Quick Stats */}
+        <div className="flex gap-4 pt-2">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-primary rounded-full"></div>
+            <span className="text-body-sm text-muted-foreground">
+              {stats.confirmed} confirmed
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-success rounded-full"></div>
+            <span className="text-body-sm text-muted-foreground">
+              {stats.completed} completed
+            </span>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-4">
-            {bookings.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No bookings for today
-              </div>
-            ) : (
-              bookings.map((booking) => (
+      
+      <CardContent className="p-0">
+        {bookings.length === 0 ? (
+          <div className="p-6">
+            <EmptyState
+              illustration="calendar"
+              title="No bookings today"
+              description="When customers make reservations for today, they'll appear here."
+              action={{
+                label: 'View All Bookings',
+                onClick: () => window.location.href = '/dashboard/bookings',
+                icon: Users
+              }}
+            />
+          </div>
+        ) : (
+          <ScrollArea className="h-80">
+            <div className="space-y-2 p-4">
+              {bookings.map((booking) => (
                 <BookingCard 
                   key={booking.id} 
                   booking={{
                     id: booking.id,
                     customerName: booking.guest_name,
-                    time: new Date(booking.booking_time).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true
-                    }),
+                    time: booking.booking_time,
                     guests: booking.party_size,
-                    table: booking.table_id || 'Unassigned',
+                    table: booking.table_id || 'TBD',
                     phone: booking.guest_phone || '',
                     status: booking.status as any,
                     specialRequests: booking.special_requests
                   }}
                 />
-              ))
-            )}
-          </div>
-        </ScrollArea>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
       </CardContent>
     </Card>
   );
