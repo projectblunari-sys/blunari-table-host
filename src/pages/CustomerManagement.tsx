@@ -251,20 +251,72 @@ const CustomerManagement: React.FC = () => {
       >
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+              {/* Search Input */}
+              <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by name, email, or phone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
+                  aria-label="Search customers"
                 />
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
+              
+              {/* Filter Chips */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Filter by:</span>
+                </div>
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Customer type filters">
+                  {[
+                    { value: 'all', label: 'All' },
+                    { value: 'vip', label: 'VIP' },
+                    { value: 'regular', label: 'Regular' },
+                    { value: 'new', label: 'New' },
+                    { value: 'inactive', label: 'Inactive' }
+                  ].map((filter) => (
+                    <Button
+                      key={filter.value}
+                      variant={selectedCustomerType === filter.value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCustomerType(filter.value)}
+                      className="text-xs h-8 px-3 transition-all duration-200"
+                      role="button"
+                      aria-pressed={selectedCustomerType === filter.value}
+                      aria-label={`Filter by ${filter.label} customers`}
+                    >
+                      {filter.label}
+                      {filter.value !== 'all' && (
+                        <span className="ml-1 text-xs opacity-75">
+                          ({filter.value === 'vip' ? customerStats.vip : 
+                            filter.value === 'regular' ? customerStats.regular :
+                            filter.value === 'new' ? customerStats.new : 
+                            customerStats.inactive})
+                        </span>
+                      )}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleExportCustomers}
+                  className="h-10 px-4"
+                >
+                  Export
+                </Button>
+                <Button 
+                  onClick={handleAddCustomer}
+                  className="h-10 px-4"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Customer
                 </Button>
               </div>
             </div>
@@ -272,54 +324,80 @@ const CustomerManagement: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Customer Tabs */}
+      {/* Customer Content */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <Tabs value={selectedCustomerType} onValueChange={setSelectedCustomerType}>
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all">All ({customerStats.total})</TabsTrigger>
-            <TabsTrigger value="vip">VIP ({customerStats.vip})</TabsTrigger>
-            <TabsTrigger value="regular">Regular ({customerStats.regular})</TabsTrigger>
-            <TabsTrigger value="new">New ({customerStats.new})</TabsTrigger>
-            <TabsTrigger value="inactive">Inactive ({customerStats.inactive})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value={selectedCustomerType} className="mt-6">
-            {isLoading ? (
-              <SkeletonList items={6} className="mt-6" />
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredCustomers.map((customer, index) => (
-                    <motion.div
-                      key={customer.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                    >
-                      <CustomerCard customer={customer} getCustomerTypeColor={getCustomerTypeColor} />
-                    </motion.div>
-                  ))}
+        {isLoading ? (
+          <SkeletonList items={6} className="mt-6" />
+        ) : filteredCustomers.length === 0 ? (
+          <Card className="border-dashed border-2 border-border/50 bg-surface/50">
+            <CardContent className="flex flex-col items-center justify-center text-center py-16 px-8">
+              <div className="mb-8">
+                <div className="w-20 h-20 mx-auto bg-surface-2 rounded-full flex items-center justify-center mb-6 ring-1 ring-border/10">
+                  <Users className="h-10 w-10 text-text-muted" />
                 </div>
-                
-                {filteredCustomers.length === 0 && (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium text-foreground mb-2">No customers found</h3>
-                      <p className="text-muted-foreground text-center max-w-sm">
-                        No customers match your current search criteria. Try adjusting your filters or create your first booking to generate customer data.
-                      </p>
-                    </CardContent>
-                  </Card>
+              </div>
+
+              <div className="max-w-md space-y-3 mb-8">
+                <h3 className="text-xl font-semibold text-foreground">
+                  {searchTerm || selectedCustomerType !== 'all' ? 'No customers found' : 'No customers yet'}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {searchTerm || selectedCustomerType !== 'all' 
+                    ? 'No customers match your current search criteria. Try adjusting your filters or search terms.' 
+                    : 'Customer profiles will appear here once you receive your first booking.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 flex-wrap justify-center">
+                {(searchTerm || selectedCustomerType !== 'all') ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedCustomerType('all');
+                    }}
+                    className="transition-brand"
+                  >
+                    Clear Filters
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/dashboard/bookings'}
+                    className="transition-brand"
+                  >
+                    View Bookings
+                  </Button>
                 )}
-              </>
-            )}
-          </TabsContent>
-        </Tabs>
+                
+                <Button
+                  onClick={handleAddCustomer}
+                  className="transition-brand shadow-elev-1"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  {customers.length === 0 ? 'Add First Customer' : 'Add Customer'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCustomers.map((customer, index) => (
+              <motion.div
+                key={customer.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+              >
+                <CustomerCard customer={customer} getCustomerTypeColor={getCustomerTypeColor} />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
