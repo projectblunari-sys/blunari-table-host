@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTenantBranding } from '@/contexts/TenantBrandingContext';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Github, Chrome } from 'lucide-react';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -45,7 +46,9 @@ const Auth: React.FC = () => {
   const [showCodeForm, setShowCodeForm] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
   const { signIn, user } = useAuth();
+  const { logoUrl, restaurantName } = useTenantBranding();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -89,11 +92,13 @@ const Auth: React.FC = () => {
 
   const onSubmit = async (data: AuthFormData) => {
     setLoading(true);
+    setAuthError(null);
     
     try {
       const { error } = await signIn(data.email, data.password);
       
       if (error) {
+        setAuthError('Invalid email or password. Please check your credentials and try again.');
         toast({
           title: 'Sign in failed',
           description: 'Invalid email or password. Please try again.',
@@ -107,6 +112,7 @@ const Auth: React.FC = () => {
         navigate('/dashboard');
       }
     } catch (error) {
+      setAuthError('Something went wrong. Please try again.');
       toast({
         title: 'Error',
         description: 'Something went wrong. Please try again.',
@@ -280,7 +286,7 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-surface via-surface-2 to-surface-3 dark:from-surface dark:via-surface-2 dark:to-surface-3 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -289,53 +295,99 @@ const Auth: React.FC = () => {
       >
         <div className="text-center mb-8">
           <img 
-            src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png" 
-            alt="Blunari Logo" 
-            className="h-16 mx-auto mb-4"
+            src={logoUrl} 
+            alt={`${restaurantName} Logo`} 
+            className="h-16 mx-auto mb-4 rounded-lg"
+            onError={(e) => {
+              e.currentTarget.src = '/placeholder.svg';
+            }}
           />
-          <h1 className="text-h2 font-bold text-foreground">Restaurant Dashboard</h1>
-          <p className="text-muted-foreground">Manage your restaurant operations</p>
+          <h1 className="text-h2 font-bold text-text">{restaurantName}</h1>
+          <p className="text-text-muted">Manage your restaurant operations</p>
         </div>
 
-        <Card className="shadow-medium">
+        <Card className="shadow-elev-2 bg-surface border-surface-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 bg-surface-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="reset">Reset Password</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="signin">
+            <TabsContent value="signin" className="space-y-5">
               <CardHeader>
-                <CardTitle className="text-center">Welcome Back</CardTitle>
-                <CardDescription className="text-center">
+                <CardTitle className="text-center text-text">Welcome Back</CardTitle>
+                <CardDescription className="text-center text-text-muted">
                   Sign in to your restaurant dashboard
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <CardContent className="space-y-5">
+                {/* Social Login Buttons */}
+                <div className="space-y-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-11 bg-surface-2 border-surface-3 hover:bg-surface-3 transition-colors"
+                    disabled
+                  >
+                    <Github className="mr-2 h-4 w-4" />
+                    Continue with GitHub
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-11 bg-surface-2 border-surface-3 hover:bg-surface-3 transition-colors"
+                    disabled
+                  >
+                    <Chrome className="mr-2 h-4 w-4" />
+                    Continue with Google
+                  </Button>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-surface-3" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-surface px-2 text-text-muted">Or continue with email</span>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                  {authError && (
+                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                      <p className="text-sm text-destructive">{authError}</p>
+                    </div>
+                  )}
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-text">Email address</Label>
                     <Input
                       id="email"
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder="Enter your email address"
                       {...register('email')}
-                      className={errors.email ? 'border-destructive' : ''}
+                      className={`h-11 bg-surface-2 border-surface-3 focus:border-brand focus:ring-brand ${errors.email ? 'border-destructive animate-shake' : ''}`}
+                      aria-invalid={errors.email ? 'true' : 'false'}
+                      aria-describedby={errors.email ? 'email-error' : undefined}
                     />
                     {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email.message}</p>
+                      <p id="email-error" className="text-sm text-destructive" role="alert">
+                        {errors.email.message}
+                      </p>
                     )}
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password" className="text-text">Password</Label>
                     <div className="relative">
                       <Input
                         id="password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Enter your password"
                         {...register('password')}
-                        className={errors.password ? 'border-destructive' : ''}
+                        className={`h-11 bg-surface-2 border-surface-3 focus:border-brand focus:ring-brand pr-10 ${errors.password ? 'border-destructive animate-shake' : ''}`}
+                        aria-invalid={errors.password ? 'true' : 'false'}
+                        aria-describedby={errors.password ? 'password-error' : undefined}
                       />
                       <Button
                         type="button"
@@ -343,20 +395,27 @@ const Auth: React.FC = () => {
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
+                          <EyeOff className="h-4 w-4 text-text-muted" />
                         ) : (
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4 text-text-muted" />
                         )}
                       </Button>
                     </div>
                     {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password.message}</p>
+                      <p id="password-error" className="text-sm text-destructive" role="alert">
+                        {errors.password.message}
+                      </p>
                     )}
                   </div>
                   
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full h-11 bg-brand hover:bg-brand/90 text-brand-foreground" 
+                    disabled={loading}
+                  >
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -371,46 +430,57 @@ const Auth: React.FC = () => {
                     <Button
                       type="button"
                       variant="link"
-                      onClick={() => setActiveTab('reset')}
-                      className="text-sm text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setActiveTab('reset');
+                        setAuthError(null);
+                      }}
+                      className="text-sm text-text-muted hover:text-text"
                     >
                       Forgot your password?
                     </Button>
                   </div>
                   
-                  <p className="text-sm text-muted-foreground text-center">
+                  <p className="text-sm text-text-muted text-center">
                     Account created by restaurant admin? Check your email for login credentials.
                   </p>
                 </form>
               </CardContent>
             </TabsContent>
             
-            <TabsContent value="reset">
+            <TabsContent value="reset" className="space-y-5">
               <CardHeader>
-                <CardTitle className="text-center">Reset Password</CardTitle>
-                <CardDescription className="text-center">
+                <CardTitle className="text-center text-text">Reset Password</CardTitle>
+                <CardDescription className="text-center text-text-muted">
                   {!showCodeForm ? 'Enter your email to receive a security code' : 
                    'Enter the security code and your new password'}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-5">
                 {!showCodeForm ? (
-                  <form onSubmit={handleResetSubmit(onResetSubmit)} className="space-y-4">
+                  <form onSubmit={handleResetSubmit(onResetSubmit)} className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="reset-email">Email</Label>
+                      <Label htmlFor="reset-email" className="text-text">Email address</Label>
                       <Input
                         id="reset-email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder="Enter your email address"
                         {...registerReset('email')}
-                        className={resetErrors.email ? 'border-destructive' : ''}
+                        className={`h-11 bg-surface-2 border-surface-3 focus:border-brand focus:ring-brand ${resetErrors.email ? 'border-destructive animate-shake' : ''}`}
+                        aria-invalid={resetErrors.email ? 'true' : 'false'}
+                        aria-describedby={resetErrors.email ? 'reset-email-error' : undefined}
                       />
                       {resetErrors.email && (
-                        <p className="text-sm text-destructive">{resetErrors.email.message}</p>
+                        <p id="reset-email-error" className="text-sm text-destructive" role="alert">
+                          {resetErrors.email.message}
+                        </p>
                       )}
                     </div>
                     
-                    <Button type="submit" className="w-full" disabled={resetLoading}>
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 bg-brand hover:bg-brand/90 text-brand-foreground" 
+                      disabled={resetLoading}
+                    >
                       {resetLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -426,69 +496,86 @@ const Auth: React.FC = () => {
                         type="button"
                         variant="link"
                         onClick={() => setActiveTab('signin')}
-                        className="text-sm text-muted-foreground hover:text-foreground"
+                        className="text-sm text-text-muted hover:text-text"
                       >
                         Back to sign in
                       </Button>
                     </div>
                   </form>
                 ) : (
-                  <form onSubmit={handleCodeSubmit(onCodeSubmit)} className="space-y-4">
+                  <form onSubmit={handleCodeSubmit(onCodeSubmit)} className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="code-email">Email</Label>
+                      <Label htmlFor="code-email" className="text-text">Email address</Label>
                       <Input
                         id="code-email"
                         type="email"
                         value={resetEmail || ''}
                         disabled
-                        className="bg-muted"
+                        className="h-11 bg-surface-3 border-surface-3 text-text-muted"
+                        aria-label="Email address (readonly)"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="security-code">Security Code</Label>
+                      <Label htmlFor="security-code" className="text-text">Security Code</Label>
                       <Input
                         id="security-code"
                         type="text"
                         placeholder="Enter 6-digit code"
                         maxLength={6}
                         {...registerCode('code')}
-                        className={codeErrors.code ? 'border-destructive' : ''}
+                        className={`h-11 bg-surface-2 border-surface-3 focus:border-brand focus:ring-brand ${codeErrors.code ? 'border-destructive animate-shake' : ''}`}
+                        aria-invalid={codeErrors.code ? 'true' : 'false'}
+                        aria-describedby={codeErrors.code ? 'code-error' : undefined}
                       />
                       {codeErrors.code && (
-                        <p className="text-sm text-destructive">{codeErrors.code.message}</p>
+                        <p id="code-error" className="text-sm text-destructive" role="alert">
+                          {codeErrors.code.message}
+                        </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="new-password">New Password</Label>
+                      <Label htmlFor="new-password" className="text-text">New Password</Label>
                       <Input
                         id="new-password"
                         type="password"
                         placeholder="Enter new password"
                         {...registerCode('password')}
-                        className={codeErrors.password ? 'border-destructive' : ''}
+                        className={`h-11 bg-surface-2 border-surface-3 focus:border-brand focus:ring-brand ${codeErrors.password ? 'border-destructive animate-shake' : ''}`}
+                        aria-invalid={codeErrors.password ? 'true' : 'false'}
+                        aria-describedby={codeErrors.password ? 'password-new-error' : undefined}
                       />
                       {codeErrors.password && (
-                        <p className="text-sm text-destructive">{codeErrors.password.message}</p>
+                        <p id="password-new-error" className="text-sm text-destructive" role="alert">
+                          {codeErrors.password.message}
+                        </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="confirm-password">Confirm Password</Label>
+                      <Label htmlFor="confirm-password" className="text-text">Confirm Password</Label>
                       <Input
                         id="confirm-password"
                         type="password"
                         placeholder="Confirm new password"
                         {...registerCode('confirmPassword')}
-                        className={codeErrors.confirmPassword ? 'border-destructive' : ''}
+                        className={`h-11 bg-surface-2 border-surface-3 focus:border-brand focus:ring-brand ${codeErrors.confirmPassword ? 'border-destructive animate-shake' : ''}`}
+                        aria-invalid={codeErrors.confirmPassword ? 'true' : 'false'}
+                        aria-describedby={codeErrors.confirmPassword ? 'confirm-password-error' : undefined}
                       />
                       {codeErrors.confirmPassword && (
-                        <p className="text-sm text-destructive">{codeErrors.confirmPassword.message}</p>
+                        <p id="confirm-password-error" className="text-sm text-destructive" role="alert">
+                          {codeErrors.confirmPassword.message}
+                        </p>
                       )}
                     </div>
                     
-                    <Button type="submit" className="w-full" disabled={codeLoading}>
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 bg-brand hover:bg-brand/90 text-brand-foreground" 
+                      disabled={codeLoading}
+                    >
                       {codeLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -505,7 +592,7 @@ const Auth: React.FC = () => {
                         variant="link"
                         onClick={onResendCode}
                         disabled={resetLoading}
-                        className="text-sm text-primary hover:text-primary/80 disabled:opacity-50"
+                        className="text-sm text-brand hover:text-brand/80 disabled:opacity-50"
                       >
                         {resetLoading ? 'Sending...' : "Didn't receive the code? Resend"}
                       </Button>
@@ -514,7 +601,7 @@ const Auth: React.FC = () => {
                         type="button"
                         variant="link"
                         onClick={() => setShowCodeForm(false)}
-                        className="block text-sm text-muted-foreground hover:text-foreground"
+                        className="block text-sm text-text-muted hover:text-text"
                       >
                         Back to email entry
                       </Button>
@@ -526,7 +613,7 @@ const Auth: React.FC = () => {
                           setShowCodeForm(false);
                           setActiveTab('signin');
                         }}
-                        className="text-sm text-muted-foreground hover:text-foreground"
+                        className="text-sm text-text-muted hover:text-text"
                       >
                         Back to sign in
                       </Button>
