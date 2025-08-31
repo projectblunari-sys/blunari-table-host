@@ -157,5 +157,26 @@ All colors MUST be HSL. Restaurant-focused, professional palette.
 
   body {
     @apply bg-background text-foreground;
+    }
+  }
+
+  /* Mobile Safe Areas & Bottom Navigation Utilities */
+  .pb-safe-mobile {
+    @apply pb-4 lg:pb-4;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom) + 140px);
+  }
+
+  .h-safe-area-bottom {
+    height: env(safe-area-inset-bottom);
+  }
+
+  /* Scrollbar utilities */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
