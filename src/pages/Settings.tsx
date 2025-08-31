@@ -5,6 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { 
   Settings as SettingsIcon, 
   Palette, 
   Clock, 
@@ -15,7 +23,8 @@ import {
   RefreshCw,
   Wrench,
   Eye,
-  Monitor
+  Monitor,
+  Home
 } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { useTenant } from '@/hooks/useTenant';
@@ -27,6 +36,7 @@ import SecuritySettings from '@/components/settings/SecuritySettings';
 import IntegrationSettings from '@/components/settings/IntegrationSettings';
 import InterfaceSettings from '@/components/settings/InterfaceSettings';
 import AdvancedSettings from '@/components/settings/AdvancedSettings';
+import { EmptyState } from '@/components/ui/state';
 import { toast } from '@/lib/toast';
 
 const Settings: React.FC = () => {
@@ -77,6 +87,30 @@ const Settings: React.FC = () => {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard" className="flex items-center gap-1">
+              <Home className="h-4 w-4" />
+              Dashboard
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Settings</BreadcrumbPage>
+          </BreadcrumbItem>
+          {activeTab !== 'branding' && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="capitalize">{activeTab}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Header with Live Preview */}
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1">
@@ -310,59 +344,80 @@ const Settings: React.FC = () => {
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7 bg-surface-2 p-1 overflow-x-auto">
+        <TabsList className="grid w-full grid-cols-7 bg-surface-2 p-1 overflow-x-auto relative">
           <TabsTrigger 
             value="branding" 
-            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+            className="flex items-center gap-2 relative data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-sm transition-all duration-200"
           >
             <Palette className="h-4 w-4" />
             <span className="hidden sm:inline">Branding</span>
+            {activeTab === 'branding' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-full" />
+            )}
           </TabsTrigger>
           <TabsTrigger 
             value="operational" 
-            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+            className="flex items-center gap-2 relative data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-sm transition-all duration-200"
           >
             <Clock className="h-4 w-4" />
             <span className="hidden sm:inline">Operations</span>
+            {activeTab === 'operational' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-full" />
+            )}
           </TabsTrigger>
           <TabsTrigger 
             value="integrations" 
-            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+            className="flex items-center gap-2 relative data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-sm transition-all duration-200"
           >
             <Plug className="h-4 w-4" />
             <span className="hidden sm:inline">Integrations</span>
+            {activeTab === 'integrations' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-full" />
+            )}
           </TabsTrigger>
           <TabsTrigger 
             value="notifications" 
-            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+            className="flex items-center gap-2 relative data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-sm transition-all duration-200"
           >
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
+            {activeTab === 'notifications' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-full" />
+            )}
           </TabsTrigger>
           <TabsTrigger 
             value="security" 
-            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+            className="flex items-center gap-2 relative data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-sm transition-all duration-200"
           >
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
+            {activeTab === 'security' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-full" />
+            )}
           </TabsTrigger>
           <TabsTrigger 
             value="interface" 
-            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+            className="flex items-center gap-2 relative data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-sm transition-all duration-200"
           >
             <Monitor className="h-4 w-4" />
             <span className="hidden sm:inline">Interface</span>
+            {activeTab === 'interface' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-full" />
+            )}
           </TabsTrigger>
           <TabsTrigger 
             value="advanced" 
-            className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
+            className="flex items-center gap-2 relative data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-sm transition-all duration-200"
           >
             <Wrench className="h-4 w-4" />
             <span className="hidden sm:inline">Advanced</span>
+            {activeTab === 'advanced' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-full" />
+            )}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="branding" className="space-y-6">
+        <TabsContent value="branding" className="space-y-6 p-6 bg-surface/30 rounded-lg border border-border/50">
           <BrandingSettings
             settings={settings.branding}
             onUpdate={updateBranding}
@@ -370,7 +425,7 @@ const Settings: React.FC = () => {
           />
         </TabsContent>
 
-        <TabsContent value="operational" className="space-y-6">
+        <TabsContent value="operational" className="space-y-6 p-6 bg-surface/30 rounded-lg border border-border/50">
           <OperationalSettings
             settings={settings.operational}
             onUpdate={updateOperational}
@@ -378,7 +433,7 @@ const Settings: React.FC = () => {
           />
         </TabsContent>
 
-        <TabsContent value="integrations" className="space-y-6">
+        <TabsContent value="integrations" className="space-y-6 p-6 bg-surface/30 rounded-lg border border-border/50">
           <IntegrationSettings
             settings={settings.integrations}
             onUpdate={updateIntegrations}
@@ -386,7 +441,7 @@ const Settings: React.FC = () => {
           />
         </TabsContent>
 
-        <TabsContent value="notifications" className="space-y-6">
+        <TabsContent value="notifications" className="space-y-6 p-6 bg-surface/30 rounded-lg border border-border/50">
           <NotificationSettings
             settings={settings.notifications}
             onUpdate={updateNotifications}
@@ -394,7 +449,7 @@ const Settings: React.FC = () => {
           />
         </TabsContent>
 
-        <TabsContent value="security" className="space-y-6">
+        <TabsContent value="security" className="space-y-6 p-6 bg-surface/30 rounded-lg border border-border/50">
           <SecuritySettings
             settings={settings.security}
             onUpdate={updateSecurity}
@@ -402,11 +457,11 @@ const Settings: React.FC = () => {
           />
         </TabsContent>
 
-        <TabsContent value="interface" className="space-y-6">
+        <TabsContent value="interface" className="space-y-6 p-6 bg-surface/30 rounded-lg border border-border/50">
           <InterfaceSettings />
         </TabsContent>
 
-        <TabsContent value="advanced" className="space-y-6">
+        <TabsContent value="advanced" className="space-y-6 p-6 bg-surface/30 rounded-lg border border-border/50">
           <AdvancedSettings />
         </TabsContent>
       </Tabs>
