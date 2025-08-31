@@ -10,7 +10,7 @@ import { BrandingSettings as BrandingSettingsType } from '@/types/settings';
 import { useTenantBranding } from '@/contexts/TenantBrandingContext';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { toast } from '@/lib/toast';
+import { toast } from '@/hooks/use-toast';
 
 interface BrandingSettingsProps {
   settings: BrandingSettingsType;
@@ -39,7 +39,10 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ settings, onUpdate,
 
   const onSubmit = (data: BrandingSettingsType) => {
     onUpdate(data);
-    toast.success('Branding settings saved successfully');
+    toast({
+      title: "Branding Updated",
+      description: "Your branding settings have been saved successfully.",
+    });
   };
 
   const getStatusBadgeVariant = (status: string) => {

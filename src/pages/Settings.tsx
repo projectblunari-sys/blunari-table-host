@@ -26,6 +26,7 @@ import NotificationSettings from '@/components/settings/NotificationSettings';
 import SecuritySettings from '@/components/settings/SecuritySettings';
 import IntegrationSettings from '@/components/settings/IntegrationSettings';
 import InterfaceSettings from '@/components/settings/InterfaceSettings';
+import AdvancedSettings from '@/components/settings/AdvancedSettings';
 import { toast } from '@/lib/toast';
 
 const Settings: React.FC = () => {
@@ -309,7 +310,7 @@ const Settings: React.FC = () => {
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7 bg-surface-2 p-1">
+        <TabsList className="grid w-full grid-cols-7 bg-surface-2 p-1 overflow-x-auto">
           <TabsTrigger 
             value="branding" 
             className="flex items-center gap-2 data-[state=active]:bg-brand data-[state=active]:text-brand-foreground"
@@ -406,23 +407,7 @@ const Settings: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="advanced" className="space-y-6">
-          <Card className="bg-surface border-surface-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-h3">
-                <Wrench className="h-5 w-5 text-brand" />
-                Advanced Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Wrench className="h-12 w-12 text-text-muted mx-auto mb-4" />
-                <h3 className="text-h4 font-medium text-text mb-2">Coming Soon</h3>
-                <p className="text-body-sm text-text-muted">
-                  Advanced features like API keys, data exports, and logs will be available here.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <AdvancedSettings />
         </TabsContent>
       </Tabs>
 
