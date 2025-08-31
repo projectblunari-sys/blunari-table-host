@@ -1,181 +1,200 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { SkeletonBox, SkeletonText, SkeletonMetricsCard, SkeletonChart, SkeletonTable, SkeletonPage } from './skeleton-components';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Dashboard-specific skeleton layouts
-export const SkeletonDashboardHeader: React.FC = () => (
-  <div className="flex items-start justify-between mb-8">
-    <div className="space-y-2">
-      <SkeletonBox className="w-64 h-8" />
-      <SkeletonBox className="w-96 h-4" />
-    </div>
-    <div className="flex gap-3">
-      <SkeletonBox className="w-32 h-10 rounded-md" />
-      <SkeletonBox className="w-10 h-10 rounded-md" />
-    </div>
-  </div>
-);
-
-export const SkeletonDashboardMetrics: React.FC = () => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    {Array.from({ length: 4 }, (_, i) => (
-      <SkeletonMetricsCard key={i} />
-    ))}
-  </div>
-);
-
-export const SkeletonAnalyticsDashboard: React.FC = () => (
-  <div className="space-y-6">
-    <SkeletonDashboardHeader />
-    
-    {/* Time picker skeleton */}
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <div className="flex items-center gap-4">
-          <SkeletonBox className="w-32 h-9 rounded-md" />
-          <SkeletonBox className="w-48 h-9 rounded-md" />
-        </div>
-        <div className="flex gap-2">
-          <SkeletonBox className="w-20 h-9 rounded-md" />
-          <SkeletonBox className="w-24 h-9 rounded-md" />
-        </div>
+export const SkeletonMetricsCard: React.FC = () => {
+  return (
+    <Card className="bg-surface border-surface-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-10 w-10 rounded-lg" />
       </CardHeader>
-    </Card>
-    
-    <SkeletonDashboardMetrics />
-    
-    {/* Charts grid */}
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <SkeletonChart height="h-80" showLegend />
-      <SkeletonChart height="h-80" showLegend />
-    </div>
-    
-    {/* Bottom insights */}
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2">
-        <SkeletonTable rows={8} columns={5} />
-      </div>
-      <div className="space-y-4">
-        {Array.from({ length: 3 }, (_, i) => (
-          <Card key={i}>
-            <CardHeader className="pb-3">
-              <SkeletonBox className="w-32 h-5" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <SkeletonBox className="w-full h-16 rounded-lg" />
-              <SkeletonText lines={2} />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-export const SkeletonTablesDashboard: React.FC = () => (
-  <div className="space-y-6">
-    <SkeletonDashboardHeader />
-    
-    {/* View mode toggle */}
-    <div className="flex items-center justify-between">
-      <div className="flex gap-2">
-        {Array.from({ length: 3 }, (_, i) => (
-          <SkeletonBox key={i} className="w-20 h-9 rounded-md" />
-        ))}
-      </div>
-      <SkeletonBox className="w-32 h-9 rounded-md" />
-    </div>
-    
-    {/* Main floor plan area */}
-    <Card>
-      <CardContent className="p-6">
-        <SkeletonBox className="w-full h-96 rounded-lg" />
+      <div className="h-px bg-surface-3 mx-6"></div>
+      <CardContent className="pt-4">
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-3 w-32" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-16 rounded-full" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        </div>
       </CardContent>
+      <div className="h-1 bg-surface-3"></div>
     </Card>
-    
-    {/* Table stats */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <SkeletonMetricsCard />
-      <SkeletonMetricsCard />
-      <SkeletonMetricsCard />
-    </div>
-  </div>
-);
+  );
+};
 
-export const SkeletonBookingsDashboard: React.FC = () => (
-  <div className="space-y-6">
-    <SkeletonDashboardHeader />
-    
-    {/* Filters */}
-    <Card>
+export const SkeletonDashboardChart: React.FC<{ height?: string }> = ({ 
+  height = "h-96" 
+}) => {
+  return (
+    <Card className={`${height} bg-surface border-surface-2`}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <SkeletonBox className="w-32 h-6" />
-          <div className="flex gap-2">
-            <SkeletonBox className="w-24 h-9 rounded-md" />
-            <SkeletonBox className="w-32 h-9 rounded-md" />
-            <SkeletonBox className="w-28 h-9 rounded-md" />
-          </div>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-8 w-24" />
         </div>
+        <Skeleton className="h-4 w-64" />
       </CardHeader>
-    </Card>
-    
-    <SkeletonDashboardMetrics />
-    
-    {/* Bookings table */}
-    <SkeletonTable rows={10} columns={6} />
-  </div>
-);
-
-export const SkeletonMessagesDashboard: React.FC = () => (
-  <div className="h-[calc(100vh-12rem)] flex gap-6">
-    {/* Inbox list */}
-    <Card className="w-80 flex-shrink-0">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <SkeletonBox className="w-20 h-6" />
-          <SkeletonBox className="w-8 h-8 rounded-md" />
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="divide-y divide-border">
-          {Array.from({ length: 8 }, (_, i) => (
-            <div key={i} className="p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <SkeletonBox className="w-24 h-4" />
-                <SkeletonBox className="w-12 h-3" />
+      <CardContent className="flex-1">
+        <div className="space-y-4">
+          {/* Chart area */}
+          <div className="h-60 flex items-end justify-between gap-2">
+            {Array.from({ length: 12 }, (_, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                <Skeleton 
+                  className="w-full" 
+                  style={{ height: `${Math.random() * 80 + 20}%` }}
+                />
+                <Skeleton className="h-3 w-6" />
               </div>
-              <SkeletonBox className="w-full h-3" />
-              <SkeletonBox className="w-3/4 h-3" />
+            ))}
+          </div>
+          {/* Legend */}
+          <div className="flex justify-center gap-6">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-3 w-3 rounded-full" />
+              <Skeleton className="h-3 w-16" />
             </div>
-          ))}
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-3 w-3 rounded-full" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
-    
-    {/* Conversation pane */}
-    <Card className="flex-1 flex flex-col">
-      <CardHeader className="border-b">
-        <div className="flex items-center gap-3">
-          <SkeletonBox className="w-10 h-10 rounded-full" />
-          <div className="space-y-1">
-            <SkeletonBox className="w-32 h-5" />
-            <SkeletonBox className="w-24 h-3" />
-          </div>
+  );
+};
+
+export const SkeletonBookingsList: React.FC = () => {
+  return (
+    <Card className="h-96 bg-surface border-surface-2">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-8 w-20" />
         </div>
       </CardHeader>
-      <CardContent className="flex-1 p-6">
+      <CardContent>
         <div className="space-y-4">
           {Array.from({ length: 5 }, (_, i) => (
-            <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
-              <SkeletonBox className={`max-w-xs h-16 rounded-lg ${i % 2 === 0 ? '' : 'bg-brand/20'}`} />
+            <div key={i} className="flex items-center justify-between p-4 bg-surface-2 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+              <div className="text-right space-y-1">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-5 w-12 rounded-full" />
+              </div>
             </div>
           ))}
         </div>
       </CardContent>
-      <div className="border-t p-4">
-        <SkeletonBox className="w-full h-20 rounded-lg" />
-      </div>
     </Card>
-  </div>
-);
+  );
+};
+
+export const SkeletonWelcomeSection: React.FC = () => {
+  return (
+    <div className="relative overflow-hidden bg-gradient-to-br from-surface-2 to-surface-3 rounded-2xl p-8 shadow-elev-2">
+      <div className="relative z-10">
+        <Skeleton className="h-8 w-48 mb-3" />
+        <Skeleton className="h-4 w-96 max-w-full" />
+      </div>
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-surface-3 rounded-full blur-2xl opacity-50"></div>
+      <div className="absolute -bottom-5 -left-5 w-32 h-32 bg-surface-3 rounded-full blur-xl opacity-30"></div>
+    </div>
+  );
+};
+
+export const SkeletonAnalyticsDashboard: React.FC = () => {
+  return (
+    <div className="space-y-6">
+      {/* Analytics Header */}
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-96" />
+      </div>
+      
+      {/* Time Picker */}
+      <div className="flex gap-2">
+        <Skeleton className="h-10 w-32" />
+        <Skeleton className="h-10 w-40" />
+      </div>
+      
+      {/* Main Analytics Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SkeletonDashboardChart height="h-80" />
+        <SkeletonDashboardChart height="h-80" />
+      </div>
+      
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <SkeletonMetricsCard key={i} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export const SkeletonMessagesDashboard: React.FC = () => {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
+      {/* Conversations List */}
+      <Card className="lg:col-span-1">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-8 w-8 rounded-lg" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="flex-1 space-y-1">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-3 w-3 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Messages View */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-1">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 5 }, (_, i) => (
+              <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
+                <div className={`max-w-xs p-3 rounded-lg ${i % 2 === 0 ? 'bg-surface-2' : 'bg-brand/10'}`}>
+                  <Skeleton className="h-4 w-full mb-1" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

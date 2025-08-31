@@ -43,117 +43,86 @@ const DashboardHeader: React.FC = () => {
   });
 
   return (
-    <header className="bg-gradient-to-r from-background via-card to-background border-b border-border/50 px-4 py-6 md:px-6 backdrop-blur-sm">
+    <header className="bg-gradient-to-r from-surface via-surface-2 to-surface border-b border-surface-2 px-4 py-6 md:px-6">
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         {/* Restaurant Info & Date */}
         <div className="space-y-2">
-          <h1 className="text-h2 font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-h2 font-bold text-brand">
             {restaurantName}
           </h1>
-          <p className="text-body-sm text-muted-foreground flex items-center gap-2">
+          <p className="text-body-sm text-text-muted flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             {currentDate}
           </p>
         </div>
 
-        {/* Enhanced Quick Stats */}
-        <div className="flex flex-wrap gap-4">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-warm rounded-xl opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
-            <div className="relative px-4 py-3 bg-card/80 backdrop-blur-sm rounded-xl border border-border/50 shadow-soft hover:shadow-medium transition-all duration-300">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-secondary/10 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-secondary" />
-                </div>
-                <div className="text-body-sm">
-                  <div className="font-semibold text-foreground font-tabular">87%</div>
-                  <div className="text-xs text-muted-foreground">Capacity</div>
-                </div>
+        {/* Single Status Indicator */}
+        <div className="flex items-center gap-4">
+          <div className="px-4 py-2 bg-surface border border-surface-3 rounded-lg shadow-elev-1">
+            <div className="flex items-center gap-3">
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                isConnected 
+                  ? 'bg-success/10 text-success' 
+                  : 'bg-destructive/10 text-destructive'
+              }`}>
+                <div className={`h-2 w-2 rounded-full ${
+                  isConnected ? 'bg-success animate-pulse' : 'bg-destructive'
+                }`}></div>
+                <span className="text-sm font-medium">
+                  {isConnected ? 'Live' : 'Offline'}
+                </span>
               </div>
-            </div>
-          </div>
-
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-primary rounded-xl opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
-            <div className="relative px-4 py-3 bg-card/80 backdrop-blur-sm rounded-xl border border-border/50 shadow-soft hover:shadow-medium transition-all duration-300">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${isConnected ? 'bg-success/10' : 'bg-destructive/10'}`}>
-                  <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-success animate-pulse-soft' : 'bg-destructive'}`}></div>
-                </div>
-                <div className="text-body-sm">
-                  <div className="font-semibold text-foreground">
-                    {isConnected ? 'Live' : 'Offline'}
-                  </div>
-                  <div className="text-xs text-muted-foreground">Status</div>
-                </div>
+              <div className="text-body-sm">
+                <div className="font-semibold text-text font-tabular">87%</div>
+                <div className="text-xs text-text-muted">Capacity</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Enhanced Actions */}
+        {/* Actions */}
         <div className="flex items-center gap-3">
-          {/* Enhanced Real-time connection status */}
-          <Badge 
-            variant={isConnected ? "default" : "destructive"} 
-            className={`flex items-center gap-2 px-3 py-1 transition-all duration-300 ${
-              isConnected ? 'bg-success/10 text-success border-success/20 hover:bg-success/20' : ''
-            }`}
-          >
-            {isConnected ? (
-              <>
-                <Wifi className="h-3 w-3" />
-                Live
-              </>
-            ) : (
-              <>
-                <WifiOff className="h-3 w-3" />
-                Offline
-              </>
-            )}
-          </Badge>
-
           {/* Dark mode toggle */}
           <Button
             variant="outline"
             size="sm"
             onClick={toggleTheme}
-            className="w-9 h-9 p-0 group hover:bg-primary/5 hover:border-primary/20 transition-all duration-300"
+            className="w-9 h-9 p-0 bg-surface border-surface-3 hover:bg-surface-2 hover:border-brand/20 transition-all duration-300"
             aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
           >
             {theme === 'light' ? (
-              <Moon className="h-4 w-4 group-hover:text-primary transition-colors duration-300" />
+              <Moon className="h-4 w-4 text-text-muted hover:text-brand transition-colors duration-300" />
             ) : (
-              <Sun className="h-4 w-4 group-hover:text-primary transition-colors duration-300" />
+              <Sun className="h-4 w-4 text-text-muted hover:text-brand transition-colors duration-300" />
             )}
           </Button>
 
           <Button 
             variant="outline" 
             size="sm" 
-            className="relative group hover:bg-primary/5 hover:border-primary/20 transition-all duration-300"
+            className="relative bg-surface border-surface-3 hover:bg-surface-2 hover:border-brand/20 transition-all duration-300"
           >
-            <Bell className="h-4 w-4 group-hover:text-primary transition-colors duration-300" />
-            <Badge className="absolute -top-1 -right-1 h-2 w-2 p-0 bg-destructive animate-pulse-soft"></Badge>
+            <Bell className="h-4 w-4 text-text-muted hover:text-brand transition-colors duration-300" />
+            <Badge className="absolute -top-1 -right-1 h-2 w-2 p-0 bg-destructive"></Badge>
           </Button>
           
           <Button 
             variant="outline" 
             size="sm"
-            className="group hover:bg-primary/5 hover:border-primary/20 transition-all duration-300"
+            className="bg-surface border-surface-3 hover:bg-surface-2 hover:border-brand/20 transition-all duration-300"
           >
-            <Settings className="h-4 w-4 group-hover:text-primary transition-colors duration-300" />
+            <Settings className="h-4 w-4 text-text-muted hover:text-brand transition-colors duration-300" />
           </Button>
 
-          {/* Enhanced User menu */}
+          {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
                 size="sm"
-                className="group hover:bg-primary/5 hover:border-primary/20 transition-all duration-300"
+                className="bg-surface border-surface-3 hover:bg-surface-2 hover:border-brand/20 transition-all duration-300"
               >
-                <User className="h-4 w-4 group-hover:text-primary transition-colors duration-300" />
+                <User className="h-4 w-4 text-text-muted hover:text-brand transition-colors duration-300" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">

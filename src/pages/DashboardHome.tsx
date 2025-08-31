@@ -8,7 +8,7 @@ import TodaysBookings from '@/components/dashboard/TodaysBookings';
 import MetricsCard from '@/components/dashboard/MetricsCard';
 import PerformanceTrendsChart from '@/components/dashboard/PerformanceTrendsChart';
 import AlertSystem from '@/components/dashboard/AlertSystem';
-import { SkeletonMetricsCard, SkeletonChart, SkeletonList } from '@/components/ui/skeleton-components';
+import { SkeletonMetricsCard, SkeletonDashboardChart, SkeletonBookingsList, SkeletonWelcomeSection } from '@/components/ui/skeleton-dashboard';
 import { EmptyState } from '@/components/ui/state';
 import { 
   DollarSign, 
@@ -24,7 +24,7 @@ const DashboardHome: React.FC = () => {
   const { metrics, performanceTrends, isLoading: metricsLoading } = useDashboardMetrics(tenant?.id);
   const { alerts, dismissAlert, clearAllAlerts } = useAlertSystem(tenant?.id);
 
-  // Define KPI metrics data
+  // Define KPI metrics data with tooltips
   const kpiMetrics = [
     {
       title: "Monthly Revenue",
@@ -34,17 +34,19 @@ const DashboardHome: React.FC = () => {
       color: "text-success",
       bgColor: "bg-success/10",
       format: "currency" as const,
-      subtitle: "This month (estimated)"
+      subtitle: "This month (estimated)",
+      tooltip: "Total revenue generated this month from all bookings and orders. This is an estimate based on daily averages."
     },
     {
       title: "Table Utilization", 
       value: metrics?.occupancyRate?.current || 0,
       trend: metrics?.occupancyRate?.trend || 0,
       icon: Target,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
+      color: "text-brand",
+      bgColor: "bg-brand/10",
       format: "percentage" as const,
-      subtitle: `Target: ${metrics?.occupancyRate?.target || 85}%`
+      subtitle: `Target: ${metrics?.occupancyRate?.target || 85}%`,
+      tooltip: "Percentage of available tables currently occupied. Higher utilization indicates better efficiency and revenue optimization."
     },
     {
       title: "Bookings Today",
@@ -54,7 +56,8 @@ const DashboardHome: React.FC = () => {
       color: "text-secondary",
       bgColor: "bg-secondary/10",
       format: "number" as const,
-      subtitle: `$${metrics?.todayBookings?.revenue?.toLocaleString() || '0'} revenue`
+      subtitle: `$${metrics?.todayBookings?.revenue?.toLocaleString() || '0'} revenue`,
+      tooltip: "Total number of confirmed reservations for today, including both advance bookings and walk-ins."
     },
     {
       title: "No-Show Rate",
@@ -64,7 +67,8 @@ const DashboardHome: React.FC = () => {
       color: "text-warning",
       bgColor: "bg-warning/10",
       format: "percentage" as const,
-      subtitle: "Last 7 days"
+      subtitle: "Last 7 days",
+      tooltip: "Percentage of confirmed bookings where customers did not show up. Lower rates indicate better booking management and customer communication."
     }
   ];
 
@@ -88,18 +92,23 @@ const DashboardHome: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="relative overflow-hidden bg-gradient-to-br from-brand to-brand/80 rounded-2xl p-8 text-brand-foreground shadow-elev-2"
       >
-        <div className="relative z-10">
-          <h1 className="text-h1 font-bold mb-3">
-            Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'}!
-          </h1>
-          <p className="text-brand-foreground/90 text-body max-w-2xl">
-            Welcome to your restaurant dashboard. Here's your business overview for today.
-          </p>
-        </div>
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-foreground/10 rounded-full blur-2xl"></div>
-        <div className="absolute -bottom-5 -left-5 w-32 h-32 bg-brand-foreground/5 rounded-full blur-xl"></div>
+        {metricsLoading ? (
+          <SkeletonWelcomeSection />
+        ) : (
+          <div className="relative overflow-hidden bg-gradient-to-br from-brand to-brand/80 rounded-2xl p-8 text-brand-foreground shadow-elev-2">
+            <div className="relative z-10">
+              <h1 className="text-h1 font-bold mb-3">
+                Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'}!
+              </h1>
+              <p className="text-brand-foreground/90 text-body max-w-2xl">
+                Welcome to your restaurant dashboard. Here's your business overview for today.
+              </p>
+            </div>
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-foreground/10 rounded-full blur-2xl"></div>
+            <div className="absolute -bottom-5 -left-5 w-32 h-32 bg-brand-foreground/5 rounded-full blur-xl"></div>
+          </div>
+        )}
       </motion.div>
 
       {/* Row 1: KPI Cards */}
@@ -145,7 +154,7 @@ const DashboardHome: React.FC = () => {
           {/* Performance Trends Chart - Takes 3/5 of width on xl screens */}
           <div className="xl:col-span-3">
             {metricsLoading ? (
-              <SkeletonChart height="h-96" className="h-96" />
+              <SkeletonDashboardChart height="h-96" />
             ) : performanceTrends && performanceTrends.length > 0 ? (
               <PerformanceTrendsChart 
                 data={performanceTrends} 
@@ -168,7 +177,11 @@ const DashboardHome: React.FC = () => {
           {/* Today's Bookings - Takes 2/5 of width on xl screens */}
           <div className="xl:col-span-2">
             <div className="h-96">
-              <TodaysBookings />
+              {metricsLoading ? (
+                <SkeletonBookingsList />
+              ) : (
+                <TodaysBookings />
+              )}
             </div>
           </div>
         </div>
