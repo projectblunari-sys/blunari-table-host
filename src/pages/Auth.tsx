@@ -86,7 +86,9 @@ const Auth: React.FC = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      const savedMode = localStorage.getItem('ui.mode');
+      const targetRoute = savedMode === 'focus' ? '/command-center' : '/dashboard';
+      navigate(targetRoute);
     }
   }, [user, navigate]);
 
