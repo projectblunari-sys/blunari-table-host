@@ -23,6 +23,7 @@ import Messages from "./pages/Messages";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import BookingPage from "./pages/BookingPage";
+import CommandCenter from "./pages/CommandCenter";
 import { Suspense, lazy } from "react";
 import { SkeletonPage } from "@/components/ui/skeleton-components";
 import { DesignQAProvider } from "@/components/dev/DesignQAProvider";
@@ -51,6 +52,13 @@ const App = () => (
             
             {/* Public booking widget routes */}
             <Route path="/book/:slug" element={<BookingPage />} />
+            
+            {/* Command Center (Focus Mode) */}
+            <Route path="/command-center" element={
+              <ProtectedRoute>
+                <CommandCenter />
+              </ProtectedRoute>
+            } />
             
             <Route path="/dashboard" element={
               <ProtectedRoute>

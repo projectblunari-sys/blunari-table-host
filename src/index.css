@@ -53,6 +53,18 @@
     --motion-slow: 350ms;
     --motion-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
     
+    /* Command Center Design Tokens */
+    --accent: 226 90% 64%;
+    --accent-2: 259 73% 60%;
+    --success: 152 70% 40%;
+    --warning: 38 92% 50%;
+    --muted: 220 10% 20%;
+    --card: 220 12% 12%;
+    --bg: 220 14% 8%;
+    --ring: 226 90% 64%;
+    --shadow-1: 0 4px 16px hsl(220 10% 4% / 0.3);
+    --shadow-2: 0 8px 24px hsl(220 10% 4% / 0.35);
+
     /* Spacing Scale - Consistent 4/8/12/16px increments */
     --space-1: 0.25rem; /* 4px */
     --space-2: 0.5rem;  /* 8px */
@@ -333,5 +345,10 @@
   
   .skip-to-main:focus {
     top: 6px;
+  }
+
+  /* === GLASS EFFECT UTILITY === */
+  .glass {
+    @apply bg-[hsl(var(--card)/0.7)] backdrop-blur-md border border-white/10 shadow-[var(--shadow-1)];
   }
 }

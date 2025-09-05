@@ -17,8 +17,10 @@ import {
   Calendar,
   TrendingUp,
   Moon,
-  Sun
+  Sun,
+  Focus
 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +36,9 @@ const DashboardHeader: React.FC = () => {
   const { user, signOut } = useAuth();
   const { isConnected } = useRealtimeBookings(tenant?.id);
   const { restaurantName } = useTenantBranding();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isCommandCenter = location.pathname === '/command-center';
 
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -41,6 +46,17 @@ const DashboardHeader: React.FC = () => {
     month: 'long',
     day: 'numeric',
   });
+
+  const handleModeToggle = () => {
+    const newMode = isCommandCenter ? 'advanced' : 'focus';
+    localStorage.setItem('ui.mode', newMode);
+    
+    if (isCommandCenter) {
+      navigate('/dashboard');
+    } else {
+      navigate('/command-center');
+    }
+  };
 
   return (
     <header className="bg-gradient-to-r from-surface via-surface-2 to-surface border-b border-surface-2 px-4 py-6 md:px-6">
@@ -82,6 +98,17 @@ const DashboardHeader: React.FC = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
+          {/* Mode Toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleModeToggle}
+            className="bg-surface border-surface-3 hover:bg-surface-2 hover:border-brand/20 transition-all duration-300"
+          >
+            <Focus className="h-4 w-4 mr-2 text-text-muted hover:text-brand transition-colors duration-300" />
+            {isCommandCenter ? 'Advanced Mode' : 'Focus Mode'}
+          </Button>
+
           {/* Dark mode toggle */}
           <Button
             variant="outline"
